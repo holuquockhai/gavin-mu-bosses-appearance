@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MU BOSS TIMER — v14p19-final</title>
+<style>
+:root{
+  --bg:#0b0f14; --card:#161b22; --line:#2a2f36; --text:#e9eef3; --muted:#9aa3ad;
+  --btn:#1f2530; --btn-line:#313843; --chip:#1a2029;
+  --as-red:#2b1517; --as-red-line:#ff6b75;
+  --as-yellow:#2b2514; --as-yellow-line:#ffc773;
+  --as-green:#13261b; --as-green-line:#53e58a;
+  --side:300px;               /* fixed side columns */
+  --content:720px;            /* middle column width so chips fit 1 row */
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+.wrap{max-width:1600px;margin:0 auto;padding:18px;position:relative}
+h1{margin:0 0 14px;font-size:28px;font-weight:900;text-align:center}
+h2{margin:0 0 8px;font-size:18px;font-weight:700}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.small{font-size:12px;color:var(--muted)}
+.select{border:1px solid var(--btn-line);background:var(--btn);border-radius:10px;padding:6px 14px;
+  font-weight:600;color:var(--text);text-align:center;text-align-last:center}
+.btn{border:1px solid var(--btn-line);background:var(--btn);border-radius:10px;padding:8px 12px;
+  font-weight:600;color:var(--text);cursor:pointer}
+.btn:active{transform:scale(.98)}
+
+/* ===== Layout ===== */
+.main-row{display:flex;gap:16px;align-items:flex-start}
+.side{width:var(--side);flex:0 0 var(--side)}
+.mid{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;gap:14px}
+.mid .unified{width:100%;max-width:var(--content);margin:0 auto}
+
+/* Coming Soon list (left/right layout) */
+.side .list-item{display:flex;justify-content:space-between;align-items:center;
+  border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#0f141a;margin-bottom:8px}
+.side .list-item .left{font-weight:800}
+.side .list-item .right{font-weight:800}
+.side .list-item.as-red{background:var(--as-red);border-color:var(--as-red-line)}
+.side .list-item.as-yellow{background:var(--as-yellow);border-color:var(--as-yellow-line)}
+.side .list-item.as-green{background:var(--as-green);border-color:var(--as-green-line)}
+
+/* Boss cards */
+#cards{display:grid;gap:14px;width:100%;max-width:var(--content)}
+.boss-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 14px 16px;width:100%}
+.boss-head{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin-bottom:8px}
+.inputs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.actions{display:flex;gap:8px;justify-content:center;margin-top:8px}
+/* disable-look while keeping the toggle button clickable */
+.boss-card.disabled .inputs .select,
+.boss-card.disabled .actions .btn{opacity:.45;pointer-events:none}
+.boss-card.disabled .god-toggle{opacity:1;pointer-events:auto}
+
+/* Chips – compact one-row, no scrollbar */
+.chips{display:flex;gap:6px;flex-wrap:nowrap;justify-content:center}
+.chip{border:1px solid var(--btn-line);background:var(--chip);padding:3px 7px;border-radius:999px;font-weight:700;cursor:pointer;user-select:none;font-size:11px;white-space:nowrap}
+.chip input{margin-right:5px;transform:scale(.9)}
+
+/* Channel row */
+.channel-row{display:flex;justify-content:center}
+.channel-row .select{min-width:160px}
+
+/* Fixed controls */
+.top-right{position:fixed;top:10px;right:12px;z-index:999;display:flex;gap:8px;align-items:center}
+.top-right .select{padding:4px 10px}
+.top-right .btn{padding:6px 10px}
+
+/* History */
+.history-list{display:grid;gap:8px}
+.history-item{display:flex;justify-content:space-between;align-items:center;background:#0f141a;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.history-item .left{font-weight:700}
+.history-item .right{font-size:12px;color:var(--muted)}
+
+@media (max-width:980px){ .main-row{flex-direction:column} .side{width:auto} }
+@media (max-width:520px){ :root{ --content:100%; --side:100%; } .chips{flex-wrap:wrap} }
+
+footer{margin-top:20px;text-align:center;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>MU BOSS TIMER</h1>
+
+  <!-- fixed controls -->
+  <div class="top-right">
+    <button class="btn" id="resetAllBtn" title="Clear all timers in all channels">Reset All</button>
+    <label class="row small" style="gap:6px;user-select:none"><input type="checkbox" id="soundToggle" style="accent-color:#22c55e" checked/>Sound</label>
+    <select class="select" id="soundStyle" title="Alert tone">
+      <option value="chime">Chime</option><option value="bell">Bell</option>
+      <option value="beep">Beep</option><option value="retro">Retro</option>
+    </select>
+  </div>
+
+  <!-- ===== Main row ===== -->
+  <section class="main-row">
+    <!-- LEFT -->
+    <aside class="side">
+      <div class="card">
+        <h2>Coming Soon Boss (Top 8)</h2>
+        <div id="soonestList"></div>
+      </div>
+    </aside>
+
+    <!-- MIDDLE -->
+    <div class="mid">
+      <div class="card unified" id="showHideCard">
+        <div class="row" style="justify-content:space-between">
+          <h2>Show / Hide Boss Cards</h2>
+          <span class="small">Use to temporarily hide cards</span>
+        </div>
+        <div class="chips" id="visChips"></div>
+        <div class="row" style="justify-content:center;gap:8px;margin-top:6px">
+          <span class="small">Presets (max 3):</span>
+          <select id="presetSelect" class="select" style="min-width:180px"></select>
+          <button class="btn" id="applyPresetBtn">Apply</button>
+          <button class="btn" id="savePresetBtn">Save</button>
+          <button class="btn" id="newPresetBtn">New</button>
+          <button class="btn" id="renamePresetBtn">Rename</button>
+          <button class="btn" id="deletePresetBtn">Delete</button>
+        </div>
+      </div>
+
+      <div class="channel-row unified">
+        <select class="select" id="channelSelect" title="Channel"></select>
+      </div>
+
+      <div id="cards" class="unified"></div>
+    </div>
+
+    <!-- RIGHT -->
+    <aside class="side">
+      <div class="card">
+        <h2>Recent Boss History (last 5)</h2>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </aside>
+  </section>
+
+  <footer>App made by CallMeDinh · v14p19-final</footer>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const BOSSES=["Kundun","Medusa","Nightmare","Selupan","Silvester","Core","Ferea","Nyx","GOD"];
+  const CHANNELS=Array.from({length:14},(_,i)=>i+1);
+  const KEY='v14p19-final';
+
+  const rowsKey   = `mu_bt_${KEY}_rows`;
+  const chKey     = `mu_bt_${KEY}_channel`;
+  const soundKey  = `mu_bt_${KEY}_sound_enabled`;
+  const styleKey  = `mu_bt_${KEY}_sound_style`;
+  const visKey    = `mu_bt_${KEY}_visible`;
+  const histKey   = `mu_bt_${KEY}_history`;
+  const presetsKey= `mu_bt_${KEY}_presets`;
+
+  const $=id=>document.getElementById(id);
+  const nowMs=()=>Date.now();
+  const pad=n=>String(n).padStart(2,'0');
+  const saveRows=()=>localStorage.setItem(rowsKey, JSON.stringify(rows));
+
+  function remain(row){
+    const ms = row.target ? Math.max(0, row.target - nowMs()) : NaN;
+    return { ms,
+      h: Number.isFinite(ms)?Math.floor(ms/3600000):null,
+      m: Number.isFinite(ms)?Math.floor((ms%3600000)/60000):null,
+      s: Number.isFinite(ms)?Math.floor((ms%60000)/1000):null
+    };
+  }
+  function fmt(r){ return !Number.isFinite(r.ms) ? "—" : `${pad(r.h)}:${pad(r.m)}:${pad(r.s)}`; }
+  function asClass(ms){ return !Number.isFinite(ms)?'' : (ms<300000?'as-red':(ms<600000?'as-yellow':'as-green')); }
+
+  function defRows(){
+    const a=[];
+    for(const ch of CHANNELS){
+      for(const b of BOSSES){
+        a.push({boss:b,channel:ch,hh:"",mm:"",target:null,a3:false,disabled:false});
+      }
+    }
+    return a;
+  }
+
+  let rows;
+  try{ rows = JSON.parse(localStorage.getItem(rowsKey)||'null') || defRows(); }
+  catch{ rows = defRows(); }
+  rows = rows.map(r=>({...r, a3:!!r.a3, disabled:!!r.disabled}));
+
+  let currentChannel = parseInt(localStorage.getItem(chKey)||'1',10);
+  if(!CHANNELS.includes(currentChannel)) currentChannel=1;
+
+  // visibility (show/hide)
+  let visible;
+  try{ visible = JSON.parse(localStorage.getItem(visKey)||'null') || Object.fromEntries(BOSSES.map(b=>[b,true])); }
+  catch{ visible = Object.fromEntries(BOSSES.map(b=>[b,true])); }
+
+  // Channel dropdown
+  const chSel=$('channelSelect');
+  CHANNELS.forEach(ch=>{ const o=document.createElement('option'); o.value=ch; o.textContent='Channel '+ch; chSel.appendChild(o); });
+  chSel.value=currentChannel;
+  chSel.addEventListener('change', e=>{ currentChannel=parseInt(e.target.value,10); localStorage.setItem(chKey,currentChannel); render(true); });
+
+  // Show/Hide chips
+  const visBox=$('visChips');
+  function drawVisChips(){
+    visBox.innerHTML='';
+    BOSSES.forEach(b=>{
+      const lbl=document.createElement('label'); lbl.className='chip';
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!visible[b];
+      cb.addEventListener('change',()=>{ visible[b]=cb.checked; localStorage.setItem(visKey, JSON.stringify(visible)); render(true); });
+      lbl.appendChild(cb); lbl.appendChild(document.createTextNode(b));
+      visBox.appendChild(lbl);
+    });
+  }
+  drawVisChips();
+
+  // Presets (max 3)
+  let presets; try{ presets=JSON.parse(localStorage.getItem(presetsKey)||'null')||[]; } catch{ presets=[]; }
+  function savePresets(){ localStorage.setItem(presetsKey, JSON.stringify(presets)); drawPresetSelect(); }
+  function drawPresetSelect(){
+    const sel=$('presetSelect'); sel.innerHTML='';
+    if(!presets.length){ const o=document.createElement('option'); o.value=''; o.textContent='(no presets)'; sel.appendChild(o); return; }
+    presets.forEach((p,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=p.name; sel.appendChild(o); });
+  }
+  drawPresetSelect();
+
+  $('applyPresetBtn').addEventListener('click', ()=>{
+    const idx=$('presetSelect').value; if(idx===''||isNaN(idx)) return;
+    const p=presets[Number(idx)]; if(!p) return;
+    visible = {...p.visible};
+    localStorage.setItem(visKey, JSON.stringify(visible));
+    drawVisChips(); render(true);
+  });
+  $('savePresetBtn').addEventListener('click', ()=>{
+    const idx=$('presetSelect').value; if(idx===''||isNaN(idx)) return alert('Select a preset to save/overwrite.');
+    presets[Number(idx)] = {name: presets[Number(idx)].name, visible: {...visible}, created: Date.now()};
+    savePresets();
+  });
+  $('newPresetBtn').addEventListener('click', ()=>{
+    if(presets.length>=3) return alert('Maximum 3 presets. Please delete one before creating a new preset.');
+    const name=prompt('Preset name:'); if(!name) return;
+    presets.push({name, visible:{...visible}, created:Date.now()}); savePresets();
+  });
+  $('renamePresetBtn').addEventListener('click', ()=>{
+    const idx=$('presetSelect').value; if(idx===''||isNaN(idx)) return alert('Select a preset to rename.');
+    const p=presets[Number(idx)]; if(!p) return;
+    const name=prompt('New name:', p.name); if(!name) return;
+    p.name=name; savePresets();
+  });
+  $('deletePresetBtn').addEventListener('click', ()=>{
+    const idx=$('presetSelect').value; if(idx===''||isNaN(idx)) return alert('Select a preset to delete.');
+    if(!confirm('Delete selected preset?')) return;
+    presets.splice(Number(idx),1); savePresets();
+  });
+
+  // Helpers
+  function opts(max,ph){
+    const f=document.createDocumentFragment();
+    const o0=document.createElement('option'); o0.value=''; o0.textContent=ph; f.appendChild(o0);
+    for(let i=0;i<=max;i++){ const o=document.createElement('option'); o.value=String(i); o.textContent=String(i).padStart(2,'0'); f.appendChild(o); }
+    return f;
+  }
+
+  function makeCard(r){
+    const card=document.createElement('div'); card.className='boss-card'+(r.boss==='GOD'&&r.disabled?' disabled':'');
+    const rem=remain(r);
+
+    const head=document.createElement('div'); head.className='boss-head';
+    const left=document.createElement('div'); left.style.fontWeight='800'; left.textContent=r.boss;
+    const timer=document.createElement('div'); timer.className='t'; timer.dataset.boss=r.boss; timer.style.fontWeight='800'; timer.textContent=fmt(rem);
+    head.appendChild(left); head.appendChild(timer);
+
+    if(r.boss==='GOD'){
+      const toggleBtn=document.createElement('button'); toggleBtn.className='btn god-toggle'; toggleBtn.textContent=r.disabled?'Enable':'Disable';
+      toggleBtn.title='Disable/Enable GOD (bug marker)';
+      toggleBtn.addEventListener('click', ()=>{
+        rows=rows.map(x=> (x.boss==='GOD'&&x.channel===currentChannel)
+          ? {...x, disabled:!x.disabled, target:null, hh:'', mm:'', a3:false}
+          : x);
+        saveRows(); render(true);
+      });
+      head.appendChild(toggleBtn);
+    }else{
+      head.appendChild(document.createElement('div')); // spacer
+    }
+    card.appendChild(head);
+
+    const hour=document.createElement('select'); hour.className='select'; hour.dataset.role='timer-select';
+    hour.appendChild(opts(23,'Hour')); hour.value=r.hh??'';
+    hour.addEventListener('change',e=>{ rows=rows.map(x=>x.boss===r.boss&&x.channel===currentChannel? {...x,hh:e.target.value}:x); saveRows(); });
+
+    const minute=document.createElement('select'); minute.className='select'; minute.dataset.role='timer-select';
+    minute.appendChild(opts(59,'Minute')); minute.value=r.mm??'';
+    minute.addEventListener('change',e=>{ rows=rows.map(x=>x.boss===r.boss&&x.channel===currentChannel? {...x,mm:e.target.value}:x); saveRows(); });
+
+    const inputs=document.createElement('div'); inputs.className='inputs';
+    inputs.appendChild(hour); inputs.appendChild(minute);
+
+    const actions=document.createElement('div'); actions.className='actions';
+    const setB=document.createElement('button'); setB.className='btn'; setB.textContent='Set';
+    setB.addEventListener('click',()=>{
+      rows=rows.map(x=>{
+        if(x.boss!==r.boss||x.channel!==currentChannel) return x;
+        if(x.disabled && x.boss==='GOD') return {...x,target:null,a3:false};
+        const h=parseInt(x.hh||'0',10), m=parseInt(x.mm||'0',10);
+        if(!(Number.isFinite(h)&&Number.isFinite(m))||(h<=0&&m<=0)) return {...x,target:null,a3:false};
+        return {...x,target: nowMs() + (h*60+m)*60e3, a3:false};
+      });
+      saveRows(); render(true);
+    });
+    const clrB=document.createElement('button'); clrB.className='btn'; clrB.textContent='Clear';
+    clrB.addEventListener('click',()=>{
+      rows=rows.map(x=> x.boss===r.boss&&x.channel===currentChannel? {...x,hh:'',mm:'',target:null,a3:false}:x);
+      saveRows(); render(true);
+    });
+    actions.appendChild(setB); actions.appendChild(clrB);
+
+    card.appendChild(inputs); card.appendChild(actions);
+    return card;
+  }
+
+  // History
+  let history; try{ history=JSON.parse(localStorage.getItem(histKey)||'null')||[]; } catch{ history=[]; }
+  function pushHistory(entry){
+    history.unshift(entry); history=history.slice(0,5);
+    localStorage.setItem(histKey, JSON.stringify(history));
+  }
+  function drawHistory(){
+    const list=$('historyList'); list.innerHTML='';
+    if(!history.length){ const p=document.createElement('p'); p.className='small'; p.textContent='No recent events.'; list.appendChild(p); return; }
+    history.forEach(h=>{
+      const d=document.createElement('div'); d.className='history-item';
+      const when=new Date(h.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      d.innerHTML=`<span class="left">${h.boss} - CH ${h.channel}</span><span class="right">${when}</span>`;
+      list.appendChild(d);
+    });
+  }
+
+  // Sound
+  if(localStorage.getItem(soundKey)===null) localStorage.setItem(soundKey,'1');
+  $('soundToggle').checked = localStorage.getItem(soundKey)!=='0';
+  $('soundStyle').value = localStorage.getItem(styleKey)||'chime';
+  $('soundToggle').addEventListener('change',()=> localStorage.setItem(soundKey, $('soundToggle').checked?'1':'0'));
+  $('soundStyle').addEventListener('change',()=>{ localStorage.setItem(styleKey, $('soundStyle').value); playStyle($('soundStyle').value,true); });
+  $('resetAllBtn').addEventListener('click', ()=>{
+    if(!confirm('Reset all timers in all channels?')) return;
+    rows = rows.map(r=>({...r, hh:'', mm:'', target:null, a3:false, disabled:false})); // also clear disabled
+    saveRows(); render(true);
+  });
+
+  // Audio
+  let ctx=null, masterGain=null;
+  function ensureAudio(){ if(!ctx){ ctx=new (window.AudioContext||window.webkitAudioContext)(); masterGain=ctx.createGain(); masterGain.gain.value=0.8; masterGain.connect(ctx.destination);} }
+  function tone(freq,t0,dur,type='sine',attack=0.01,peak=0.6,decay=0.25){
+    const o=ctx.createOscillator(), g=ctx.createGain(); o.type=type;
+    const start=ctx.currentTime+t0; o.frequency.setValueAtTime(freq,start);
+    g.gain.setValueAtTime(0.0001,start); g.gain.exponentialRampToValueAtTime(peak,start+attack);
+    g.gain.exponentialRampToValueAtTime(0.0001,start+attack+decay);
+    o.connect(g); g.connect(masterGain); o.start(start); o.stop(start+dur);
+  }
+  function noise(t0,dur,level=0.12){
+    const sr=ctx.sampleRate||44100, frames=Math.floor(sr*dur), buf=ctx.createBuffer(1,frames,sr), data=buf.getChannelData(0);
+    for(let i=0;i<frames;i++) data[i]=(Math.random()*2-1)*Math.exp(-i/(frames/3));
+    const src=ctx.createBufferSource(); src.buffer=buf; const g=ctx.createGain(); g.gain.value=level; src.connect(g); g.connect(masterGain);
+    const start=ctx.currentTime+t0; src.start(start); src.stop(start+dur);
+  }
+  function playStyle(style, preview=false){
+    if(localStorage.getItem(soundKey)==='0' && !preview) return;
+    try{ ensureAudio();
+      if(style==='chime'){ tone(880,0,0.35,'sine',0.01,0.55,0.25); tone(1175,0.18,0.35,'sine',0.01,0.45,0.25); }
+      else if(style==='bell'){ tone(659,0,0.55,'triangle',0.01,0.7,0.42); tone(987,0.08,0.55,'triangle',0.01,0.55,0.42); noise(0,0.10,0.10); }
+      else if(style==='beep'){ tone(1000,0,0.16,'square',0.005,0.7,0.12); tone(1000,0.2,0.16,'square',0.005,0.7,0.12); tone(1000,0.4,0.16,'square',0.005,0.7,0.12); }
+      else { tone(784,0,0.22,'square',0.005,0.7,0.14); tone(988,0.22,0.22,'square',0.005,0.7,0.14); tone(1319,0.44,0.28,'square',0.005,0.7,0.14); noise(0.62,0.12,0.08); }
+    }catch(e){}
+  }
+
+  // Render
+  let interacting=false;
+  function isTimerSel(n){ return n && n.tagName==='SELECT' && n.dataset.role==='timer-select'; }
+  document.addEventListener('mousedown',e=>{ if(isTimerSel(e.target)) interacting=true; }, true);
+  document.addEventListener('focusin',e=>{ if(isTimerSel(e.target)) interacting=true; }, true);
+  document.addEventListener('change',e=>{ if(isTimerSel(e.target)) setTimeout(()=>{interacting=false;},150); }, true);
+  document.addEventListener('click',e=>{ if(interacting && !isTimerSel(e.target)) setTimeout(()=>{interacting=false;},150); }, true);
+
+  function render(full=false){
+    // Coming Soon (respects visibility) — format: "BOSS NAME - CH #" left, time right
+    const soon=rows
+      .filter(r=> visible[r.boss])
+      .map(r=>({...r,...remain(r)}))
+      .filter(r=>Number.isFinite(r.ms)&&r.ms>0)
+      .sort((a,b)=>a.ms-b.ms).slice(0,8);
+    const list=$('soonestList'); list.innerHTML='';
+    if(!soon.length){
+      const p=document.createElement('p'); p.className='small'; p.textContent='No active timers yet.'; list.appendChild(p);
+    } else {
+      soon.forEach(r=>{
+        const d=document.createElement('div'); d.className='list-item '+asClass(r.ms);
+        d.innerHTML=`<span class="left">${r.boss} - CH ${r.channel}</span>
+                     <span class="right">${fmt(r)}</span>`;
+        list.appendChild(d);
+      });
+    }
+
+    drawHistory();
+
+    // Cards for current channel (respect visibility)
+    const visibleRows = BOSSES.filter(b=>visible[b])
+      .map(b=> rows.find(r=>r.channel===currentChannel&&r.boss===b))
+      .filter(Boolean);
+
+    const grid=$('cards');
+    if(full){ grid.innerHTML=''; visibleRows.forEach(r=> grid.appendChild(makeCard(r))); }
+    else {
+      grid.querySelectorAll('.t').forEach(node=>{
+        const boss=node.dataset.boss;
+        const f=rows.find(x=>x.boss===boss&&x.channel===currentChannel);
+        if(f){
+          node.textContent=fmt(remain(f));
+          const card=node.closest('.boss-card');
+          if(card && boss==='GOD'){
+            if(f.disabled) card.classList.add('disabled'); else card.classList.remove('disabled');
+            const btn=card.querySelector('.god-toggle'); if(btn) btn.textContent = f.disabled?'Enable':'Disable';
+          }
+        }
+      });
+    }
+
+    // Alerts + clear on zero
+    rows=rows.map(r=>{
+      const rm=remain(r);
+      if(Number.isFinite(rm.ms) && rm.ms>0 && rm.ms<=180000 && r.target && !r.a3){
+        r={...r,a3:true}; playStyle($('soundStyle').value,false);
+      }
+      if(Number.isFinite(rm.ms) && rm.ms<=0 && r.target){
+        pushHistory({boss:r.boss,channel:r.channel,time:Date.now()});
+        return {...r,target:null,a3:false};
+      }
+      return r;
+    });
+    saveRows();
+  }
+
+  render(true);
+  setInterval(()=>{ if(!interacting) render(false); }, 1000);
+  playStyle($('soundStyle').value,true);
+});
+</script>
+</body>
+</html>
