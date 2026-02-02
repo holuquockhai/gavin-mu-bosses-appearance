@@ -24,12 +24,26 @@ const bosses = listBosses.map((boss, id)=>({
   title : boss
 }));
 
+const listChannels = [
+  {value: 1, title: "Channel 1"},
+  {value: 2, title: "Channel 2"},
+  {value: 3, title: "Channel 3"},
+  {value: 4, title: "Channel 4"},
+  {value: 5, title: "Channel 5"},
+  {value: 6, title: "Channel 6"},
+  {value: 7, title: "Channel 7"},
+  {value: 8, title: "Channel 8"},
+  {value: 9, title: "Channel 9"},
+  {value: 10, title: "Channel 10"},
+  {value: 11, title: "Channel 11"},
+]
+
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-      <div className='container-fluid vh-100 bg-black text-light ' data-bs-theme="dark">
+      <div className='container-fluid vh-100' >
 
         <div className='row wrap'>
           <div className='col-12 text-center'>
@@ -47,7 +61,7 @@ function App() {
           {/* <!-- LEFT --> */}
           <div className='col-3'><LeftNavigation/></div>
           
-          <div className='col-6'><MainContent bosses = {bosses}/></div>
+          <div className='col-6'><MainContent bosses = {bosses} channels = {listChannels}/></div>
 
           <div className='col-3'><RightNavigation/></div>
 
