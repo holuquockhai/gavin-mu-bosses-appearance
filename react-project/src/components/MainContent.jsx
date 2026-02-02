@@ -34,9 +34,9 @@ function MainContent({bosses, channels}){
                             </div>
                             <div className="col-7 hstack gap-2">
                                 <button className="btn btn-outline-secondary" id="applyPresetBtn">Apply</button>
-                                <button className="btn btn-outline-secondary" id="savePresetBtn">Save</button>
-                                <button className="btn btn-outline-secondary" id="newPresetBtn">New</button>
-                                <button className="btn btn-outline-secondary" id="renamePresetBtn">Rename</button>
+                                <button className="btn btn-outline-success" id="savePresetBtn">Save</button>
+                                <button className="btn btn-outline-primary" id="newPresetBtn">New</button>
+                                <button className="btn btn-outline-info" id="renamePresetBtn">Rename</button>
                                 <button type="button" className="btn btn-outline-danger" id="deletePresetBtn">Delete</button>
                             </div>
                         </div>
