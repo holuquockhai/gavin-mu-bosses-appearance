@@ -1,7 +1,7 @@
 function TopNavigation(){
     return(
         <>
-            <div className="top-right">
+            <div className="top-right top-right d-flex justify-content-endtop-right top-right d-flex justify-content-end fixed-top">
                 <button className="btn" id="resetAllBtn" title="Clear all timers in all channels">Reset All</button>
                 <label className="row small">
                 <input type="checkbox"/> Sound
