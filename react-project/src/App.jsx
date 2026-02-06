@@ -42,20 +42,20 @@ const listChannels = [
 function App() {
   const [count, setCount] = useState(0);
 
-  // Initialize state based on the current body data attribute or default to light
-  const [isDarkMode, setIsDarkMode] = useState(
-    document.documentElement.getAttribute('data-bs-theme') === 'dark'
-  );
+  // // Initialize state based on the current body data attribute or default to light
+  // const [isDarkMode, setIsDarkMode] = useState(
+  //   document.documentElement.getAttribute('data-bs-theme') === 'dark'
+  // );
 
-  useEffect(() => {
-    // When isDarkMode changes, update the data-bs-theme attribute on the body
-    document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
-    // You could also save the preference to localStorage here for persistence
-  }, [isDarkMode]);
+  // useEffect(() => {
+  //   // When isDarkMode changes, update the data-bs-theme attribute on the body
+  //   document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
+  //   // You could also save the preference to localStorage here for persistence
+  // }, [isDarkMode]);
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
+  // const toggleDarkMode = () => {
+  //   setIsDarkMode(!isDarkMode);
+  // };
 
   return (
     <>
@@ -64,13 +64,13 @@ function App() {
 
           <div className='row wrap'>
             <div className='col-12 text-center'>
-                <h1 className='p-3'>MU BOSS TIMER {isDarkMode}</h1>
+                <h1 className='p-3'>MU BOSS TIMER </h1>
             </div>
             
           </div>
 
           {/* === TOP NAVIGATION === */}
-          <TopNavigation isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} toggleDarkMode={toggleDarkMode}/>
+          <TopNavigation/>
           {/* === #TOP NAVIGATION === */}
 
           {/*<!-- ===== Main row ===== -->*/}

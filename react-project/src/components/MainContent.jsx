@@ -44,7 +44,7 @@ function MainContent({bosses, channels}){
                             <div className="col-5 hstack gap-2">
                                 <span className="small text-muted text-end text-end text-nowrap">Presets (max 3):</span>
                                 <select id="presetSelect" className="select form-select">
-                                    <option value="">(no presets)</option>
+                                    <option key={0} value="">(no presets)</option>
                                 </select>
                             </div>
                             <div className="col-7 hstack gap-2">
@@ -64,10 +64,10 @@ function MainContent({bosses, channels}){
             <div className="row justify-content-center mt-3">
                 <div className="channel-row unified col-4 ">
                     <select className="select form-select" id="channelSelect" title="Channel" aria-label="Default select example">
-                        <option selected>Open this select menu</option>
+                        <option key={0} defaultValue>Open this select menu</option>
                         {channels.map(
                             (channel) => (
-                                <option key= {channel.value} value={channel.value}>{channel.title}</option>
+                                <option key={channel.value} value={channel.value}>{channel.title}</option>
                             )
                         )}
                     </select>
@@ -75,8 +75,8 @@ function MainContent({bosses, channels}){
             </div>
 
             <div className="row">
-                {bosses.map((boss)=>(
-                    <BossTimerCard boss={boss} hoursList={hoursList} minuteList={minuteList}/>         
+                {bosses.map((boss, id)=>(
+                    <BossTimerCard key={id} boss={boss} hoursList={hoursList} minuteList={minuteList}/>         
                 ))}
                 
             </div>
