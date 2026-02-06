@@ -1,7 +1,8 @@
 $color-mode-type: data;
 
+
 @include color-mode(dark) {
-    #root {
+    #main-content {
         background-color: black;
     }
 
@@ -20,7 +21,7 @@ $color-mode-type: data;
             color: rgb(20 23 25 / 80%)
     }
 
-    #root {
+    #main-content {
         background-color: rgb(217 221 226);
     }
    

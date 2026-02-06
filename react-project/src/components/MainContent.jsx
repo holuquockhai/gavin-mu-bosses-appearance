@@ -1,8 +1,23 @@
+import BossTimerCard from "./BossTimerCard";
+
+
+
+
 function MainContent({bosses, channels}){
+    const hoursList = Array.from({ length: 25 }, (_, index) => ({
+        value: index.toString(),
+        label: String(index).padStart(2, "0")
+    }));
+
+    const minuteList = Array.from({ length: 61 }, (_, index) => ({
+        value: index.toString(),
+        label: String(index).padStart(2, "0")
+    }));
+
     return (
         <>
             {/*<!-- MIDDLE -->*/}
-            <div className="input-group">
+            <div className="row input-group">
                 <div className="p-3 card rounded-4 unified" id="showHideCard">
                     <div className="row">
                         <h5 className="card-title col-8">Show / Hide Boss Cards</h5>
@@ -46,14 +61,10 @@ function MainContent({bosses, channels}){
                 </div>
 
             </div>
-            <div className="row justify-content-center mt-3 mb-3">
+            <div className="row justify-content-center mt-3">
                 <div className="channel-row unified col-4 ">
                     <select className="select form-select" id="channelSelect" title="Channel" aria-label="Default select example">
                         <option selected>Open this select menu</option>
-                        {/* <option value="1">Channel 1</option>
-                        <option value="2">Channel 2</option>
-                        <option value="3">Channel 1</option> */}
-                        
                         {channels.map(
                             (channel) => (
                                 <option key= {channel.value} value={channel.value}>{channel.title}</option>
@@ -61,8 +72,13 @@ function MainContent({bosses, channels}){
                         )}
                     </select>
                 </div>
+            </div>
 
-                <div id="cards" className="unified"></div>
+            <div className="row">
+                {bosses.map((boss)=>(
+                    <BossTimerCard boss={boss} hoursList={hoursList} minuteList={minuteList}/>         
+                ))}
+                
             </div>
         </>
     );                                            
