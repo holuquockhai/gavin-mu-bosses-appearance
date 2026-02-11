@@ -1,4 +1,4 @@
-function LeftNavigation(){
+function LeftContent(){
     return(
         <>
             <div className="card p-3 rounded-4">
@@ -9,4 +9,4 @@ function LeftNavigation(){
     )
 }
 
-export default LeftNavigation
+export default LeftContent;

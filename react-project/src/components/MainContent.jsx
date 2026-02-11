@@ -1,8 +1,5 @@
 import BossTimerCard from "./BossTimerCard";
 
-
-
-
 function MainContent({bosses, channels}){
     const hoursList = Array.from({ length: 25 }, (_, index) => ({
         value: index.toString(),

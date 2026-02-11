@@ -1,4 +1,4 @@
-function RightNavigation(){
+function RightContent(){
     return(
         <>
             <aside className="side">
@@ -11,4 +11,4 @@ function RightNavigation(){
     );
 }
 
-export default RightNavigation
+export default RightContent;
