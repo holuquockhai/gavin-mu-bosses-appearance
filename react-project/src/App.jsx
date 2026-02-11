@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import TopContent from './components/TopContent'
+import TopNavigation from './components/TopNavigation'
 import LeftContent from './components/LeftContent'
 import MainContent from './components/MainContent'
 import RightContent from './components/RightContent'
@@ -59,20 +59,19 @@ function App() {
 
   return (
     <>
-      {/* === TOP NAVIGATION === */}
-          <TopContent/>
-      {/* === #TOP NAVIGATION === */}
+      <TopNavigation/>
+      
       <main>
-         <div id='main-content' className='container-fluid' >
+          <div id='main-content' className='container-fluid' >
           <div className='row wrap'>
             <div className='col-12 text-center'>
-                <h1 className='pt-4 pb-4 mb-0'>MU BOSS TIMER </h1>
+              <h1 className='pt-4 pb-4 mb-0'>MU BOSS TIMER </h1>
             </div>
-            
           </div>
-
+         
           {/*<!-- ===== Main row ===== -->*/}
           <section className="row main-row">
+            
             {/* <!-- LEFT --> */}
             <div className='col-3'><LeftContent/></div>
             
