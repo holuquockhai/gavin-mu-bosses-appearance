@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import BossTimerCard from "./BossTimerCard";
 
 function MainContent({bosses, channels}){
@@ -10,6 +11,16 @@ function MainContent({bosses, channels}){
         value: index.toString(),
         label: String(index).padStart(2, "0")
     }));
+
+    const [selectedBosses, setSelectedBosses] = useState([]);
+    
+    const handleCheckboxChange = (boss) => {
+        if (selectedBosses.includes(boss)) {
+            setSelectedBosses(selectedBosses.filter(item => item !== boss));
+        } else {
+            setSelectedBosses([...selectedBosses, boss]);
+        }
+    };
 
     return (
         <>
@@ -26,10 +37,15 @@ function MainContent({bosses, channels}){
                         <div className="chips d-flex flex-wrap" id="visChips">
                             {bosses.map((boss)=>(
                                 <div className="form-check form-switch pe-4" key={boss.id}>
-                                    <input className="form-check-input" type="checkbox" role="switch" id="switchCheckDefault"/>
-                                    <label className="form-check-label" htmlFor="switchCheckDefault">{boss.title}</label>
+                                    <input className="form-check-input" 
+                                    type="checkbox" 
+                                    role="switch" 
+                                    id={`switchCheck-${boss.title}`}
+                                    checked={selectedBosses.includes(boss)}
+                                    onChange={() => handleCheckboxChange(boss)}
+                                />
+                                    <label className="form-check-label" htmlFor={`switchCheck-${boss.title}`}>{boss.title}</label>
                                 </div>
-                                
                             ))}
                         </div>
                     </div>
@@ -73,7 +89,7 @@ function MainContent({bosses, channels}){
 
             <div className="row">
                 {bosses.map((boss, id)=>(
-                    <BossTimerCard key={id} boss={boss} hoursList={hoursList} minuteList={minuteList}/>         
+                    <BossTimerCard key={id} boss={boss} hoursList={hoursList} minuteList={minuteList} selectedBosses={selectedBosses} />         
                 ))}
                 
             </div>

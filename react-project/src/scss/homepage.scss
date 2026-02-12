@@ -1,6 +1,22 @@
 $color-mode-type: data;
+.boss-detail {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: all 0.5s ease-in-out;
+    transform: translateY(-10px);
+}
 
+.boss-detail.show {
+    max-height: 500px; /* Đảm bảo lớn hơn nội dung thẻ div */
+    opacity: 1;
+    transform: translateY(0);
+    margin-bottom: 1rem;
+}
 
+.page-title {
+    margin-top: 72px;
+}
 @include color-mode(dark) {
     #main-content {
         background-color: black;

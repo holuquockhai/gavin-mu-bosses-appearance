@@ -5,6 +5,7 @@ import TopNavigation from './components/TopNavigation'
 import LeftContent from './components/LeftContent'
 import MainContent from './components/MainContent'
 import RightContent from './components/RightContent'
+import BottomContent from './components/BottomContent'
 // import './App.css'
 
 const listBosses = [
@@ -16,7 +17,8 @@ const listBosses = [
   "Core",
   "Ferea",
   "Nyx",
-  "GOD"
+  "GOD",
+  "Hieu",
 ];
 
 const bosses = listBosses.map((boss, id)=>({
@@ -40,32 +42,32 @@ const listChannels = [
 
 
 function App() {
-  const [count, setCount] = useState(0);
 
-  // // Initialize state based on the current body data attribute or default to light
-  // const [isDarkMode, setIsDarkMode] = useState(
-  //   document.documentElement.getAttribute('data-bs-theme') === 'dark'
-  // );
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    return saved ? saved === "dark" : false;
+  });
 
-  // useEffect(() => {
-  //   // When isDarkMode changes, update the data-bs-theme attribute on the body
-  //   document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
-  //   // You could also save the preference to localStorage here for persistence
-  // }, [isDarkMode]);
+  useEffect(() => {
+    const theme = isDark ? "dark" : "light";
 
-  // const toggleDarkMode = () => {
-  //   setIsDarkMode(!isDarkMode);
-  // };
+    // Bootstrap 5.3 theme switch
+    document.documentElement.setAttribute("data-bs-theme", theme);
+
+    // Persist
+    localStorage.setItem("theme", theme);
+  }, [isDark]);
+
 
   return (
     <>
-      <TopNavigation/>
+      <TopNavigation isDark={isDark} setIsDark={setIsDark} />
       
       <main>
-          <div id='main-content' className='container-fluid' >
+          <div id='main-content' className='container-fluid min-vh-100' >
           <div className='row wrap'>
             <div className='col-12 text-center'>
-              <h1 className='pt-4 pb-4 mb-0'>MU BOSS TIMER </h1>
+              <h1 className='pt-4 pb-4 mb-0 page-title'>MU BOSS TIMER </h1>
             </div>
           </div>
          
@@ -81,10 +83,10 @@ function App() {
 
           </section>
           
+          <BottomContent/>
+          
         </div>
       </main>
-     
-     
     </>
   )
 }

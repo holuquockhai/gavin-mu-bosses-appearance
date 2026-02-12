@@ -1,6 +1,6 @@
 import LeftHiddenNavigation from "./LeftHiddenNavigation";
 import RightHiddenNavigation from "./RightHiddenNavigation";
-function TopNavigation(){
+function TopNavigation({isDark, setIsDark}){
     return (
         <>
             <nav className="navbar fixed-top bg-body-tertiary">
@@ -31,8 +31,8 @@ function TopNavigation(){
                     </div>
                 </div>
             </nav>
-            
-            <LeftHiddenNavigation/>
+
+            <LeftHiddenNavigation isDark={isDark} setIsDark={setIsDark}/>
             <RightHiddenNavigation/>
 
         </>

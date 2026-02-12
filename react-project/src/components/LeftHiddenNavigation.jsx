@@ -1,4 +1,4 @@
-function LeftHiddenNavigation(){
+function LeftHiddenNavigation({isDark, setIsDark}){
  return (
     <>
         <div className="offcanvas offcanvas-start" tabIndex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
@@ -18,15 +18,17 @@ function LeftHiddenNavigation(){
                             className="form-check-input" 
                             type="checkbox" 
                             role="switch" 
-                            id="switchCheckDefault"
+                            id="switchCheckDarkMode"
+                            checked={isDark}
+                            onChange={(e) => setIsDark(e.target.checked)}
                             />
 
-                            <label className="small form-check-label" htmlFor="switchCheckDefault">Dark mode</label>
+                            <label className="small form-check-label" htmlFor="switchCheckDarkMode">Dark mode</label>
                         </div>
 
                         <div className="form-check form-switch pe-4">
-                            <input className="form-check-input" type="checkbox" role="switch" id="switchCheckDefault"/>
-                            <label className="small form-check-label" htmlFor="switchCheckDefault">Sound</label>
+                            <input className="form-check-input" type="checkbox" role="switch" id="switchCheckSound"/>
+                            <label className="small form-check-label" htmlFor="switchCheckSound">Sound</label>
                         </div>
 
                         <select className="select form-select mt-3" id="soundStyle" title="Alert tone">
