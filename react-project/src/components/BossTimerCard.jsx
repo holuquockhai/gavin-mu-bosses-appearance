@@ -14,7 +14,7 @@ function BossTimerCard({boss, hoursList, minuteList, selectedBosses}){
             <div className="row mt-3 mb-3">
                 <div className="hstack gap-2" id="visChips">
                     <select id="presetSelect" className="select form-select">
-                        <option key={0} value="-1" defaultValue={0}>Select a value</option>
+                        <option key={0} value="-1" defaultValue={0}>Hour</option>
                         {hoursList.map(
                             (hour) => (
                                 <option key={hour.value} value={hour.value}>{hour.label}</option>
@@ -22,7 +22,7 @@ function BossTimerCard({boss, hoursList, minuteList, selectedBosses}){
                         )}
                     </select>
                     <select id="presetSelect" className="select form-select">
-                        <option key={0} value="-1">Select a value</option>
+                        <option key={0} value="-1">Minute</option>
                         {minuteList.map(
                             (minute) => (
                                 <option key= {minute.value} value={minute.value}>{minute.label}</option>
