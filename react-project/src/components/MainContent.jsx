@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
-import BossTimerCard from "./BossTimerCard";
+import { useSelector, useDispatch } from 'react-redux'
+import { markBossAsShowed } from '../js/bossSlice';
+import BossTimerCard from "./BossTimerCard"
 
-function MainContent({bosses, channels}){
+
+function MainContent({channels}){
+    const dispatch = useDispatch();
+
+    // Load bosses redux store values
+    const bosses = useSelector(state => state.bosses.value);
+
     const hoursList = Array.from({ length: 25 }, (_, index) => ({
         value: index.toString(),
         label: String(index).padStart(2, "0")
@@ -40,11 +48,11 @@ function MainContent({bosses, channels}){
                                     <input className="form-check-input" 
                                     type="checkbox" 
                                     role="switch" 
-                                    id={`switchCheck-${boss.title}`}
-                                    checked={selectedBosses.includes(boss)}
-                                    onChange={() => handleCheckboxChange(boss)}
+                                    id={`switchCheck-${boss.name}`}
+                                    checked={boss.isShowed}
+                                    onChange={(e) => dispatch(markBossAsShowed(boss.id))}
                                 />
-                                    <label className="form-check-label" htmlFor={`switchCheck-${boss.title}`}>{boss.title}</label>
+                                    <label className="form-check-label" htmlFor={`switchCheck-${boss.name}`}>{boss.name}</label>
                                 </div>
                             ))}
                         </div>
@@ -88,8 +96,8 @@ function MainContent({bosses, channels}){
             </div>
 
             <div className="row">
-                {bosses.map((boss, id)=>(
-                    <BossTimerCard key={id} boss={boss} hoursList={hoursList} minuteList={minuteList} selectedBosses={selectedBosses} />         
+                {bosses.map((boss)=>(
+                    <BossTimerCard key={boss.id} boss={boss} hoursList={hoursList} minuteList={minuteList} selectedBosses={selectedBosses} />         
                 ))}
                 
             </div>

@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import TopNavigation from './components/TopNavigation'
 import LeftContent from './components/LeftContent'
 import MainContent from './components/MainContent'
@@ -42,7 +40,6 @@ const listChannels = [
 
 
 function App() {
-
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     return saved ? saved === "dark" : false;
@@ -77,7 +74,7 @@ function App() {
             {/* <!-- LEFT --> */}
             <div className='col-3'><LeftContent/></div>
             
-            <div className='col-6'><MainContent bosses = {bosses} channels = {listChannels}/></div>
+            <div className='col-6'><MainContent channels = {listChannels}/></div>
 
             <div className='col-3'><RightContent/></div>
 

@@ -1,12 +1,12 @@
 function BossTimerCard({boss, hoursList, minuteList, selectedBosses}){
  return(
     <>
-    <div className={`boss-detail input-group ${selectedBosses.includes(boss) ? 'show mt-3 mb-0' : ''}`}>
+    <div className={`boss-detail input-group ${boss.isShowed ? 'show mt-3 mb-0' : ''}`}>
         <div className="col-12 p-3 card rounded-4 unified" id="showHideCard">
             <div className="row">
-                <h5 className="card-title col-8">{boss.title}</h5>
+                <h5 className="card-title col-8">{boss.name}</h5>
                 <span className="small col-4 text-muted text-end">
-                    <i className="bi bi-dash">mini</i>
+                    <button>Minimize</button>
                 </span>
             </div>
 
