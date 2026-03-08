@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { markBossAsShowed } from '../js/bossSlice';
-import BossTimerCard from "./BossTimerCard"
+import BossTimerCard from "./BossTimerCard";
+import PresetControlForm from './PresetControlForm';
 
 
-function MainContent({}){
+function MainContent(){
     const dispatch = useDispatch();
 
     // Load bosses redux store values
@@ -51,26 +52,7 @@ function MainContent({}){
                     </div>
                     {/** #Render bosses filter checkboxes */}
 
-                    {/** Preset control */}
-                    <div className="row justify-content-center">
-                        <div className="hstack gap-2">
-                            <div className="col-5 hstack gap-2">
-                                <span className="small text-muted text-end text-end text-nowrap">Presets (max 3):</span>
-                                <select id="presetSelect" className="select form-select">
-                                    <option key={0} value="">(no presets)</option>
-                                </select>
-                            </div>
-                            <div className="col-7 hstack gap-2">
-                                <button className="btn btn-outline-secondary" id="applyPresetBtn">Apply</button>
-                                <button className="btn btn-outline-success" id="savePresetBtn">Save</button>
-                                <button className="btn btn-outline-primary" id="newPresetBtn">New</button>
-                                <button className="btn btn-outline-info" id="renamePresetBtn">Rename</button>
-                                <button type="button" className="btn btn-outline-danger" id="deletePresetBtn">Delete</button>
-                            </div>
-                        </div>
-                        
-                    </div>
-                    {/** #Preset control */}
+                    <PresetControlForm />
                 </div>
 
             </div>

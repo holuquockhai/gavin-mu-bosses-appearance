@@ -7,6 +7,7 @@ import App from './App.jsx'
 import { bossesSlice } from './js/bossSlice.js'
 import { channelSlice } from './js/channelSlice.js'
 import { timerHourSlice, timerminuteSlice } from './js/timerSlice.js'
+import { presetSettingSlice } from './js/presetSlice.js'
 
 
 const store = configureStore({
@@ -14,7 +15,8 @@ const store = configureStore({
      bosses: bossesSlice.reducer,
      channels: channelSlice.reducer,
      timerHours: timerHourSlice.reducer,
-     timerMinutes: timerminuteSlice.reducer
+     timerMinutes: timerminuteSlice.reducer,
+     presetSettings: presetSettingSlice.reducer,
   },
 })
 
