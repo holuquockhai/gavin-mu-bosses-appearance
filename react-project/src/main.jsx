@@ -6,12 +6,15 @@ import { Provider } from "react-redux"
 import App from './App.jsx'
 import { bossesSlice } from './js/bossSlice.js'
 import { channelSlice } from './js/channelSlice.js'
+import { timerHourSlice, timerminuteSlice } from './js/timerSlice.js'
 
 
 const store = configureStore({
   reducer : {
      bosses: bossesSlice.reducer,
      channels: channelSlice.reducer,
+     timerHours: timerHourSlice.reducer,
+     timerMinutes: timerminuteSlice.reducer
   },
 })
 

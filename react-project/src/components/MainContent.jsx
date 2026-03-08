@@ -22,16 +22,6 @@ function MainContent({}){
         label: String(index).padStart(2, "0")
     }));
 
-    const [selectedBosses, setSelectedBosses] = useState([]);
-    
-    const handleCheckboxChange = (boss) => {
-        if (selectedBosses.includes(boss)) {
-            setSelectedBosses(selectedBosses.filter(item => item !== boss));
-        } else {
-            setSelectedBosses([...selectedBosses, boss]);
-        }
-    };
-
     return (
         <>
             {/*<!-- MIDDLE -->*/}
@@ -99,7 +89,7 @@ function MainContent({}){
 
             <div className="row">
                 {bosses.map((boss)=>(
-                    <BossTimerCard key={boss.id} boss={boss} hoursList={hoursList} minuteList={minuteList} selectedBosses={selectedBosses} />         
+                    <BossTimerCard key={boss.id} boss={boss} />         
                 ))}
                 
             </div>

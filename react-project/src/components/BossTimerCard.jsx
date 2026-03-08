@@ -1,8 +1,10 @@
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { markBossAsShowed } from '../js/bossSlice';
 
-function BossTimerCard({boss, hoursList, minuteList, selectedBosses}){
+function BossTimerCard({boss}){
     const dispatch = useDispatch();
+    const hoursList = useSelector(state => state.timerHours.value);
+    const minuteList = useSelector(state => state.timerMinutes.value);
     return(
         <>
         <div className={`boss-detail input-group ${boss.isShowed ? 'show mt-3 mb-0' : ''}`}>
