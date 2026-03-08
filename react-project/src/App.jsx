@@ -6,24 +6,6 @@ import RightContent from './components/RightContent'
 import BottomContent from './components/BottomContent'
 // import './App.css'
 
-const listBosses = [
-  "Kundun",
-  "Medusa",
-  "Nightmare",
-  "Selupan",
-  "Silvester",
-  "Core",
-  "Ferea",
-  "Nyx",
-  "GOD",
-  "Hieu",
-];
-
-const bosses = listBosses.map((boss, id)=>({
-  id: id,
-  title : boss
-}));
-
 const listChannels = [
   {value: 1, title: "Channel 1"},
   {value: 2, title: "Channel 2"},
@@ -74,7 +56,7 @@ function App() {
             {/* <!-- LEFT --> */}
             <div className='col-3'><LeftContent/></div>
             
-            <div className='col-6'><MainContent channels = {listChannels}/></div>
+            <div className='col-6'><MainContent /></div>
 
             <div className='col-3'><RightContent/></div>
 

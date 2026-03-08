@@ -4,11 +4,14 @@ import { markBossAsShowed } from '../js/bossSlice';
 import BossTimerCard from "./BossTimerCard"
 
 
-function MainContent({channels}){
+function MainContent({}){
     const dispatch = useDispatch();
 
     // Load bosses redux store values
     const bosses = useSelector(state => state.bosses.value);
+
+    const channels = useSelector(state => state.channels.value);
+    console.log(channels);
 
     const hoursList = Array.from({ length: 25 }, (_, index) => ({
         value: index.toString(),
@@ -88,7 +91,7 @@ function MainContent({channels}){
                         <option key={0} defaultValue>Open this select menu</option>
                         {channels.map(
                             (channel) => (
-                                <option key={channel.value} value={channel.value}>{channel.title}</option>
+                                <option key={channel.id} value={channel.name}>{channel.name}</option>
                             )
                         )}
                     </select>
