@@ -11,7 +11,6 @@ function MainContent({}){
     const bosses = useSelector(state => state.bosses.value);
 
     const channels = useSelector(state => state.channels.value);
-    console.log(channels);
 
     const hoursList = Array.from({ length: 25 }, (_, index) => ({
         value: index.toString(),
