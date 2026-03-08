@@ -32,7 +32,7 @@ export const bossesSlice = createSlice({
   reducers: {
     createBoss: (state, action) => {
       state.value = [...state.value, {
-        name: 'Medusa',
+        name: action.payload,
         isShowed: false,
       }];
     },
