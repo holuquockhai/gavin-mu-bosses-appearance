@@ -1,7 +1,16 @@
 import { useDispatch } from "react-redux";
 import { createPreset } from "../js/presetSlice";
+import { useState } from "react";
+
 function PresetModal({presetModalState}){
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
+    const [presetName, setPresetName] = useState("") ;
+
+    const handleInputChange = (event) => {
+        // Access the new value via event.target.value
+        setPresetName(event.target.value);
+        // console.log('Current value:', event.target.value);
+    };
 
     // Generate modal title by state number
     const  generateModalTitle = () => {
@@ -11,7 +20,7 @@ function PresetModal({presetModalState}){
                 case 2: 
                     return "Rename";
                 case 3:
-                    return "Delete"
+                    return "Delete";
             }
     }
 
@@ -26,12 +35,17 @@ function PresetModal({presetModalState}){
                         <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div className="modal-body">
+                        {presetModalState !== 3 ? ( 
                         <form>
                             <div className="mb-3">
                                 <label htmlFor="preset-name" className="col-form-label">Preset Name:</label>
-                                <input type="text" className="form-control" id="preset-name"/>
+                                <input type="text" value={presetName} className="form-control" id="preset-name" onChange={handleInputChange}/>
                             </div>
-                        </form>
+                        </form> ) : (
+                            <div className="mb-3">
+                                <p>Are you sure to delete this preset?</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="modal-footer">
@@ -44,7 +58,18 @@ function PresetModal({presetModalState}){
                         ) : (
                             <>
                                 <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="button" className="btn btn-primary">Save</button>
+                                <button type="button" className="btn btn-primary" data-bs-dismiss="modal"
+                                onClick={(e) => {
+                                    if (presetModalState === 1) {
+                                        dispatch(createPreset(presetName)) 
+                                    }
+                                        
+                                    else{
+                                        e.defaultPrevented 
+                                    }
+                                        }}>
+                                    Save
+                                </button>
                             </>
                         )}
                         

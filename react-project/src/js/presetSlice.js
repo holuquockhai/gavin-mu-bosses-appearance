@@ -24,13 +24,13 @@ export const presetSettingSlice = createSlice({
         },
         ],
     },
-    reducer: {
-        createPreset: (state, action) => {
-            state.value = [...state, {
-                id: 5,
+    reducers: {
+        createPreset: (state, action) =>{ 
+            state.value = [...state.value, {
+                id:5,
                 name: action.payload,
             }]
-        }
+        },
     }
 });
 
