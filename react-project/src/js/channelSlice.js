@@ -25,6 +25,7 @@ export const channelSlice = createSlice({
                 name: action.payload,
             }]
         },
+        
         deleteChannel : (state, action) => {
             const name = action.payload;
             state.value = state.value.filter(t => t.name !== name);

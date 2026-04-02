@@ -13,18 +13,12 @@ function MainContent(){
 
     const channels = useSelector(state => state.channels.value);
 
-    const hoursList = Array.from({ length: 25 }, (_, index) => ({
-        value: index.toString(),
-        label: String(index).padStart(2, "0")
-    }));
-
-    const minuteList = Array.from({ length: 61 }, (_, index) => ({
-        value: index.toString(),
-        label: String(index).padStart(2, "0")
-    }));
+    // use currentPreset usestate to determine preset's showed cards
+    const [currenPreset, setCurrentPreset] = useState({});
 
     return (
         <>
+        
             {/*<!-- MIDDLE -->*/}
             <div className="row input-group">
                 <div className="p-3 card rounded-4 unified" id="showHideCard">

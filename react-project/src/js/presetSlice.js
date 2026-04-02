@@ -5,33 +5,28 @@ export const presetSettingSlice = createSlice({
 
     // Innitial bosses list
     initialState: {
-        value: [
-        {
-            id: 1,
-            name: "Setting 1",
-        },
-        {
-            id: 2,
-            name: "Setting 2",
-        },
-        {
-            id: 3,
-            name: "Setting 3",
-        },
-        {
-            id: 4,
-            name: "Setting 4",
-        },
-        ],
+        value: [],
     },
+
     reducers: {
         createPreset: (state, action) =>{ 
             state.value = [...state.value, {
                 id:5,
                 name: action.payload,
+                data: [],
             }]
+        },
+        
+        //@todo: update preset name based on Perset ID
+        renamePreset: (state, action) => {
+            console.log(action.payload);
+        },
+
+        deletePreset: (state, action) => {
+            const id = action.payload;
+            state.value = state.value.filter(t => t.id !== id);
         },
     }
 });
 
-export const {createPreset} = presetSettingSlice.actions;
+export const {createPreset, renamePreset,  deletePreset} = presetSettingSlice.actions;
