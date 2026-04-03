@@ -1,0 +1,12 @@
+.idea/*
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.env
+
+# FastAPI / general
+*.log

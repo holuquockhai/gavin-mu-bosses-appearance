@@ -1,11 +1,18 @@
-from sqlalchemy.orm import Session
-from app.models.user import User
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
+
+from app.core.security import create_access_token, hash_password, verify_password
 from app.models.role import Role
-from app.core.security import hash_password, verify_password, create_access_token
+from app.models.user import User
 
 
 def get_user_by_email(db: Session, email: str) -> User | None:
-    return db.query(User).filter(User.email == email).first()
+    stmt = (
+        select(User)
+        .options(selectinload(User.roles).selectinload(Role.permissions))
+        .where(User.email == email)
+    )
+    return db.execute(stmt).scalar_one_or_none()
 
 
 def register_user(
@@ -18,7 +25,10 @@ def register_user(
     if existing_user:
         raise ValueError("Email already registered")
 
-    default_role = db.query(Role).filter(Role.name == "user").first()
+    default_role = db.execute(
+        select(Role).where(Role.name == "user")
+    ).scalar_one_or_none()
+
     if not default_role:
         raise ValueError("Default role 'user' does not exist")
 
@@ -36,24 +46,26 @@ def register_user(
     return user
 
 
-def authenticate_user(db: Session, email: str, password: str) -> User | None:
+def authenticate_user(db: Session, email: str, password: str):
     user = get_user_by_email(db, email)
+
     if not user:
-        return None
+        return None, "invalid_credentials"
 
     if not verify_password(password, user.hashed_password):
-        return None
+        return None, "invalid_credentials"
 
     if not user.is_active:
-        return None
+        return None, "inactive"
 
-    return user
+    return user, None
 
 
-def login_user(db: Session, email: str, password: str) -> str | None:
-    user = authenticate_user(db, email, password)
-    if not user:
-        return None
+def login_user(db: Session, email: str, password: str):
+    user, error = authenticate_user(db, email, password)
+
+    if error:
+        return None, error
 
     token = create_access_token(
         {
@@ -61,4 +73,4 @@ def login_user(db: Session, email: str, password: str) -> str | None:
             "email": user.email,
         }
     )
-    return token
+    return token, None

@@ -6,7 +6,7 @@ def get_user_role_names(user: User) -> list[str]:
 
 
 def get_user_permission_names(user: User) -> set[str]:
-    permissions = set()
+    permissions: set[str] = set()
     for role in user.roles:
         for permission in role.permissions:
             permissions.add(permission.name)
