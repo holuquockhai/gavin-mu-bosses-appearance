@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../api/auth";
+import background from "../assets/images/bg/login_bg1.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -21,75 +22,79 @@ const Login = () => {
       navigate("/");
     } catch (err) {
       setError(
-        err.response?.data?.detail || "Login failed. Please check your credentials."
+        err.response?.data?.detail ||
+          "Login failed. Please check your credentials.",
       );
     }
   };
 
   return (
-    <div style={styles.container}>
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <h2>Login</h2>
+    <>
+      <section className="vh-100">
+        <div className="container py-5 h-100">
+          <div className="row d-flex align-items-center justify-content-center h-100">
+            <div className="col-md-8 col-lg-7 col-xl-6">
+              <img src={background} className="img-fluid" alt="Phone image" />
+            </div>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={styles.input}
-          required
-        />
+            <div className="col-md-7 col-lg-5 col-xl-5">
+              <form onSubmit={handleSubmit}>
+                <h1>Welcome back</h1>
+                <div data-mdb-input-init className="form-outline mb-4">
+                  <input
+                    type="email"
+                    id="form1Example13"
+                    className="form-control form-control-lg"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={styles.input}
-          required
-        />
+                <div data-mdb-input-init className="form-outline mb-4">
+                  <input
+                    type="password"
+                    id="form1Example23"
+                    placeholder="Password"
+                    value={password}
+                    className="form-control form-control-lg"
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
 
-        {error && <p style={styles.error}>{error}</p>}
+                <div className="d-flex justify-content-around align-items-center mb-4">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      value=""
+                      id="form1Example3"
+                    />
+                    <label className="form-check-label" htmlFor="form1Example3">
+                      {" "}
+                      Remember me{" "}
+                    </label>
+                  </div>
+                  <a href="#!">Forgot password?</a>
+                </div>
 
-        <button type="submit" style={styles.button}>
-          Login
-        </button>
-      </form>
-    </div>
+                <button
+                  type="submit"
+                  data-mdb-button-init
+                  data-mdb-ripple-init
+                  className="btn btn-primary btn-lg btn-block"
+                >
+                  Sign in
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
-};
-
-const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "100vh",
-    background: "#f4f4f4",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    width: "320px",
-    padding: "24px",
-    background: "#fff",
-    borderRadius: "8px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-  },
-  input: {
-    marginBottom: "12px",
-    padding: "10px",
-    fontSize: "16px",
-  },
-  button: {
-    padding: "10px",
-    fontSize: "16px",
-    cursor: "pointer",
-  },
-  error: {
-    color: "red",
-    marginBottom: "12px",
-  },
 };
 
 export default Login;
