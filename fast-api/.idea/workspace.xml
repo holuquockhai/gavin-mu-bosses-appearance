@@ -5,17 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/db/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/dependencies/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/dependencies/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routers/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/auth_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/auth_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/rbac_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/rbac_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ignore" beforeDir="false" afterPath="$PROJECT_DIR$/.ignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -126,7 +116,7 @@
       <option name="presentableId" value="Default" />
       <updated>1775107608457</updated>
       <workItem from="1775107609492" duration="14009000" />
-      <workItem from="1775187007614" duration="1187000" />
+      <workItem from="1775187007614" duration="1246000" />
     </task>
     <servers />
   </component>
