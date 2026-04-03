@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
-import { markBossAsShowed } from '../js/bossSlice';
+import { markBossAsShowed } from '../../js/bossSlice';
 import BossTimerCard from "./BossTimerCard";
 import PresetControlForm from './PresetControlForm';
 

@@ -1,8 +1,8 @@
 import { useDispatch } from "react-redux";
-import { createPreset } from "../js/presetSlice";
+import { createPreset, deletePreset } from "../../js/presetSlice";
 import { useState } from "react";
 
-function PresetModal({presetModalState}){
+function PresetModal({presetModalState, currenPreset}){
     const dispatch = useDispatch();
     const [presetName, setPresetName] = useState("") ;
 
@@ -52,7 +52,10 @@ function PresetModal({presetModalState}){
                         {presetModalState === 3 ? (
                             <>
                                 <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" className="btn btn-danger">Delete</button>
+                                <button type="button" className="btn btn-danger" 
+                                    onClick={(e) => dispatch(deletePreset())}                                >
+                                    Delete
+                                </button>
                             </>
                            
                         ) : (

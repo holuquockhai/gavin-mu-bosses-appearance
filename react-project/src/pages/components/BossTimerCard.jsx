@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { markBossAsShowed } from '../js/bossSlice';
+import { markBossAsShowed } from '../../js/bossSlice';
 
 function BossTimerCard({boss}){
     const dispatch = useDispatch();

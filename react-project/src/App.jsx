@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import TopNavigation from './components/TopNavigation'
-import LeftContent from './components/LeftContent'
-import MainContent from './components/MainContent'
-import RightContent from './components/RightContent'
-import BottomContent from './components/BottomContent'
+import TopNavigation from './pages/components/TopNavigation'
+import LeftContent from './pages/components/LeftContent'
+import MainContent from './pages/components/MainContent'
+import RightContent from './pages/components/RightContent'
+import BottomContent from './pages/components/BottomContent'
 // import './App.css'
 
 const listChannels = [
