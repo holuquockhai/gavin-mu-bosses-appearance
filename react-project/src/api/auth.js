@@ -5,16 +5,22 @@ const API = axios.create({
 });
 
 export const loginUser = async (email, password) => {
-  const formData = new URLSearchParams();
-  formData.append("username", email); // FastAPI OAuth2PasswordRequestForm uses "username"
-  formData.append("password", password);
+//   const formData = new URLSearchParams();
+//   formData.append("email", email); // FastAPI OAuth2PasswordRequestForm uses "username"
+//   formData.append("password", password);
 
-  const response = await API.post("/auth/login", formData, {
+  const response = await API.post("/auth/login", 
+    {
+        "email": email,
+        "password":password
+    }, 
+    
+    {
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Type": "application/json",
     },
   });
-
+  console.log(response.data)
   return response.data;
 };
 

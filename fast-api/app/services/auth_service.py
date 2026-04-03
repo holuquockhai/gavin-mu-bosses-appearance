@@ -1,3 +1,4 @@
+from pydantic.v1 import EmailStr
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -17,7 +18,7 @@ def get_user_by_email(db: Session, email: str) -> User | None:
 
 def register_user(
     db: Session,
-    email: str,
+    email: EmailStr,
     password: str,
     full_name: str | None = None,
 ) -> User:
@@ -46,7 +47,7 @@ def register_user(
     return user
 
 
-def authenticate_user(db: Session, email: str, password: str):
+def authenticate_user(db: Session, email: EmailStr, password: str):
     user = get_user_by_email(db, email)
 
     if not user:
@@ -61,7 +62,7 @@ def authenticate_user(db: Session, email: str, password: str):
     return user, None
 
 
-def login_user(db: Session, email: str, password: str):
+def login_user(db: Session, email: EmailStr, password: str):
     user, error = authenticate_user(db, email, password)
 
     if error:
