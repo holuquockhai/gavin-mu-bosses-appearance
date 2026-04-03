@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../api/auth";
 import background from "../assets/images/bg/login_bg1.png";
+import "../scss/login_page.scss";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -28,17 +29,20 @@ const Login = () => {
     }
   };
 
+  const root = document.getElementById("root");
+  root.classList.add("login-page");
+
   return (
     <>
       <section className="vh-100">
-        <div className="container py-5 h-100">
-          <div className="row d-flex align-items-center justify-content-center h-100">
-            <div className="col-md-8 col-lg-7 col-xl-6">
+        <div className="container py-5 h-100 ">
+          <div className="row d-flex align-items-center justify-content-center h-100 wrapper">
+            <div className="col-md-8 col-lg-7 col-xl-6 left-image">
               <img src={background} className="img-fluid" alt="Phone image" />
             </div>
 
-            <div className="col-md-7 col-lg-5 col-xl-5">
-              <form onSubmit={handleSubmit}>
+            <div className="col-md-7 col-lg-5 col-xl-5 login-form-wrapper p-3 rounded-5">
+              <form onSubmit={handleSubmit} id="login-form">
                 <h1>Welcome back</h1>
                 <div data-mdb-input-init className="form-outline mb-4">
                   <input
@@ -84,7 +88,7 @@ const Login = () => {
                   type="submit"
                   data-mdb-button-init
                   data-mdb-ripple-init
-                  className="btn btn-primary btn-lg btn-block"
+                  className="btn btn-primary btn-lg btn-block small"
                 >
                   Sign in
                 </button>

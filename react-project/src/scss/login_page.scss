@@ -1,0 +1,29 @@
+.login-page{
+    // background-image: url("../assets/images/bg/login-bg-color.jpg");
+}
+
+.wrapper{
+    position: relative;
+}
+
+.left-image{
+    position: absolute;
+    left: -50px;
+    z-index: -1;
+}
+
+.login-form-wrapper{
+    background-color: rgba(255, 255, 255, 0.3);
+    border: 1px solid #dee2e6;
+}
+
+#login-form button{
+    background-color: #CB8E53;
+    color: #E2DEE0;
+    border: none;
+}
+
+#login-form button:hover{
+    background-color: #784D27;
+    color: #fff;
+}
