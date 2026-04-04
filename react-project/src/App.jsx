@@ -4,8 +4,6 @@ import Landing from "./pages/Landing";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  const token = localStorage.getItem("access_token");
-
   return (
     <BrowserRouter>
       <Routes>
