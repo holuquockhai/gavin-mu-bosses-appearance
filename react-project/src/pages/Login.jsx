@@ -43,12 +43,19 @@ const Login = () => {
 
             <div className="col-md-7 col-lg-5 col-xl-5 login-form-wrapper p-3 rounded-5">
               <form onSubmit={handleSubmit} id="login-form">
-                <h1>Welcome back</h1>
-                <div data-mdb-input-init className="form-outline mb-4">
+                <h2>Welcome back</h2>
+
+                {error && (
+                  <p>
+                    <code className="error-message">{error}</code>
+                  </p>
+                )}
+
+                <div data-mdb-input-init className="form-group mb-4">
                   <input
                     type="email"
                     id="form1Example13"
-                    className="form-control form-control-lg"
+                    className="form-control"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -56,13 +63,13 @@ const Login = () => {
                   />
                 </div>
 
-                <div data-mdb-input-init className="form-outline mb-4">
+                <div data-mdb-input-init className="form-group mb-4">
                   <input
                     type="password"
                     id="form1Example23"
                     placeholder="Password"
                     value={password}
-                    className="form-control form-control-lg"
+                    className="form-control"
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
@@ -88,7 +95,7 @@ const Login = () => {
                   type="submit"
                   data-mdb-button-init
                   data-mdb-ripple-init
-                  className="btn btn-primary btn-lg btn-block small"
+                  className="btn btn-primary btn-block"
                 >
                   Sign in
                 </button>
