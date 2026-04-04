@@ -9,10 +9,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/login"
-          element={token ? <Navigate to="/" replace /> : <Login />}
-        />
+        <Route path="/login" element={<Login />} />
 
         <Route
           path="/"
@@ -23,7 +20,7 @@ function App() {
           }
         />
 
-        <Route path="*" element={<Navigate to={token ? "/" : "/login"} replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
