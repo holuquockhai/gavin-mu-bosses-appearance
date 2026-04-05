@@ -1,26 +1,10 @@
-import { useState, useEffect } from "react";
 import TopNavigation from "./components/TopNavigation";
 import LeftContent from "./components/LeftContent";
 import MainContent from "./components/MainContent";
 import RightContent from "./components/RightContent";
 import BottomContent from "./components/BottomContent";
 
-const Landing = () => {
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem("theme");
-    return saved ? saved === "dark" : false;
-  });
-
-  useEffect(() => {
-    const theme = isDark ? "dark" : "light";
-
-    // Bootstrap 5.3 theme switch
-    document.documentElement.setAttribute("data-bs-theme", theme);
-
-    // Persist
-    localStorage.setItem("theme", theme);
-  }, [isDark]);
-
+const Landing = ({ isDark, setIsDark }) => {
   return (
     <>
       <TopNavigation isDark={isDark} setIsDark={setIsDark} />

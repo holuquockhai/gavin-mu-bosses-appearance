@@ -47,9 +47,9 @@ const Login = () => {
       <section className="vh-100">
         <div className="container py-5 h-100 ">
           <div className="row d-flex align-items-center justify-content-center h-100 wrapper">
-            <div className="col-md-8 col-lg-7 col-xl-6 left-image">
+            {/* <div className="col-md-8 col-lg-7 col-xl-6 left-image">
               <img src={background} className="img-fluid" alt="Phone image" />
-            </div>
+            </div> */}
 
             <div className="col-md-7 col-lg-5 col-xl-5 login-form-wrapper p-3 rounded-5">
               <form onSubmit={handleSubmit} id="login-form">

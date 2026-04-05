@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import LeftHiddenNavigation from "./LeftHiddenNavigation";
 import RightHiddenNavigation from "./RightHiddenNavigation";
+
 function TopNavigation({ isDark, setIsDark }) {
   const navigate = useNavigate();
 
@@ -62,7 +63,6 @@ function TopNavigation({ isDark, setIsDark }) {
           </div>
         </div>
       </nav>
-
       <LeftHiddenNavigation isDark={isDark} setIsDark={setIsDark} />
       <RightHiddenNavigation />
     </>
