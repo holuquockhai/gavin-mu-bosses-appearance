@@ -11,6 +11,10 @@
       <change beforePath="$PROJECT_DIR$/app/models/permission.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/permission.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models/role.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/role.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/users.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/auth.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

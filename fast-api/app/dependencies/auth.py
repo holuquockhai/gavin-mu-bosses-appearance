@@ -12,6 +12,7 @@ from app.services.rbac_service import user_has_role, user_has_permission
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
+# Get current user
 def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)],
@@ -48,6 +49,7 @@ def get_current_user(
 
     return user
 
+# Check User Roles
 def require_roles(allowed_roles: list[str]):
     def checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
         if not any(user_has_role(current_user, role) for role in allowed_roles):
@@ -55,6 +57,7 @@ def require_roles(allowed_roles: list[str]):
         return current_user
     return checker
 
+# Check user permission
 def require_permissions(required_permissions: list[str]):
     def checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
         for permission in required_permissions:

@@ -8,6 +8,7 @@ from app.models.role import user_roles
 if TYPE_CHECKING:
     from app.models.role import Role
 
+#User Model
 class User(Base):
     __tablename__ = "users"
 

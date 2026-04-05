@@ -8,6 +8,7 @@ from app.models.role import role_permissions
 if TYPE_CHECKING:
     from app.models.role import Role
 
+# Permission model
 class Permission(Base):
     __tablename__ = "permissions"
 

@@ -22,6 +22,7 @@ role_permissions = Table(
     Column("permission_id", ForeignKey("permissions.id"), primary_key=True),
 )
 
+# Role Model
 class Role(Base):
     __tablename__ = "roles"
 

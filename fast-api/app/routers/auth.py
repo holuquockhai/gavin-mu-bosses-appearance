@@ -11,7 +11,7 @@ from app.services.auth_service import login_user, register_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-
+# Register User Router
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(
     data: RegisterRequest,
@@ -31,6 +31,7 @@ def register(
         )
 
 
+# Login Router
 @router.post("/login", response_model=TokenResponse)
 def login(
     data: LoginRequest,

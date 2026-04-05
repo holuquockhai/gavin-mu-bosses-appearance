@@ -14,6 +14,7 @@ router = APIRouter(
 )
 
 
+#Create Roles URI
 @router.post("/roles")
 def create_role(name: str, description: str | None = None, db: Session = Depends(get_db)):
     existing = db.query(Role).filter(Role.name == name).first()
@@ -27,6 +28,7 @@ def create_role(name: str, description: str | None = None, db: Session = Depends
     return role
 
 
+# Create permission URL
 @router.post("/permissions")
 def create_permission(name: str, description: str | None = None, db: Session = Depends(get_db)):
     existing = db.query(Permission).filter(Permission.name == name).first()
@@ -40,6 +42,7 @@ def create_permission(name: str, description: str | None = None, db: Session = D
     return permission
 
 
+# Assign role and permission
 @router.post("/roles/{role_id}/permissions/{permission_id}")
 def assign_permission_to_role(role_id: int, permission_id: int, db: Session = Depends(get_db)):
     role = db.query(Role).filter(Role.id == role_id).first()
@@ -55,6 +58,7 @@ def assign_permission_to_role(role_id: int, permission_id: int, db: Session = De
     return {"message": "Permission assigned to role"}
 
 
+# Assign Roles to User
 @router.post("/users/{user_id}/roles/{role_id}")
 def assign_role_to_user(user_id: int, role_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
