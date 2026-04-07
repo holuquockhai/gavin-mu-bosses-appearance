@@ -1,0 +1,38 @@
+[
+    {
+        id: 1,
+        name: "Kundun"
+    },
+    {
+        id: 2,
+        name: "Medusa"
+    },
+    {
+        id: 3,
+        name: Nightmare
+    },
+    {
+        id: 4,
+        name: "Selupan"
+    },
+    {
+        id: 5,
+        name: "Silvester"
+    },
+    {
+        id: 6,
+        name: "Core"
+    },
+    {
+        id: 7,
+        name: "Ferea"
+    },
+    {
+        id: 8,
+        name: "Nyx"
+    },
+    {
+        id: 9,
+        name: "GOD"
+    }
+]

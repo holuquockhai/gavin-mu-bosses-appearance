@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr
 
-
 class RegisterRequest(BaseModel):
     email: EmailStr
     full_name: str | None = None
