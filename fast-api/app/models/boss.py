@@ -1,24 +1,23 @@
-from symtable import Class
-from typing import TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import String, Boolean, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, DateTime
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.db.database import Base
+
 
 class Boss(Base):
     __tablename__ = "bosses"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    
-    # Stores both date and time; timezone-aware if supported by DB
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
+        DateTime, default=datetime.utcnow, nullable=False
     )
 
-    # Automatically updates on every record change
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        onupdate=func.now()
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
     )
