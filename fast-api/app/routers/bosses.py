@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.schemas.boss import BossCreate, BossResponse
-from app.services.boss_service import create_boss, get_bosses, get_boss, delete_boss
+from app.services.boss_service import create_boss, get_bosses, get_bosse_by_name, get_boss, delete_boss
 from app.dependencies.auth import require_permissions
 
 router = APIRouter(prefix="/bosses", tags=["bosses"])
@@ -13,6 +13,12 @@ router = APIRouter(prefix="/bosses", tags=["bosses"])
 @router.post("/", response_model=BossResponse,
              dependencies=[Depends(require_permissions(["boss:create"]))])
 def create(data: BossCreate, db: Annotated[Session, Depends(get_db)]):
+    boss = get_bosse_by_name(db, data.name)
+
+    #Check if boss exist or not, then create new boss
+    if boss:
+        raise HTTPException(status_code=400, detail="Boss already exists")
+
     return create_boss(db, data.name)
 
 
@@ -20,7 +26,6 @@ def create(data: BossCreate, db: Annotated[Session, Depends(get_db)]):
             dependencies=[Depends(require_permissions(["boss:read"]))])
 def list_all(db: Annotated[Session, Depends(get_db)]):
     return get_bosses(db)
-
 
 @router.get("/{boss_id}", response_model=BossResponse,
             dependencies=[Depends(require_permissions(["boss:read"]))])
