@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="" />
+    <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/bosses.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/bosses.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/boss_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/boss_service.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -47,7 +51,7 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;backend&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/holuquockhai/Documents/Gavin/gavin-mu-bosses-appearance/fast-api&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,

@@ -11,6 +11,12 @@ def seed_admin(db: Session):
         "user:read",
         "user:update",
         "user:delete",
+
+        "boss:create",
+        "boss:read",
+        "boss:update",
+        "boss:delete",
+
         "rbac:manage",
     ]
 
@@ -25,6 +31,7 @@ def seed_admin(db: Session):
         permissions[name] = permission
 
     admin_role = db.query(Role).filter_by(name="admin").first()
+
     if not admin_role:
         admin_role = Role(name="admin", description="Administrator")
         db.add(admin_role)

@@ -1,40 +1,29 @@
-import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem("theme");
-    return saved ? saved === "dark" : false;
-  });
-
-  useEffect(() => {
-    const theme = isDark ? "dark" : "light";
-
-    // Bootstrap 5.3 theme switch
-    document.documentElement.setAttribute("data-bs-theme", theme);
-
-    // Persist
-    localStorage.setItem("theme", theme);
-  }, [isDark]);
+  const token = localStorage.getItem("access_token");
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/login"
+          element={token ? <Navigate to="/" replace /> : <Login />}
+        />
 
         <Route
           path="/"
           element={
             <ProtectedRoute>
-              <Landing isDark={isDark} setIsDark={setIsDark} />
+              <Landing />
             </ProtectedRoute>
           }
         />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={token ? "/" : "/login"} replace />} />
       </Routes>
     </BrowserRouter>
   );
