@@ -1,14 +1,23 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import { loginUser } from "../api/auth";
 import background from "../assets/images/bg/login_bg1.png";
 import "../scss/login_page.scss";
 
 const Login = () => {
+  const token = localStorage.getItem("access_token");
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+
+  const from = location.state?.from?.pathname || "/";
+
+  if (token) {
+    return <Navigate to={from} replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +29,8 @@ const Login = () => {
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("token_type", data.token_type);
 
-      navigate("/");
+      localStorage.setItem("access_token", res.data.access_token);
+      navigate(from, { replace: true });
     } catch (err) {
       setError(
         err.response?.data?.detail ||
@@ -37,18 +47,25 @@ const Login = () => {
       <section className="vh-100">
         <div className="container py-5 h-100 ">
           <div className="row d-flex align-items-center justify-content-center h-100 wrapper">
-            <div className="col-md-8 col-lg-7 col-xl-6 left-image">
+            {/* <div className="col-md-8 col-lg-7 col-xl-6 left-image">
               <img src={background} className="img-fluid" alt="Phone image" />
-            </div>
+            </div> */}
 
             <div className="col-md-7 col-lg-5 col-xl-5 login-form-wrapper p-3 rounded-5">
               <form onSubmit={handleSubmit} id="login-form">
-                <h1>Welcome back</h1>
-                <div data-mdb-input-init className="form-outline mb-4">
+                <h2>Welcome back</h2>
+
+                {error && (
+                  <p>
+                    <code className="error-message">{error}</code>
+                  </p>
+                )}
+
+                <div data-mdb-input-init className="form-group mb-4">
                   <input
                     type="email"
                     id="form1Example13"
-                    className="form-control form-control-lg"
+                    className="form-control"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -56,13 +73,13 @@ const Login = () => {
                   />
                 </div>
 
-                <div data-mdb-input-init className="form-outline mb-4">
+                <div data-mdb-input-init className="form-group mb-4">
                   <input
                     type="password"
                     id="form1Example23"
                     placeholder="Password"
                     value={password}
-                    className="form-control form-control-lg"
+                    className="form-control"
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
@@ -88,7 +105,7 @@ const Login = () => {
                   type="submit"
                   data-mdb-button-init
                   data-mdb-ripple-init
-                  className="btn btn-primary btn-lg btn-block small"
+                  className="btn btn-primary btn-block"
                 >
                   Sign in
                 </button>
