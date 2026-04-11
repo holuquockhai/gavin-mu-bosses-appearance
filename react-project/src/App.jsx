@@ -15,11 +15,7 @@ function App() {
 
   useEffect(() => {
     const theme = isDark ? "dark" : "light";
-
-    // Bootstrap 5.3 theme switch
     document.documentElement.setAttribute("data-bs-theme", theme);
-
-    // Persist
     localStorage.setItem("theme", theme);
   }, [isDark]);
 

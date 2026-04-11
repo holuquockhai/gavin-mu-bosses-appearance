@@ -1,12 +1,12 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { isAuthenticated } from "../utils/auth";
 
 export default function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("access_token");
   const location = useLocation();
 
-  if (!token) {
+  if (!isAuthenticated()) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  return children;
+  return children ? children : <Outlet />;
 }
