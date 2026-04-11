@@ -1,5 +1,6 @@
-# OS
-.DS_Store
-
-# Env
+node_modules
+dist
 .env
+.DS_Store
+.vscode
+.idea

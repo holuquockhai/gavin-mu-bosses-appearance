@@ -38,3 +38,6 @@ class Role(Base):
         secondary=role_permissions,
         back_populates="roles",
     )
+
+    def __repr__(self) -> str:
+        return f"<Role id={self.id} name={self.name}>"

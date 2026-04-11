@@ -39,7 +39,6 @@ def register_user(
         is_active=True,
     )
     user.roles.append(default_role)
-
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -65,12 +64,16 @@ def login_user(db: Session, email: str, password: str):
     user, error = authenticate_user(db, email, password)
 
     if error:
-        return None, error
+        return None, None, error
+
+    role_names = [role.name for role in user.roles]
 
     token = create_access_token(
         {
             "sub": str(user.id),
             "email": user.email,
+            "roles": role_names,
         }
     )
-    return token, None
+
+    return token, user, None

@@ -8,10 +8,9 @@ from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 from app.schemas.user import UserResponse
 from app.services.auth_service import login_user, register_user
 
-
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# Register User Router
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(
     data: RegisterRequest,
@@ -31,13 +30,12 @@ def register(
         )
 
 
-# Login Router
 @router.post("/login", response_model=TokenResponse)
 def login(
     data: LoginRequest,
     db: Annotated[Session, Depends(get_db)],
 ):
-    token, error = login_user(db, data.email, data.password)
+    token, user, error = login_user(db, data.email, data.password)
 
     if error == "invalid_credentials":
         raise HTTPException(
@@ -54,4 +52,9 @@ def login(
     return {
         "access_token": token,
         "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "roles": [role.name for role in user.roles],
+        },
     }

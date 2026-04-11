@@ -22,3 +22,6 @@ class User(Base):
         secondary=user_roles,
         back_populates="users",
     )
+
+    def __str__(self):
+        return f"User(id={self.id}, email={self.email}, full_name={self.full_name}, is_active={self.is_active}), roles={self.roles}, hashed_password={self.hashed_password}"

@@ -3,6 +3,7 @@ import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import { loginUser } from "../api/auth";
 import background from "../assets/images/bg/login_bg1.png";
 import "../scss/login_page.scss";
+import { saveAuth } from "../utils/auth";
 
 const Login = () => {
   const token = localStorage.getItem("access_token");

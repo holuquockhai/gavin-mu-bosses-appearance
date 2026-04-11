@@ -1,4 +1,5 @@
 import axios from "axios";
+import { saveAuth } from "../utils/auth";
 
 const API = axios.create({
   baseURL: "http://127.0.0.1:8000", // your FastAPI URL
@@ -20,6 +21,9 @@ export const loginUser = async (email, password) => {
         "Content-Type": "application/json",
         },
   });
+
+  console.log(response.data)
+  saveAuth(response.data);
 
   return response.data;
 };
