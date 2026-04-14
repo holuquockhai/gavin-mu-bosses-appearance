@@ -1,9 +1,9 @@
 // Layout.jsx
 import { Link, Outlet } from "react-router-dom";
-import TopNavigation from "../components/TopNavigation";
-import LeftContent from "../components/LeftContent";
-import RightContent from "../components/RightContent";
-import BottomContent from "../components/BottomContent";
+import TopNavigation from "./TopNavigation";
+import LeftContent from "./LeftContent";
+import RightContent from "./RightContent";
+import BottomContent from "./BottomContent";
 import { getUser } from "../../utils/auth";
 import { useState, useEffect } from "react";
 
@@ -32,17 +32,14 @@ export default function Layout() {
           </div>
 
           <section className="row main-row">
-            {/**Left Nav or Content */}
             <div className="col-3">
               <LeftContent />
             </div>
 
-            {/** Main content Here */}
             <div className="col-6">
               <Outlet />
             </div>
 
-            {/** Right Navigation or content */}
             <div className="col-3">
               <RightContent />
             </div>

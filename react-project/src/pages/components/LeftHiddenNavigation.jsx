@@ -1,25 +1,33 @@
-function LeftHiddenNavigation({ isDark, setIsDark }) {
+import { Link } from "react-router-dom";
+import { Button, Offcanvas } from "react-bootstrap";
+import { useState } from "react";
+
+function LeftHiddenNavigation({
+  isDark,
+  setIsDark,
+  user,
+  isShow,
+  handleClose,
+}) {
   return (
     <>
-      <div
-        className="offcanvas offcanvas-start"
-        tabIndex="-1"
-        id="offcanvasExample"
-        aria-labelledby="offcanvasExampleLabel"
-      >
-        <div className="offcanvas-header">
-          <h5 className="offcanvas-title" id="offcanvasExampleLabel">
+      <Offcanvas show={isShow} onHide={handleClose} placement="start">
+        <Offcanvas.Header>
+          <h5 className="offcanvas-title" id="offcanvasLeftLabel">
             Settings
           </h5>
           <button
             type="button"
             className="btn-close"
-            data-bs-dismiss="offcanvas"
+            onClick={handleClose}
             aria-label="Close"
           ></button>
-        </div>
+        </Offcanvas.Header>
+
         <hr className="my-1" />
-        <div className="offcanvas-body">
+        <Offcanvas.Body>
+          <h6 className="lef-nav-sub-title">System Setting</h6>
+          <hr className="my-1" />
           <div>
             Setup your theme Dark Mode or Light Mode, sound and notification
           </div>
@@ -68,8 +76,30 @@ function LeftHiddenNavigation({ isDark, setIsDark }) {
               <option value="retro">Retro</option>
             </select>
           </div>
-        </div>
-      </div>
+
+          {user?.roles?.includes("admin") && (
+            <>
+              <h6 className="lef-nav-sub-title">Administration</h6>
+              <hr className="my-1" />
+              <ul className="navbar-nav justify-content-end flex-grow-1 pe-3">
+                <li className="nav-item">
+                  <Link to="/">Users</Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link to="/admin/create-boss" className="nav-link active">
+                    Bosses
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link to="/">Channels</Link>
+                </li>
+              </ul>
+            </>
+          )}
+        </Offcanvas.Body>
+      </Offcanvas>
     </>
   );
 }

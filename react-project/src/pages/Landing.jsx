@@ -3,49 +3,88 @@ import LeftContent from "./components/LeftContent";
 import MainContent from "./components/MainContent";
 import RightContent from "./components/RightContent";
 import BottomContent from "./components/BottomContent";
-import { getUser } from "../utils/auth";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { markBossAsShowed } from "../js/bossSlice";
+import BossTimerCard from "./components/BossTimerCard";
+import PresetControlForm from "./components/PresetControlForm";
 
-const Landing = ({ isDark, setIsDark }) => {
-  const user = getUser();
+const Landing = () => {
+  const dispatch = useDispatch();
+
+  // Load bosses redux store values
+  const bosses = useSelector((state) => state.bosses.value);
+
+  const channels = useSelector((state) => state.channels.value);
+
+  // use currentPreset usestate to determine preset's showed cards
+  const [currenPreset, setCurrentPreset] = useState({});
 
   return (
     <>
-      <TopNavigation isDark={isDark} setIsDark={setIsDark} />
-
-      <main>
-        <div id="main-content" className="container-fluid min-vh-100">
-          <div className="row wrap">
-            <div className="col-12 text-center">
-              <h1 className="pt-4 pb-4 mb-0 page-title">MU BOSS TIMER</h1>
-
-              {user?.roles?.includes("admin") && (
-                <div className="mb-3">
-                  <Link to="/admin/create-boss" className="btn btn-warning">
-                    Go to Admin Create Boss
-                  </Link>
-                </div>
-              )}
-            </div>
+      {/*<!-- MIDDLE -->*/}
+      <div className="row input-group">
+        <div className="p-3 card rounded-4 unified" id="showHideCard">
+          <div className="row">
+            <h5 className="card-title col-8">Show / Hide Boss Cards</h5>
+            <span className="small col-4 text-muted text-end">
+              Use to temporarily hide cards
+            </span>
           </div>
 
-          <section className="row main-row">
-            <div className="col-3">
-              <LeftContent />
+          {/** Render bosses filter checkboxes */}
+          <div className="row mt-3 mb-3">
+            <div className="chips d-flex flex-wrap" id="visChips">
+              {bosses.map((boss) => (
+                <div className="form-check form-switch pe-4" key={boss.id}>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id={`switchCheck-${boss.name}`}
+                    checked={boss.isShowed}
+                    onChange={(e) => dispatch(markBossAsShowed(boss.id))}
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor={`switchCheck-${boss.name}`}
+                  >
+                    {boss.name}
+                  </label>
+                </div>
+              ))}
             </div>
+          </div>
+          {/** #Render bosses filter checkboxes */}
 
-            <div className="col-6">
-              <MainContent />
-            </div>
-
-            <div className="col-3">
-              <RightContent />
-            </div>
-          </section>
-
-          <BottomContent />
+          <PresetControlForm />
         </div>
-      </main>
+      </div>
+      <div className="row justify-content-center mt-3">
+        <div className="channel-row unified col-4 ">
+          <select
+            className="select form-select"
+            id="channelSelect"
+            title="Channel"
+            aria-label="Default select example"
+          >
+            <option key={0} defaultValue>
+              Open this select menu
+            </option>
+            {channels.map((channel) => (
+              <option key={channel.id} value={channel.name}>
+                {channel.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="row">
+        {bosses.map((boss) => (
+          <BossTimerCard key={boss.id} boss={boss} />
+        ))}
+      </div>
     </>
   );
 };

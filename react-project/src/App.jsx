@@ -6,6 +6,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
 import CreateBossPage from "./pages/admin/CreateBossPage";
+import Layout from "./pages/components/Layout";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -28,10 +30,14 @@ function App() {
           path="/"
           element={
             <ProtectedRoute>
-              <Landing isDark={isDark} setIsDark={setIsDark} />
+              <Layout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Landing />} />
+          {/* Child route: renders at "/settings" */}
+          <Route path="/settings" element={<Dashboard />} />
+        </Route>
 
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminLayout />}>

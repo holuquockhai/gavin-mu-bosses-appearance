@@ -8,6 +8,8 @@ import { bossesSlice } from "./js/bossSlice.js";
 import { channelSlice } from "./js/channelSlice.js";
 import { timerHourSlice, timerminuteSlice } from "./js/timerSlice.js";
 import { presetSettingSlice } from "./js/presetSlice.js";
+import { RouterProvider } from "react-router-dom";
+import router from "./router.jsx";
 
 const store = configureStore({
   reducer: {
@@ -23,6 +25,7 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
       <App />
+      {/* <RouterProvider router={router} /> */}
     </Provider>
   </StrictMode>,
 );

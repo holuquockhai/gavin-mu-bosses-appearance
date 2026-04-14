@@ -1,8 +1,12 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import LeftHiddenNavigation from "./LeftHiddenNavigation";
 import RightHiddenNavigation from "./RightHiddenNavigation";
+import { Button, Offcanvas } from "react-bootstrap";
 
-function TopNavigation({ isDark, setIsDark }) {
+function TopNavigation({ isDark, setIsDark, user }) {
+  const location = useLocation();
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -10,6 +14,11 @@ function TopNavigation({ isDark, setIsDark }) {
     localStorage.removeItem("token_type");
     navigate("/login");
   };
+
+  const [show, setShow] = useState(false);
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
   return (
     <>
       <nav className="navbar fixed-top bg-body-tertiary">
@@ -23,11 +32,7 @@ function TopNavigation({ isDark, setIsDark }) {
                 <button
                   className="navbar-toggler"
                   type="button"
-                  data-bs-toggle="offcanvas"
-                  data-bs-target="#offcanvasExample"
-                  aria-controls="offcanvasExample"
-                  aria-expanded="false"
-                  aria-label="Toggle navigation"
+                  onClick={handleShow}
                 >
                   <span className="navbar-toggler-icon"></span>
                 </button>
@@ -63,7 +68,14 @@ function TopNavigation({ isDark, setIsDark }) {
           </div>
         </div>
       </nav>
-      <LeftHiddenNavigation isDark={isDark} setIsDark={setIsDark} />
+      <LeftHiddenNavigation
+        isDark={isDark}
+        setIsDark={setIsDark}
+        user={user}
+        isShow={show}
+        handleClose={handleClose}
+      />
+
       <RightHiddenNavigation />
     </>
   );
