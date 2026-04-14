@@ -1,8 +1,11 @@
 from sqlalchemy.orm import Session
 from app.models.boss import Boss
+from app.models.user import User
 
-def create_boss(db: Session, name: str) -> Boss:
-    boss = Boss(name=name)
+def create_boss(db: Session, name: str, current_user: User) -> Boss:
+    boss = Boss(name=name,
+                created_by_id=current_user.id,
+                updated_by_id=current_user.id,)
     db.add(boss)
     db.commit()
     db.refresh(boss)
@@ -24,4 +27,11 @@ def delete_boss(db: Session, boss_id: int):
     if boss:
         db.delete(boss)
         db.commit()
+    return boss
+
+def update_boss(db: Session, boss: Boss, name: str, current_user: User) -> Boss:
+    boss.name = name
+    boss.updated_by_id = current_user.id
+    db.commit()
+    db.refresh(boss)
     return boss

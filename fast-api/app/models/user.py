@@ -22,6 +22,16 @@ class User(Base):
         secondary=user_roles,
         back_populates="users",
     )
+    bosses_created = relationship(
+        "Boss",
+        foreign_keys="Boss.created_by_id",
+        back_populates="created_by",
+    )
+    bosses_updated = relationship(
+        "Boss",
+        foreign_keys="Boss.updated_by_id",
+        back_populates="updated_by",
+    )
 
     def __str__(self):
         return f"User(id={self.id}, email={self.email}, full_name={self.full_name}, is_active={self.is_active}), roles={self.roles}, hashed_password={self.hashed_password}"

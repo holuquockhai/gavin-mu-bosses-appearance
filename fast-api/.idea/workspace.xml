@@ -6,9 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/Landing.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/Landing.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/LeftHiddenNavigation.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/LeftHiddenNavigation.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/TopNavigation.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/TopNavigation.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/boss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/bosses.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/bosses.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/boss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/boss_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/boss_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,12 +122,22 @@
       <updated>1775107608457</updated>
       <workItem from="1775107609492" duration="14009000" />
       <workItem from="1775187007614" duration="1938000" />
-      <workItem from="1775921853198" duration="733000" />
+      <workItem from="1775921853198" duration="3467000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/app/services/boss_service.py</url>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/fast_api$main.coverage" NAME="main Coverage Results" MODIFIED="1775108222443" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
