@@ -1,14 +1,13 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import LeftHiddenNavigation from "./LeftHiddenNavigation";
 import RightHiddenNavigation from "./RightHiddenNavigation";
-import { Button, Offcanvas } from "react-bootstrap";
 
 function TopNavigation({ isDark, setIsDark, user }) {
-  const location = useLocation();
   const notificationCount = useSelector((state) => state.notifications.value.length);
   const displayName = user?.full_name || user?.email || "User";
+  const isAdmin = user?.roles?.includes("admin");
 
   const navigate = useNavigate();
 
@@ -26,24 +25,36 @@ function TopNavigation({ isDark, setIsDark, user }) {
     <>
       <nav className="navbar fixed-top bg-body-tertiary">
         <div className="container-fluid">
-          <div className="row input-group">
-            {/* <a class="btn btn-primary" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
-                        Link with href
-                        </a> */}
-            <div className="col-1">
-              <nav className="navbar">
-                <button
-                  className="navbar-toggler"
-                  type="button"
-                  onClick={handleShow}
-                >
-                  <span className="navbar-toggler-icon"></span>
-                </button>
-              </nav>
-            </div>
-            <div className="col-auto ms-auto mt-3 d-flex align-items-center gap-2">
-              <span className="small fw-semibold text-nowrap">{displayName}</span>
-              <button onClick={handleLogout} className="btn">
+          <div className="d-flex align-items-center w-100 gap-3">
+            <button
+              className="navbar-toggler"
+              type="button"
+              onClick={handleShow}
+              aria-label="Open settings menu"
+            >
+              <span className="navbar-toggler-icon"></span>
+            </button>
+
+            {isAdmin && (
+              <div className="d-none d-md-flex align-items-center gap-2">
+                <Link to="/" className="nav-link px-2">
+                  Home
+                </Link>
+                <Link to="/admin/users" className="nav-link px-2">
+                  Users
+                </Link>
+                <Link to="/admin/create-boss" className="nav-link px-2">
+                  Bosses
+                </Link>
+                <Link to="/admin/channels" className="nav-link px-2">
+                  Channels
+                </Link>
+              </div>
+            )}
+
+            <div className="ms-auto d-flex align-items-center gap-2">
+              <span className="small fw-semibold text-nowrap d-none d-sm-inline">{displayName}</span>
+              <button onClick={handleLogout} className="btn btn-sm">
                 Logout
               </button>
               <button

@@ -1,9 +1,11 @@
 function BottomContent(){
+    const currentYear = new Date().getFullYear();
+
     return(
         <>
-            <div className="row row fixed-bottom p-3">
-                <div className="col-12">
-                    Copy Right @ Lu Quoc Khai Ho
+            <div className="row fixed-bottom p-3 bg-body-tertiary border-top">
+                <div className="col-12 text-center small text-muted">
+                    &copy; {currentYear} MU Boss Timer. All rights reserved.
                 </div>
             </div>
         </>

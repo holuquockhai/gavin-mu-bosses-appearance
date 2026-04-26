@@ -1,6 +1,4 @@
-import { Link } from "react-router-dom";
-import { Button, Offcanvas } from "react-bootstrap";
-import { useState } from "react";
+import { Offcanvas } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { setNotificationPageSize } from "../../js/notificationSlice";
 import { setSoundEnabled, setSoundStyle } from "../../js/systemSettingsSlice";
@@ -105,38 +103,6 @@ function LeftHiddenNavigation({
               <option value="20">20</option>
             </select>
           </div>
-
-          {user?.roles?.includes("admin") && (
-            <>
-              <h6 className="lef-nav-sub-title">Administration</h6>
-              <hr className="my-1" />
-              <ul className="navbar-nav justify-content-end flex-grow-1 pe-3">
-                <li className="nav-item">
-                  <Link to="/" className="nav-link">
-                    Home
-                  </Link>
-                </li>
-
-                <li className="nav-item">
-                  <Link to="/admin/users" className="nav-link">
-                    Users
-                  </Link>
-                </li>
-
-                <li className="nav-item">
-                  <Link to="/admin/create-boss" className="nav-link active">
-                    Bosses
-                  </Link>
-                </li>
-
-                <li className="nav-item">
-                  <Link to="/admin/channels" className="nav-link">
-                    Channels
-                  </Link>
-                </li>
-              </ul>
-            </>
-          )}
         </Offcanvas.Body>
       </Offcanvas>
     </>
