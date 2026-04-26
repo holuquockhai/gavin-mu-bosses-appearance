@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.models.boss import Boss
 from app.models.user import User
 
 def create_boss(db: Session, name: str, current_user: User) -> Boss:
-    boss = Boss(name=name,
+    boss = Boss(name=name.strip(),
                 created_by_id=current_user.id,
                 updated_by_id=current_user.id,)
     db.add(boss)
@@ -19,8 +20,16 @@ def get_bosses(db: Session):
 def get_boss(db: Session, boss_id: int):
     return db.query(Boss).filter(Boss.id == boss_id).first()
 
+def get_boss_by_name(db: Session, name: str, exclude_boss_id: int | None = None):
+    query = db.query(Boss).filter(func.lower(Boss.name) == name.strip().lower())
+
+    if exclude_boss_id is not None:
+        query = query.filter(Boss.id != exclude_boss_id)
+
+    return query.first()
+
 def get_bosse_by_name(db: Session, name: str):
-    return db.query(Boss).filter(Boss.name == name).first()
+    return get_boss_by_name(db, name)
 
 def delete_boss(db: Session, boss_id: int):
     boss = get_boss(db, boss_id)
@@ -30,7 +39,7 @@ def delete_boss(db: Session, boss_id: int):
     return boss
 
 def update_boss(db: Session, boss: Boss, name: str, current_user: User) -> Boss:
-    boss.name = name
+    boss.name = name.strip()
     boss.updated_by_id = current_user.id
     db.commit()
     db.refresh(boss)

@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.role import Role
 from app.models.permission import Permission
+from app.models.channel import Channel
 from app.core.security import hash_password
 
 
@@ -16,6 +17,11 @@ def seed_admin(db: Session):
         "boss:read",
         "boss:update",
         "boss:delete",
+
+        "channel:create",
+        "channel:read",
+        "channel:update",
+        "channel:delete",
 
         "rbac:manage",
     ]
@@ -45,8 +51,15 @@ def seed_admin(db: Session):
         db.add(user_role)
         db.flush()
 
-    if permissions["user:read"] not in user_role.permissions:
-        user_role.permissions.append(permissions["user:read"])
+    default_user_permissions = [
+        permissions["user:read"],
+        permissions["boss:read"],
+        permissions["channel:read"],
+    ]
+
+    for permission in default_user_permissions:
+        if permission not in user_role.permissions:
+            user_role.permissions.append(permission)
 
     admin_email = "admin@example.com"
     admin_user = db.query(User).filter_by(email=admin_email).first()
@@ -60,5 +73,18 @@ def seed_admin(db: Session):
         )
         admin_user.roles.append(admin_role)
         db.add(admin_user)
+        db.flush()
+
+    default_channels = ["Channel 1", "Channel 2", "Channel 3"]
+    channel_owner_id = admin_user.id if admin_user else None
+
+    for channel_name in default_channels:
+        existing_channel = db.query(Channel).filter_by(name=channel_name).first()
+        if not existing_channel:
+            db.add(Channel(
+                name=channel_name,
+                created_by_id=channel_owner_id,
+                updated_by_id=channel_owner_id,
+            ))
 
     db.commit()

@@ -6,11 +6,27 @@
   <component name="ChangeListManager">
     <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/db/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models/boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/boss.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routers/bosses.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/bosses.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/users.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/schemas/boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/boss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/auth_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/auth_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/services/boss_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/boss_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/seed_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/seed_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/App.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/api/bossApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/api/bossApi.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/main.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/main.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/Landing.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/Landing.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/admin/CreateBossPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/admin/CreateBossPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/admin/components/CreateBossModal.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/admin/components/CreateBossModal.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/LeftHiddenNavigation.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/LeftHiddenNavigation.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/TopNavigation.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/TopNavigation.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/scss/global.scss" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/scss/global.scss" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,7 +138,8 @@
       <updated>1775107608457</updated>
       <workItem from="1775107609492" duration="14009000" />
       <workItem from="1775187007614" duration="1938000" />
-      <workItem from="1775921853198" duration="3467000" />
+      <workItem from="1775921853198" duration="8462000" />
+      <workItem from="1777153580717" duration="2091000" />
     </task>
     <servers />
   </component>

@@ -21,4 +21,20 @@ export const loginUser = async (email, password) => {
   return response.data;
 };
 
+export const forgotPassword = async (email) => {
+  const response = await API.post(
+    "/auth/forgot-password",
+    {
+      email,
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
 export default API;

@@ -11,6 +11,7 @@ class BossUpdate(BaseModel):
 class BossUserInfo(BaseModel):
     id: int
     email: EmailStr
+    full_name: str | None = None
 
     model_config = {"from_attributes": True}
 

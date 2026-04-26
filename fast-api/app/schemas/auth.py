@@ -12,9 +12,14 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
 class UserLoginResponse(BaseModel):
     id: int
     email: EmailStr
+    full_name: str | None = None
     roles: list[str]
 
 

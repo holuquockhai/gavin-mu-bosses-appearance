@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import { Button, Offcanvas } from "react-bootstrap";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setNotificationPageSize } from "../../js/notificationSlice";
+import { setSoundEnabled, setSoundStyle } from "../../js/systemSettingsSlice";
 
 function LeftHiddenNavigation({
   isDark,
@@ -9,6 +12,11 @@ function LeftHiddenNavigation({
   isShow,
   handleClose,
 }) {
+  const dispatch = useDispatch();
+  const notificationPageSize = useSelector((state) => state.notifications.pageSize);
+  const soundEnabled = useSelector((state) => state.systemSettings.soundEnabled);
+  const soundStyle = useSelector((state) => state.systemSettings.soundStyle);
+
   return (
     <>
       <Offcanvas show={isShow} onHide={handleClose} placement="start">
@@ -56,6 +64,8 @@ function LeftHiddenNavigation({
                 type="checkbox"
                 role="switch"
                 id="switchCheckSound"
+                checked={soundEnabled}
+                onChange={(event) => dispatch(setSoundEnabled(event.target.checked))}
               />
               <label
                 className="small form-check-label"
@@ -69,11 +79,30 @@ function LeftHiddenNavigation({
               className="select form-select mt-3"
               id="soundStyle"
               title="Alert tone"
+              value={soundStyle}
+              disabled={!soundEnabled}
+              onChange={(event) => dispatch(setSoundStyle(event.target.value))}
             >
               <option value="chime">Chime</option>
               <option value="bell">Bell</option>
               <option value="beep">Beep</option>
               <option value="retro">Retro</option>
+              <option value="alarm">Alarm</option>
+            </select>
+
+            <label className="small form-label mt-3" htmlFor="notificationPageSize">
+              Notifications per page
+            </label>
+            <select
+              className="select form-select"
+              id="notificationPageSize"
+              value={notificationPageSize}
+              onChange={(event) => dispatch(setNotificationPageSize(event.target.value))}
+            >
+              <option value="3">3</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
             </select>
           </div>
 
@@ -83,7 +112,15 @@ function LeftHiddenNavigation({
               <hr className="my-1" />
               <ul className="navbar-nav justify-content-end flex-grow-1 pe-3">
                 <li className="nav-item">
-                  <Link to="/">Users</Link>
+                  <Link to="/" className="nav-link">
+                    Home
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link to="/admin/users" className="nav-link">
+                    Users
+                  </Link>
                 </li>
 
                 <li className="nav-item">
@@ -93,7 +130,9 @@ function LeftHiddenNavigation({
                 </li>
 
                 <li className="nav-item">
-                  <Link to="/">Channels</Link>
+                  <Link to="/admin/channels" className="nav-link">
+                    Channels
+                  </Link>
                 </li>
               </ul>
             </>

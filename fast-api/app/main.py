@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import app.db.base
 
 from app.db.database import Base, engine, SessionLocal
-from app.routers import auth, users, admin, bosses
+from app.routers import auth, users, admin, bosses, timers, notifications, presets, channels
 from app.services.seed_service import seed_admin
 
 app = FastAPI(title="FastAPI RBAC")
@@ -37,6 +37,10 @@ app.include_router(users.router)
 app.include_router(admin.router)
 
 app.include_router(bosses.router)
+app.include_router(timers.router)
+app.include_router(notifications.router)
+app.include_router(presets.router)
+app.include_router(channels.router)
 
 
 @app.get("/")

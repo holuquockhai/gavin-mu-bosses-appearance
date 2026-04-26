@@ -1,4 +1,93 @@
+import { useDispatch, useSelector } from "react-redux";
+import { clearNotifications, removeNotification, setNotifications } from "../../js/notificationSlice";
+import { useEffect, useMemo, useState } from "react";
+import { clearNotificationsApi, getNotificationsApi, removeNotificationApi } from "../../api/notificationApi";
+
+function formatNotificationTime(value) {
+    return new Intl.DateTimeFormat("en-AU", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(new Date(value));
+}
+
+function NotificationMessage({ notification }) {
+    if (notification.type === "boss-timer-set") {
+        return (
+            <>
+                {notification.actorName} set timer for <strong>{notification.bossName}</strong> on <strong>{notification.channel}</strong> for {notification.period}.
+            </>
+        );
+    }
+
+    if (notification.type === "boss-created") {
+        return (
+            <>
+                {notification.actorName} created boss <strong>{notification.bossName}</strong>.
+            </>
+        );
+    }
+
+    if (notification.type === "boss-appeared") {
+        return (
+            <>
+                {notification.actorName ? (
+                    <>
+                        {notification.actorName} marked <strong>{notification.bossName}</strong> as appeared on <strong>{notification.channel}</strong>.
+                    </>
+                ) : (
+                    <>
+                        <strong>{notification.bossName}</strong> appeared on <strong>{notification.channel}</strong>.
+                    </>
+                )}
+            </>
+        );
+    }
+
+    if (notification.type === "user-created") {
+        return (
+            <>
+                {notification.actorName} created user <strong>{notification.userName}</strong>.
+            </>
+        );
+    }
+
+    return notification.message;
+}
+
 function RightHiddenNavigation(){
+    const dispatch = useDispatch();
+    const notifications = useSelector((state) => state.notifications.value);
+    const pageSize = useSelector((state) => state.notifications.pageSize);
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.max(1, Math.ceil(notifications.length / pageSize));
+    const visibleNotifications = useMemo(() => {
+        const startIndex = (currentPage - 1) * pageSize;
+
+        return notifications.slice(startIndex, startIndex + pageSize);
+    }, [currentPage, notifications, pageSize]);
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
+    useEffect(() => {
+        getNotificationsApi()
+            .then((data) => dispatch(setNotifications(data)))
+            .catch(() => {});
+    }, [dispatch]);
+
+    const handleRemoveNotification = (notificationId) => {
+        removeNotificationApi(notificationId).catch(() => {});
+        dispatch(removeNotification(notificationId));
+    };
+
+    const handleClearNotifications = () => {
+        clearNotificationsApi().catch(() => {});
+        dispatch(clearNotifications());
+    };
+
     return (
         <>
             <div className="offcanvas offcanvas-end" tabIndex="-1" id="offcanvasRight"  data-bs-scroll="true" aria-labelledby="offcanvasRightLabel">
@@ -9,51 +98,52 @@ function RightHiddenNavigation(){
 </svg>
                         &nbsp; Notifications
                     </h5>
-                    <a href="#" className="link-secondary ms-auto">Clear All</a>
+                    <button type="button" className="btn btn-link link-secondary ms-auto" onClick={handleClearNotifications}>Clear All</button>
                     
                     {/* <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button> */}
                 </div>
                  <hr className="my-1"/>
                 <div className="offcanvas-body">
-                    <div className="alert alert-light alert-dismissible fade show" role="alert">
-                        <span className="small">Gavin just setup time for ABC Boss at 12:30 pm </span> 
-                        <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                    {notifications.length === 0 ? (
+                        <p className="small text-muted">No notifications yet.</p>
+                    ) : (
+                        <>
+                            {visibleNotifications.map((notification) => (
+                                <div className="alert alert-light alert-dismissible fade show" role="alert" key={notification.id}>
+                                    <span className="small d-block"><NotificationMessage notification={notification} /></span>
+                                    <span className="small text-muted">{formatNotificationTime(notification.createdAt)}</span>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        aria-label="Close"
+                                    onClick={() => handleRemoveNotification(notification.id)}
+                                    ></button>
+                                </div>
+                            ))}
 
-                    <div className="alert alert-light alert-dismissible fade show" role="alert">
-                        <span className="small">Gavin just setup time for ABC Boss at 12:30 pm </span> 
-                        <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-
-                    <div className="alert alert-light alert-dismissible fade show" role="alert">
-                        <span className="small">Gavin just setup time for ABC Boss at 12:30 pm </span> 
-                        <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-
-                    <div className="alert alert-light alert-dismissible fade show" role="alert">
-                        <span className="small">Gavin just setup time for ABC Boss at 12:30 pm </span> 
-                        <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-
-                    <div className="alert alert-light alert-dismissible fade show" role="alert">
-                        <span className="small">Gavin just setup time for ABC Boss at 12:30 pm </span> 
-                        <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-
-                    <div className="alert alert-light alert-dismissible fade show" role="alert">
-                        <span className="small">Gavin just setup time for ABC Boss at 12:30 pm </span> 
-                        <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-
-                    <div className="alert alert-light alert-dismissible fade show" role="alert">
-                        <span className="small">Gavin just setup time for ABC Boss at 12:30 pm </span> 
-                        <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-
-                    <div className="alert alert-light alert-dismissible fade show" role="alert">
-                        <span className="small">Gavin just setup time for ABC Boss at 12:30 pm </span> 
-                        <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                            <div className="d-flex align-items-center justify-content-between gap-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage((page) => page - 1)}
+                                >
+                                    Previous
+                                </button>
+                                <span className="small text-muted">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    disabled={currentPage === totalPages}
+                                    onClick={() => setCurrentPage((page) => page + 1)}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </>

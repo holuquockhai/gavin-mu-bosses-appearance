@@ -51,11 +51,11 @@ def authenticate_user(db: Session, email: str, password: str):
     if not user:
         return None, "invalid_credentials"
 
-    if not verify_password(password, user.hashed_password):
-        return None, "invalid_credentials"
-
     if not user.is_active:
         return None, "inactive"
+
+    if not verify_password(password, user.hashed_password):
+        return None, "invalid_credentials"
 
     return user, None
 

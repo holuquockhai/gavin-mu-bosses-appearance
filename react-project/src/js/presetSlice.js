@@ -9,17 +9,50 @@ export const presetSettingSlice = createSlice({
     },
 
     reducers: {
+        setPresetSettings: (state, action) => {
+            state.value = action.payload;
+        },
+
         createPreset: (state, action) =>{ 
+            if (state.value.length >= 3) {
+                return;
+            }
+
             state.value = [...state.value, {
-                id:5,
-                name: action.payload,
-                data: [],
+                id: action.payload.id,
+                name: action.payload.name,
+                channels: action.payload.channels || {},
             }]
         },
+
+        updatePreset: (state, action) => {
+            const preset = state.value.find((setting) => setting.id === Number(action.payload.id));
+
+            if (preset) {
+                preset.name = action.payload.name;
+                preset.channels = action.payload.channels || {};
+            }
+        },
+
+        savePresetChannel: (state, action) => {
+            const { presetId, channel, bossIds } = action.payload;
+            const preset = state.value.find((setting) => setting.id === Number(presetId));
+
+            if (preset) {
+                preset.channels = {
+                    ...(preset.channels || {}),
+                    [channel]: bossIds,
+                };
+            }
+        },
         
-        //@todo: update preset name based on Perset ID
         renamePreset: (state, action) => {
-            console.log(action.payload);
+            const { presetId, name } = action.payload;
+            const preset = state.value.find((setting) => setting.id === Number(presetId));
+
+            if (preset) {
+                preset.name = name;
+            }
         },
 
         deletePreset: (state, action) => {
@@ -29,4 +62,11 @@ export const presetSettingSlice = createSlice({
     }
 });
 
-export const {createPreset, renamePreset,  deletePreset} = presetSettingSlice.actions;
+export const {
+    createPreset,
+    updatePreset,
+    setPresetSettings,
+    savePresetChannel,
+    renamePreset,
+    deletePreset,
+} = presetSettingSlice.actions;

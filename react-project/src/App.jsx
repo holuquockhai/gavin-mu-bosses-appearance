@@ -6,6 +6,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
 import CreateBossPage from "./pages/admin/CreateBossPage";
+import Users from "./pages/admin/Users";
+import Channels from "./pages/admin/Channels";
 import Layout from "./pages/components/Layout";
 import Dashboard from "./pages/Dashboard";
 
@@ -41,7 +43,9 @@ function App() {
 
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
+            <Route path="users" element={<Users />} />
             <Route path="create-boss" element={<CreateBossPage />} />
+            <Route path="channels" element={<Channels />} />
           </Route>
         </Route>
 
