@@ -1,11 +1,18 @@
 import { useSelector } from "react-redux";
 
 function formatHistoryTime(value) {
-    return new Intl.DateTimeFormat("en-AU", {
+    const date = new Date(value);
+    const timeText = new Intl.DateTimeFormat("en-AU", {
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit",
-    }).format(new Date(value));
+    }).format(date);
+    const dateText = new Intl.DateTimeFormat("en-AU", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    }).format(date);
+
+    return `${timeText}, ${dateText}`;
 }
 
 function formatChannelLabel(channel) {

@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/LeftHiddenNavigation.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/LeftHiddenNavigation.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/TopNavigation.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/TopNavigation.jsx" afterDir="false" />
-    </list>
+    <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -119,7 +116,7 @@
       <workItem from="1775107609492" duration="14009000" />
       <workItem from="1775187007614" duration="1938000" />
       <workItem from="1775921853198" duration="8462000" />
-      <workItem from="1777153580717" duration="2691000" />
+      <workItem from="1777153580717" duration="3292000" />
     </task>
     <servers />
   </component>

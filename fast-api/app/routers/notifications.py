@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.dependencies.auth import get_current_user
-from app.models.notification import Notification
+from app.models.notification import Notification, NotificationDismissal
 from app.models.user import User
 from app.schemas.notification import NotificationCreate, NotificationResponse
 
@@ -17,9 +17,14 @@ def list_notifications(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
+    dismissed_notification_ids = (
+        db.query(NotificationDismissal.notification_id)
+        .filter(NotificationDismissal.user_id == current_user.id)
+    )
+
     return (
         db.query(Notification)
-        .filter(Notification.user_id == current_user.id)
+        .filter(~Notification.id.in_(dismissed_notification_ids))
         .order_by(Notification.created_at.desc(), Notification.id.desc())
         .all()
     )
@@ -53,12 +58,26 @@ def remove_notification(
 ):
     notification = (
         db.query(Notification)
-        .filter(Notification.id == notification_id, Notification.user_id == current_user.id)
+        .filter(Notification.id == notification_id)
         .first()
     )
 
     if notification:
-        db.delete(notification)
+        dismissal = (
+            db.query(NotificationDismissal)
+            .filter(
+                NotificationDismissal.notification_id == notification_id,
+                NotificationDismissal.user_id == current_user.id,
+            )
+            .first()
+        )
+        if not dismissal:
+            db.add(
+                NotificationDismissal(
+                    notification_id=notification_id,
+                    user_id=current_user.id,
+                )
+            )
         db.commit()
 
     return {"message": "Notification removed"}
@@ -69,6 +88,27 @@ def clear_notifications(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    db.query(Notification).filter(Notification.user_id == current_user.id).delete()
+    existing_dismissed_ids = {
+        notification_id
+        for (notification_id,) in (
+            db.query(NotificationDismissal.notification_id)
+            .filter(NotificationDismissal.user_id == current_user.id)
+            .all()
+        )
+    }
+    notification_ids = [
+        notification_id
+        for (notification_id,) in db.query(Notification.id).all()
+        if notification_id not in existing_dismissed_ids
+    ]
+
+    for notification_id in notification_ids:
+        db.add(
+            NotificationDismissal(
+                notification_id=notification_id,
+                user_id=current_user.id,
+            )
+        )
+
     db.commit()
     return {"message": "Notifications cleared"}

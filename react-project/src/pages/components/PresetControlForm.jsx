@@ -1,22 +1,22 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Modal } from "bootstrap";
-import { applyBossVisibility } from "../../js/bossSlice";
+import { applyPresetVisibility } from "../../js/bossSlice";
 import {
   deletePreset,
   renamePreset,
-  savePresetChannel,
   setPresetSettings,
   updatePreset,
 } from "../../js/presetSlice";
 import PresetModal from "./PresetModal";
-import { deletePresetApi, getPresetsApi, renamePresetApi, savePresetChannelApi } from "../../api/presetApi";
+import { deletePresetApi, getPresetsApi, renamePresetApi, updatePresetApi } from "../../api/presetApi";
 
 function PresetControlForm({ selectedChannel }) {
   const dispatch = useDispatch();
   const presetSettings = useSelector((state) => state.presetSettings.value);
   const bosses = useSelector((state) => state.bosses.value);
   const visibilityByChannel = useSelector((state) => state.bosses.visibilityByChannel);
+  const channels = useSelector((state) => state.channels.value);
   const [selectedPresetId, setSelectedPresetId] = useState("");
   const [presetModalState, setPresetModalState] = useState(1);
   const [message, setMessage] = useState("");
@@ -43,31 +43,39 @@ function PresetControlForm({ selectedChannel }) {
 
   const selectedPreset = presetSettings.find((preset) => preset.id === Number(selectedPresetId));
   const currentShowedBossIds = bosses.filter((boss) => boss.isShowed).map((boss) => boss.id);
-  const presetChannelsSnapshot = selectedChannel
-    ? {
-        ...visibilityByChannel,
-        [selectedChannel]: currentShowedBossIds,
-      }
-    : visibilityByChannel;
+  const buildAllChannelSettings = ({ includeSelectedPresetBase = false } = {}) => {
+    const mergedChannels = {
+      ...(includeSelectedPresetBase ? selectedPreset?.channels || {} : {}),
+      ...visibilityByChannel,
+    };
+
+    if (selectedChannel) {
+      mergedChannels[selectedChannel] = currentShowedBossIds;
+    }
+
+    if (!channels.length) {
+      return mergedChannels;
+    }
+
+    return channels.reduce((settings, channel) => {
+      settings[channel.name] = mergedChannels[channel.name] || [];
+      return settings;
+    }, {});
+  };
+
+  const presetChannelsSnapshot = buildAllChannelSettings();
 
   const handleSavePreset = async () => {
-    if (!selectedPreset || !selectedChannel) {
-      setMessage("Select a preset and channel before saving.");
+    if (!selectedPreset) {
+      setMessage("Select a preset before saving.");
       return;
     }
 
-    const payload = {
-      presetId: selectedPreset.id,
-      channel: selectedChannel,
-      bossIds: currentShowedBossIds,
-    };
-    const updatedPreset = await savePresetChannelApi(selectedPreset.id, {
-      channel: selectedChannel,
-      boss_ids: currentShowedBossIds,
+    const updatedPreset = await updatePresetApi(selectedPreset.id, {
+      channels: buildAllChannelSettings({ includeSelectedPresetBase: true }),
     });
-    dispatch(savePresetChannel(payload));
     dispatch(updatePreset(updatedPreset));
-    setMessage(`Saved ${selectedPreset.name} for ${selectedChannel}.`);
+    setMessage(`Saved ${selectedPreset.name} for all channels.`);
   };
 
   const handleApplyPreset = () => {
@@ -76,8 +84,10 @@ function PresetControlForm({ selectedChannel }) {
       return;
     }
 
-    const showedBossIds = selectedPreset.channels?.[selectedChannel] || [];
-    dispatch(applyBossVisibility({ bossIds: showedBossIds, channel: selectedChannel }));
+    dispatch(applyPresetVisibility({
+      channels: selectedPreset.channels || {},
+      selectedChannel,
+    }));
     setMessage(`Applied ${selectedPreset.name} for ${selectedChannel}.`);
   };
 

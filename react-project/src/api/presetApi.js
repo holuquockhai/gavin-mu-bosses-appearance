@@ -38,6 +38,14 @@ export const renamePresetApi = async (presetId, name) => {
   return normalizePreset(response.data);
 };
 
+export const updatePresetApi = async (presetId, payload) => {
+  const response = await axios.put(`${API_URL}/presets/${presetId}`, payload, {
+    headers: authHeaders(),
+  });
+
+  return normalizePreset(response.data);
+};
+
 export const savePresetChannelApi = async (presetId, payload) => {
   const response = await axios.put(`${API_URL}/presets/${presetId}/channel`, payload, {
     headers: authHeaders(),

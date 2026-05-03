@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Modal } from "bootstrap";
 import { useDispatch } from "react-redux";
 import {
@@ -35,7 +35,14 @@ const formatDateTime = (value) => {
   }).format(new Date(value));
 };
 
-const getChannelActor = (channel) => channel.updated_by || channel.created_by || {};
+const getUserName = (user) => user?.full_name || user?.email || "-";
+const getUserFilterValue = (user) => {
+  if (!user) {
+    return "";
+  }
+
+  return String(user.id || user.email || getUserName(user));
+};
 
 export default function Channels() {
   const dispatch = useDispatch();
@@ -49,6 +56,66 @@ export default function Channels() {
   const [channelName, setChannelName] = useState("");
   const [channelToEdit, setChannelToEdit] = useState(null);
   const [channelToDelete, setChannelToDelete] = useState(null);
+  const [filters, setFilters] = useState({
+    name: "",
+    createdBy: "all",
+    updatedBy: "all",
+    startDate: "",
+    endDate: "",
+  });
+
+  const createdByOptions = useMemo(() => {
+    const users = new Map();
+    channels.forEach((channel) => {
+      if (channel.created_by) {
+        users.set(getUserFilterValue(channel.created_by), getUserName(channel.created_by));
+      }
+    });
+
+    return [...users.entries()].sort((firstUser, secondUser) =>
+      firstUser[1].localeCompare(secondUser[1]),
+    );
+  }, [channels]);
+
+  const updatedByOptions = useMemo(() => {
+    const users = new Map();
+    channels.forEach((channel) => {
+      if (channel.updated_by) {
+        users.set(getUserFilterValue(channel.updated_by), getUserName(channel.updated_by));
+      }
+    });
+
+    return [...users.entries()].sort((firstUser, secondUser) =>
+      firstUser[1].localeCompare(secondUser[1]),
+    );
+  }, [channels]);
+
+  const filteredChannels = useMemo(() => {
+    const searchName = filters.name.trim().toLowerCase();
+    const startDate = filters.startDate ? new Date(`${filters.startDate}T00:00:00`) : null;
+    const endDate = filters.endDate ? new Date(`${filters.endDate}T23:59:59`) : null;
+
+    return channels.filter((channel) => {
+      const updatedAt = channel.updated_at ? new Date(channel.updated_at) : null;
+      const matchesName = !searchName || channel.name.toLowerCase().includes(searchName);
+      const matchesCreatedBy =
+        filters.createdBy === "all" ||
+        getUserFilterValue(channel.created_by) === filters.createdBy;
+      const matchesUpdatedBy =
+        filters.updatedBy === "all" ||
+        getUserFilterValue(channel.updated_by) === filters.updatedBy;
+      const matchesStartDate = !startDate || (updatedAt && updatedAt >= startDate);
+      const matchesEndDate = !endDate || (updatedAt && updatedAt <= endDate);
+
+      return (
+        matchesName &&
+        matchesCreatedBy &&
+        matchesUpdatedBy &&
+        matchesStartDate &&
+        matchesEndDate
+      );
+    });
+  }, [channels, filters]);
 
   const showModal = (id) => {
     const modalElement = document.getElementById(id);
@@ -191,6 +258,24 @@ export default function Channels() {
     }
   };
 
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target;
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [name]: value,
+    }));
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      name: "",
+      createdBy: "all",
+      updatedBy: "all",
+      startDate: "",
+      endDate: "",
+    });
+  };
+
   return (
     <div className="p-3 card rounded-4 unified">
       <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
@@ -218,15 +303,121 @@ export default function Channels() {
 
       {error && <div className="alert alert-danger">{error}</div>}
 
+      <form
+        className="border rounded-3 p-3 mb-3 bg-body-tertiary"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+          <h6 className="mb-0">Filter Channels</h6>
+          <span className="small text-muted">
+            Found: {filteredChannels.length} of {channels.length} Channels
+          </span>
+        </div>
+        <div className="row g-3 align-items-end">
+          <div className="col-12 col-lg-3">
+            <label className="form-label small text-muted" htmlFor="channelNameFilter">
+              Channel name
+            </label>
+            <input
+              id="channelNameFilter"
+              type="search"
+              name="name"
+              className="form-control"
+              placeholder="Search channel..."
+              value={filters.name}
+              onChange={handleFilterChange}
+            />
+          </div>
+
+          <div className="col-12 col-sm-6 col-lg-2">
+            <label className="form-label small text-muted" htmlFor="channelCreatedByFilter">
+              Created by
+            </label>
+            <select
+              id="channelCreatedByFilter"
+              name="createdBy"
+              className="form-select"
+              value={filters.createdBy}
+              onChange={handleFilterChange}
+            >
+              <option value="all">All users</option>
+              {createdByOptions.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-12 col-sm-6 col-lg-2">
+            <label className="form-label small text-muted" htmlFor="channelUpdatedByFilter">
+              Updated by
+            </label>
+            <select
+              id="channelUpdatedByFilter"
+              name="updatedBy"
+              className="form-select"
+              value={filters.updatedBy}
+              onChange={handleFilterChange}
+            >
+              <option value="all">All users</option>
+              {updatedByOptions.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-12 col-sm-6 col-lg-2">
+            <label className="form-label small text-muted" htmlFor="channelStartDateFilter">
+              From
+            </label>
+            <input
+              id="channelStartDateFilter"
+              type="date"
+              name="startDate"
+              className="form-control"
+              value={filters.startDate}
+              onChange={handleFilterChange}
+            />
+          </div>
+
+          <div className="col-12 col-sm-6 col-lg-2">
+            <label className="form-label small text-muted" htmlFor="channelEndDateFilter">
+              To
+            </label>
+            <input
+              id="channelEndDateFilter"
+              type="date"
+              name="endDate"
+              className="form-control"
+              value={filters.endDate}
+              onChange={handleFilterChange}
+            />
+          </div>
+
+          <div className="col-12 col-lg-1">
+            <button
+              type="button"
+              className="btn btn-outline-secondary w-100"
+              onClick={resetFilters}
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      </form>
+
       <div className="table-responsive">
         <table className="table table-striped align-middle">
           <thead>
             <tr>
               <th scope="col">#</th>
               <th scope="col">Name</th>
+              <th scope="col">Created By</th>
+              <th scope="col">Updated By</th>
               <th scope="col">Latest Update</th>
-              <th scope="col">By User</th>
-              <th scope="col">Email</th>
               <th scope="col">Actions</th>
             </tr>
           </thead>
@@ -237,23 +428,21 @@ export default function Channels() {
                   Loading channels...
                 </td>
               </tr>
-            ) : channels.length === 0 ? (
+            ) : filteredChannels.length === 0 ? (
               <tr>
                 <td colSpan="6" className="text-center text-muted">
-                  No channels found
+                  No channels match the current filters
                 </td>
               </tr>
             ) : (
-              channels.map((channel, index) => {
-                const actor = getChannelActor(channel);
-
+              filteredChannels.map((channel, index) => {
                 return (
                   <tr key={channel.id}>
                     <th scope="row">{index + 1}</th>
                     <td>{channel.name}</td>
+                    <td>{getUserName(channel.created_by)}</td>
+                    <td>{getUserName(channel.updated_by)}</td>
                     <td>{formatDateTime(channel.updated_at)}</td>
-                    <td>{actor.full_name || "-"}</td>
-                    <td>{actor.email || "-"}</td>
                     <td>
                       <button
                         type="button"

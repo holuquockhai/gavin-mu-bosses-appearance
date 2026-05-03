@@ -56,6 +56,22 @@ export const bossesSlice = createSlice({
       }
     },
 
+    applyPresetVisibility: (state, action) => {
+      const channels = action.payload?.channels || {};
+      const selectedChannel = action.payload?.selectedChannel;
+      const channelSettings = Object.entries(channels).reduce((settings, [channel, bossIds]) => {
+        settings[channel] = Array.isArray(bossIds) ? [...bossIds] : [];
+        return settings;
+      }, {});
+      const showedBossIds = channelSettings[selectedChannel] || [];
+
+      state.visibilityByChannel = channelSettings;
+      state.value = state.value.map((boss) => ({
+        ...boss,
+        isShowed: showedBossIds.includes(boss.id),
+      }));
+    },
+
     showChannelVisibility: (state, action) => {
       const channel = action.payload;
       const showedBossIds = state.visibilityByChannel[channel] || [];
@@ -73,4 +89,11 @@ export const bossesSlice = createSlice({
   }
 });
 
-export const {markBossAsShowed, createBoss, setBosses, applyBossVisibility, showChannelVisibility} = bossesSlice.actions;
+export const {
+  markBossAsShowed,
+  createBoss,
+  setBosses,
+  applyBossVisibility,
+  applyPresetVisibility,
+  showChannelVisibility,
+} = bossesSlice.actions;

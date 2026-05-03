@@ -73,9 +73,16 @@ function RightHiddenNavigation(){
     }, [currentPage, totalPages]);
 
     useEffect(() => {
-        getNotificationsApi()
+        const syncNotifications = () => {
+            getNotificationsApi()
             .then((data) => dispatch(setNotifications(data)))
             .catch(() => {});
+        };
+
+        syncNotifications();
+        const intervalId = setInterval(syncNotifications, 5000);
+
+        return () => clearInterval(intervalId);
     }, [dispatch]);
 
     const handleRemoveNotification = (notificationId) => {

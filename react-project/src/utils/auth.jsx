@@ -1,18 +1,25 @@
+const AUTH_KEYS = ["access_token", "token_type", "user"];
+
+const clearAuthStorage = (storage) => {
+  AUTH_KEYS.forEach((key) => storage.removeItem(key));
+};
+
 export const saveAuth = (data) => {
-  localStorage.setItem("access_token", data.access_token);
-  localStorage.setItem("token_type", data.token_type || "bearer");
+  clearAuthStorage(localStorage);
+  sessionStorage.setItem("access_token", data.access_token);
+  sessionStorage.setItem("token_type", data.token_type || "bearer");
 
   if (data.user) {
-    localStorage.setItem("user", JSON.stringify(data.user));
+    sessionStorage.setItem("user", JSON.stringify(data.user));
   } else {
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
   }
 };
 
-export const getToken = () => localStorage.getItem("access_token");
+export const getToken = () => sessionStorage.getItem("access_token");
 
 export const getUser = () => {
-  const raw = localStorage.getItem("user");
+  const raw = sessionStorage.getItem("user");
 
   if (!raw || raw === "undefined" || raw === "null") {
     return null;
@@ -22,7 +29,7 @@ export const getUser = () => {
     return JSON.parse(raw);
   } catch (err) {
     console.error("Invalid user JSON:", raw);
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
     return null;
   }
 };
@@ -37,7 +44,6 @@ export const isAdmin = () => {
 };
 
 export const logout = () => {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("token_type");
-  localStorage.removeItem("user");
+  clearAuthStorage(sessionStorage);
+  clearAuthStorage(localStorage);
 };
