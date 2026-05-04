@@ -7,6 +7,7 @@ import AdminLeftNavigation from "../admin/components/AdminLeftNavigation";
 import { logout } from "../../utils/auth";
 import { Offcanvas } from "react-bootstrap";
 import logo from "../../assets/logo.png";
+import siteName from "../../assets/site_name.png";
 
 function TopNavigation({ isDark, setIsDark, user }) {
   const notificationCount = useSelector((state) => state.notifications.value.length);
@@ -34,7 +35,8 @@ function TopNavigation({ isDark, setIsDark, user }) {
           <div className="d-flex align-items-center w-100 gap-3">
             <Link to="/" className="navbar-brand top-navigation-logo-link" aria-label="Go to landing page">
               <img src={logo} alt="MU logo" className="top-navigation-logo" />
-              <span className="top-navigation-title">MU BOSS TIMER</span>
+              <img src={siteName} alt="" className="top-navigation-site-name" aria-hidden="true" />
+              <span className="visually-hidden">MU BOSS TIMER</span>
             </Link>
 
             {isAdmin && <AdminLeftNavigation />}

@@ -68,11 +68,12 @@ $color-mode-type: data;
 .top-navigation-logo-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.65rem;
   flex: 0 0 auto;
   padding: 0;
   margin: 0;
   line-height: 1;
+  min-width: 0;
 }
 
 .top-navigation-logo {
@@ -88,6 +89,21 @@ $color-mode-type: data;
   color: var(--bs-body-color);
   letter-spacing: 0;
   white-space: nowrap;
+}
+
+.top-navigation-site-name {
+  width: clamp(150px, 18vw, 240px);
+  max-width: 42vw;
+  height: 34px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+@media (max-width: 575.98px) {
+  .top-navigation-site-name {
+    width: clamp(112px, 36vw, 150px);
+    height: 28px;
+  }
 }
 
 .floating-settings-button {
