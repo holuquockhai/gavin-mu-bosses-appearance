@@ -338,6 +338,13 @@ $color-mode-type: data;
   background: linear-gradient(180deg, rgba(var(--bs-success-rgb), 0.1), rgba(var(--bs-success-rgb), 0.035));
 }
 
+.coming-soon-list.show-all {
+  height: var(--coming-soon-list-height, min(68vh, 720px));
+  padding-right: 0.5rem;
+  align-content: start;
+  position: relative;
+}
+
 .countdown-time {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   font-size: 1.25rem;

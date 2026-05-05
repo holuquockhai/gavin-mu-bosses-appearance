@@ -11,8 +11,12 @@ function LeftHiddenNavigation({
   handleClose,
 }) {
   const dispatch = useDispatch();
-  const notificationPageSize = useSelector((state) => state.notifications.pageSize);
-  const soundEnabled = useSelector((state) => state.systemSettings.soundEnabled);
+  const notificationPageSize = useSelector(
+    (state) => state.notifications.pageSize,
+  );
+  const soundEnabled = useSelector(
+    (state) => state.systemSettings.soundEnabled,
+  );
   const soundStyle = useSelector((state) => state.systemSettings.soundStyle);
 
   return (
@@ -38,7 +42,7 @@ function LeftHiddenNavigation({
             Setup your theme Dark Mode or Light Mode, sound and notification
           </div>
           <div className="dropdown mt-3">
-            <div className="form-check form-switch pe-4">
+            {/* <div className="form-check form-switch pe-4">
               <input
                 className="form-check-input"
                 type="checkbox"
@@ -54,7 +58,7 @@ function LeftHiddenNavigation({
               >
                 Dark mode
               </label>
-            </div>
+            </div> */}
 
             <div className="form-check form-switch pe-4">
               <input
@@ -63,7 +67,9 @@ function LeftHiddenNavigation({
                 role="switch"
                 id="switchCheckSound"
                 checked={soundEnabled}
-                onChange={(event) => dispatch(setSoundEnabled(event.target.checked))}
+                onChange={(event) =>
+                  dispatch(setSoundEnabled(event.target.checked))
+                }
               />
               <label
                 className="small form-check-label"
@@ -88,14 +94,19 @@ function LeftHiddenNavigation({
               <option value="alarm">Alarm</option>
             </select>
 
-            <label className="small form-label mt-3" htmlFor="notificationPageSize">
+            <label
+              className="small form-label mt-3"
+              htmlFor="notificationPageSize"
+            >
               Notifications per page
             </label>
             <select
               className="select form-select"
               id="notificationPageSize"
               value={notificationPageSize}
-              onChange={(event) => dispatch(setNotificationPageSize(event.target.value))}
+              onChange={(event) =>
+                dispatch(setNotificationPageSize(event.target.value))
+              }
             >
               <option value="3">3</option>
               <option value="5">5</option>

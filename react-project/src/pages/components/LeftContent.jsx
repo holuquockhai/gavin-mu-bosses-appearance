@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { completeExpiredCountdowns, markBossAppeared, setBossTimerState } from "../../js/timerSlice";
 import { addBossAppearedNotification } from "../../js/notificationSlice";
@@ -32,6 +32,10 @@ function LeftContent(){
     const soundEnabled = useSelector((state) => state.systemSettings.soundEnabled);
     const soundStyle = useSelector((state) => state.systemSettings.soundStyle);
     const [, setTick] = useState(0);
+    const [showAllComingSoon, setShowAllComingSoon] = useState(false);
+    const [visibleComingSoonCount, setVisibleComingSoonCount] = useState(16);
+    const [defaultComingSoonListHeight, setDefaultComingSoonListHeight] = useState(0);
+    const comingSoonListRef = useRef(null);
 
     const notifyBossAppeared = (timer, actorName) => {
         const payload = {
@@ -95,15 +99,66 @@ function LeftContent(){
         return () => clearInterval(intervalId);
     }, [dispatch, timers]);
 
-    const comingSoonTimers = useMemo(() => {
-        return [...timers].sort((firstTimer, secondTimer) => firstTimer.endAt - secondTimer.endAt).slice(0, 8);
+    const sortedComingSoonTimers = useMemo(() => {
+        return [...timers].sort((firstTimer, secondTimer) => firstTimer.endAt - secondTimer.endAt);
     }, [timers]);
+    const comingSoonTimers = showAllComingSoon
+        ? sortedComingSoonTimers.slice(0, visibleComingSoonCount)
+        : sortedComingSoonTimers.slice(0, 8);
+    const hasMoreComingSoonTimers = showAllComingSoon && visibleComingSoonCount < sortedComingSoonTimers.length;
+
+    useEffect(() => {
+        setVisibleComingSoonCount(16);
+    }, [showAllComingSoon]);
+
+    useEffect(() => {
+        if (!showAllComingSoon && comingSoonListRef.current) {
+            setDefaultComingSoonListHeight(comingSoonListRef.current.offsetHeight);
+        }
+    }, [comingSoonTimers.length, showAllComingSoon]);
+
+    const handleComingSoonScroll = (event) => {
+        if (!showAllComingSoon || !hasMoreComingSoonTimers) {
+            return;
+        }
+
+        const element = event.currentTarget;
+        const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
+
+        if (distanceFromBottom < 80) {
+            setVisibleComingSoonCount((currentCount) => Math.min(currentCount + 12, sortedComingSoonTimers.length));
+        }
+    };
 
     return(
         <>
             <div className="card p-3 rounded-4 unified">
-                <h5 className="card-title">Coming Soon Boss (Top 8)</h5>
-                <div id="soonestList" className="d-grid gap-2">
+                <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <h5 className="card-title mb-0">
+                        Coming Soon Boss {showAllComingSoon ? "(All)" : "(Top 8)"}
+                    </h5>
+                    {sortedComingSoonTimers.length > 8 && (
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => setShowAllComingSoon((value) => !value)}
+                        >
+                            {showAllComingSoon ? "Show Top 8" : "Show All"}
+                        </button>
+                    )}
+                </div>
+                <div
+                    id="soonestList"
+                    ref={comingSoonListRef}
+                    className={`coming-soon-list d-grid gap-2 ${showAllComingSoon ? "show-all overflow-auto" : ""}`}
+                    onScroll={handleComingSoonScroll}
+                    tabIndex={showAllComingSoon ? 0 : undefined}
+                    style={
+                        showAllComingSoon && defaultComingSoonListHeight
+                            ? { "--coming-soon-list-height": `${defaultComingSoonListHeight}px` }
+                            : undefined
+                    }
+                >
                     {comingSoonTimers.length === 0 ? (
                         <p className="small text-muted mb-0">Set a boss timer to show countdown here.</p>
                     ) : (
@@ -133,6 +188,11 @@ function LeftContent(){
                                 </div>
                             );
                         })
+                    )}
+                    {hasMoreComingSoonTimers && (
+                        <div className="small text-muted text-center py-2">
+                            Scroll to load more bosses
+                        </div>
                     )}
                 </div>
             </div>
