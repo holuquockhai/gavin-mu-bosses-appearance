@@ -49,7 +49,7 @@ $color-mode-type: data;
 }
 
 .main-row {
-  padding: 5rem 0.75rem 4.5rem;
+  padding: 5.75rem 0.75rem 4.5rem;
 }
 
 .homepage-stack {
@@ -63,6 +63,8 @@ $color-mode-type: data;
 
 .sticky-top-navigation {
   z-index: 1040;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
 }
 
 .top-navigation-logo-link {
@@ -99,6 +101,30 @@ $color-mode-type: data;
   object-position: left center;
 }
 
+.top-navigation-notification-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.top-navigation-notification-button .bi {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.top-navigation-notification-badge {
+  top: 0.2rem;
+  right: 0.15rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.28rem;
+  font-size: 0.65rem;
+  line-height: 1.05rem;
+  transform: translate(35%, -25%);
+}
+
 @media (max-width: 575.98px) {
   .top-navigation-site-name {
     width: clamp(112px, 36vw, 150px);
@@ -111,8 +137,8 @@ $color-mode-type: data;
   align-items: center;
   justify-content: center;
   position: fixed;
-  right: 1.25rem;
-  bottom: 1.25rem;
+  left: 1.25rem;
+  bottom: 5rem;
   z-index: 1035;
   width: 44px;
   height: 44px;
@@ -126,6 +152,45 @@ $color-mode-type: data;
   transform: translateY(-1px);
 }
 
+[data-bs-theme="light"] {
+  .floating-settings-button {
+    color: #fff;
+    background-color: #343a40;
+    border-color: #343a40;
+  }
+
+  .floating-settings-button:hover,
+  .floating-settings-button:focus {
+    color: #fff;
+    background-color: #212529;
+    border-color: #212529;
+  }
+
+  .floating-settings-button .bi {
+    color: #fff;
+  }
+}
+
+[data-bs-theme="dark"] {
+  .floating-settings-button {
+    color: #212529;
+    background-color: #f8f9fa;
+    border-color: #f8f9fa;
+    box-shadow: 0 12px 28px rgba(255, 255, 255, 0.12);
+  }
+
+  .floating-settings-button:hover,
+  .floating-settings-button:focus {
+    color: #000;
+    background-color: #e9ecef;
+    border-color: #e9ecef;
+  }
+
+  .floating-settings-button .bi {
+    color: #212529;
+  }
+}
+
 .admin-top-navigation .nav-link,
 .admin-mobile-navigation .nav-link {
   color: var(--bs-body-color);
@@ -133,6 +198,10 @@ $color-mode-type: data;
 
 .admin-nav-icon {
   flex: 0 0 18px;
+  width: 18px;
+  font-size: 1rem;
+  line-height: 1;
+  text-align: center;
 }
 
 .boss-control-card,

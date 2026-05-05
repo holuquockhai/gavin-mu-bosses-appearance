@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import "./api/http.js";
+import "bootstrap-icons/font/bootstrap-icons.css";
 // import './index.css'
 import App from "./App.jsx";
 import { bossesSlice } from "./js/bossSlice.js";
