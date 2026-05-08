@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
+import { Modal } from "bootstrap";
+import { useNavigate } from "react-router-dom";
 import {
+  factoryResetWebsiteApi,
   getSystemSettingsApi,
   sendSystemSettingsTestEmailApi,
   updateBrandingSettingsApi,
   updateSystemSettingsApi,
 } from "../../api/systemSettingsApi";
 import { USER_API_URL } from "../../api/userApi";
+import { logout } from "../../utils/auth";
 
 const initialForm = {
   app_secret_key: "",
@@ -43,10 +47,13 @@ const getErrorMessage = (err, fallback) => {
 };
 
 function SystemSettings() {
+  const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState("");
   const [smtpPasswordConfigured, setSmtpPasswordConfigured] = useState(false);
   const [mysqlPasswordConfigured, setMysqlPasswordConfigured] = useState(false);
   const [brandingFiles, setBrandingFiles] = useState({
@@ -177,6 +184,40 @@ function SystemSettings() {
       setError(getErrorMessage(err, "Could not send test email"));
     } finally {
       setIsTesting(false);
+    }
+  };
+
+  const showFactoryResetModal = () => {
+    setResetConfirmText("");
+    setError("");
+    const modalElement = document.getElementById("factoryResetModal");
+    Modal.getOrCreateInstance(modalElement).show();
+  };
+
+  const hideFactoryResetModal = () => {
+    const modalElement = document.getElementById("factoryResetModal");
+    Modal.getOrCreateInstance(modalElement).hide();
+  };
+
+  const handleFactoryReset = async () => {
+    if (resetConfirmText !== "RESET") {
+      setError('Type "RESET" to confirm website factory reset.');
+      return;
+    }
+
+    setIsResetting(true);
+    setMessage("");
+    setError("");
+
+    try {
+      await factoryResetWebsiteApi();
+      hideFactoryResetModal();
+      logout();
+      navigate("/login", { replace: true });
+    } catch (err) {
+      setError(getErrorMessage(err, "Factory reset failed"));
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -559,6 +600,33 @@ function SystemSettings() {
                 </div>
               </div>
             </div>
+
+            <div className="card border-danger">
+              <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
+                <h5 className="mb-1 text-danger">Website Factory Reset</h5>
+                <p className="small text-muted mb-0">
+                  Truncate all database tables and recreate the default admin users.
+                </p>
+              </div>
+              <div className="card-body">
+                <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                  <div>
+                    <p className="mb-1 fw-semibold">This action permanently removes all website data.</p>
+                    <p className="small text-muted mb-0">
+                      Users, bosses, channels, timers, history, presets, notifications, and settings will be reset.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger"
+                    onClick={showFactoryResetModal}
+                    disabled={isResetting}
+                  >
+                    Factory Reset
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="d-flex justify-content-end mt-4">
@@ -589,6 +657,66 @@ function SystemSettings() {
             <div className="col-12 col-lg-4">
               <button type="button" className="btn btn-outline-secondary w-100" onClick={handleTestEmail} disabled={isTesting}>
                 {isTesting ? "Sending..." : "Send Test"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="modal fade"
+        id="factoryResetModal"
+        tabIndex="-1"
+        aria-labelledby="factoryResetModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h1 className="modal-title fs-5 text-danger" id="factoryResetModalLabel">
+                Confirm website factory reset
+              </h1>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                disabled={isResetting}
+              ></button>
+            </div>
+            <div className="modal-body">
+              <p>
+                This will truncate all database tables and recreate the default admin users. You will be logged out
+                after the reset completes.
+              </p>
+              <label className="form-label" htmlFor="factoryResetConfirm">
+                Type RESET to continue
+              </label>
+              <input
+                id="factoryResetConfirm"
+                type="text"
+                className="form-control"
+                value={resetConfirmText}
+                onChange={(event) => setResetConfirmText(event.target.value)}
+                disabled={isResetting}
+              />
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+                disabled={isResetting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                disabled={isResetting || resetConfirmText !== "RESET"}
+                onClick={handleFactoryReset}
+              >
+                {isResetting ? "Resetting..." : "Reset Website"}
               </button>
             </div>
           </div>

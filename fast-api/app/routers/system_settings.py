@@ -4,8 +4,10 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.db.database import Base
 from app.db.database import get_db
 from app.dependencies.auth import require_roles
 from app.schemas.system_setting import (
@@ -15,6 +17,7 @@ from app.schemas.system_setting import (
     SystemSettingsUpdate,
 )
 from app.services.mail_service import send_email
+from app.services.seed_service import seed_admin
 from app.services.system_settings_service import get_settings_map, save_settings_map
 
 BRANDING_UPLOAD_ROOT = Path(__file__).resolve().parents[2] / "uploads" / "branding"
@@ -180,3 +183,25 @@ def send_test_email(
         raise HTTPException(status_code=400, detail=f"Could not send test email: {exc}") from exc
 
     return {"message": "Test email sent successfully"}
+
+
+@router.post("/factory-reset")
+def factory_reset_website(db: Annotated[Session, Depends(get_db)]):
+    table_names = [table.name for table in reversed(Base.metadata.sorted_tables)]
+
+    try:
+        db.execute(text("SET FOREIGN_KEY_CHECKS=0"))
+        for table_name in table_names:
+            db.execute(text(f"TRUNCATE TABLE `{table_name}`"))
+        db.execute(text("SET FOREIGN_KEY_CHECKS=1"))
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        db.execute(text("SET FOREIGN_KEY_CHECKS=1"))
+        db.commit()
+        raise HTTPException(status_code=500, detail=f"Factory reset failed: {exc}") from exc
+
+    db.expunge_all()
+    seed_admin(db)
+
+    return {"message": "Website factory reset completed. Default admin users have been recreated."}

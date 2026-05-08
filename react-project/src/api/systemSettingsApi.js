@@ -67,3 +67,11 @@ export const sendSystemSettingsTestEmailApi = async (recipient) => {
 
   return response.data;
 };
+
+export const factoryResetWebsiteApi = async () => {
+  const response = await axios.post(`${API_URL}/system-settings/factory-reset`, null, {
+    headers: authHeaders(),
+  });
+
+  return response.data;
+};
