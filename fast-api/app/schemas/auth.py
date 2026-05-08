@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr
 
 
@@ -16,10 +18,21 @@ class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
 
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str
+
+
 class UserLoginResponse(BaseModel):
     id: int
     email: EmailStr
     full_name: str | None = None
+    phone_number: str | None = None
+    country: str | None = None
+    bio: str | None = None
+    avatar_url: str | None = None
+    created_at: datetime
+    last_login_at: datetime | None = None
     roles: list[str]
 
 

@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import shutil
+from pathlib import Path
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
@@ -8,10 +12,20 @@ from app.db.database import get_db
 from app.dependencies.auth import get_current_user, require_permissions
 from app.models.role import Role
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.schemas.user import UserCreate, UserPublicProfileResponse, UserResponse, UserUpdate
+from app.services.mail_service import is_mail_configured, send_account_activated_email
+from app.services.system_settings_service import get_settings_map
 
 # Users Router
 router = APIRouter(prefix="/users", tags=["users"])
+
+UPLOAD_ROOT = Path(__file__).resolve().parents[2] / "uploads" / "avatars"
+ALLOWED_AVATAR_TYPES = {
+    "image/gif": ".gif",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
 
 
 def _get_default_user_role(db: Session) -> Role:
@@ -47,10 +61,80 @@ def _email_exists(db: Session, email: str, exclude_user_id: int | None = None) -
     return db.execute(stmt).scalar_one_or_none() is not None
 
 
+def _send_account_active_email_if_configured(db: Session, user: User) -> None:
+    if not is_mail_configured(db):
+        return
+
+    values = get_settings_map(db)
+    base_url = (values.get("app_base_url") or "http://127.0.0.1:5173").rstrip("/")
+    try:
+        send_account_activated_email(db, user.email, user.full_name, f"{base_url}/login")
+    except Exception:
+        pass
+
+
 # Get current user Router
 @router.get("/me", response_model=UserResponse)
 def read_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.put("/me/profile", response_model=UserResponse)
+def update_my_profile(
+    full_name: str | None = Form(default=None),
+    phone_number: str | None = Form(default=None),
+    country: str | None = Form(default=None),
+    bio: str | None = Form(default=None),
+    password: str | None = Form(default=None),
+    avatar: UploadFile | None = File(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user = _get_user_by_id(db, current_user.id)
+
+    if full_name is not None:
+        user.full_name = full_name.strip() or None
+
+    if phone_number is not None:
+        user.phone_number = phone_number.strip() or None
+
+    if country is not None:
+        user.country = country.strip() or None
+
+    if bio is not None:
+        user.bio = bio.strip() or None
+
+    if password:
+        if len(password) < 6:
+            raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+        user.hashed_password = hash_password(password)
+
+    if avatar and avatar.filename:
+        extension = ALLOWED_AVATAR_TYPES.get(avatar.content_type or "")
+        if not extension:
+            raise HTTPException(status_code=400, detail="Avatar must be a PNG, JPG, GIF, or WEBP image")
+
+        UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+        filename = f"user-{user.id}-{uuid4().hex}{extension}"
+        avatar_path = UPLOAD_ROOT / filename
+
+        with avatar_path.open("wb") as file_object:
+            shutil.copyfileobj(avatar.file, file_object)
+
+        user.avatar_url = f"/uploads/avatars/{filename}"
+
+    db.commit()
+    db.refresh(user)
+    return _get_user_by_id(db, user.id)
+
+
+@router.get("/profile/{user_id}", response_model=UserPublicProfileResponse)
+def read_user_profile(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return _get_user_by_id(db, user_id)
 
 
 # get user Router
@@ -89,6 +173,10 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    if user.is_active:
+        _send_account_active_email_if_configured(db, user)
+
     return _get_user_by_id(db, user.id)
 
 
@@ -100,6 +188,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
 )
 def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)):
     user = _get_user_by_id(db, user_id)
+    was_inactive = not user.is_active
     data = payload.model_dump(exclude_unset=True)
 
     if "email" in data:
@@ -110,6 +199,12 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
     if "full_name" in data:
         user.full_name = data["full_name"]
 
+    if "phone_number" in data:
+        user.phone_number = data["phone_number"]
+
+    if "country" in data:
+        user.country = data["country"]
+
     if "is_active" in data:
         user.is_active = data["is_active"]
 
@@ -118,6 +213,10 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
 
     db.commit()
     db.refresh(user)
+
+    if was_inactive and user.is_active:
+        _send_account_active_email_if_configured(db, user)
+
     return _get_user_by_id(db, user.id)
 
 # Delete a user

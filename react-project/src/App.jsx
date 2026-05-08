@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -8,8 +8,12 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import CreateBossPage from "./pages/admin/CreateBossPage";
 import Users from "./pages/admin/Users";
 import Channels from "./pages/admin/Channels";
+import SystemSettings from "./pages/admin/SystemSettings";
 import Layout from "./pages/components/Layout";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
+import ResetPassword from "./pages/ResetPassword";
+import NotFound from "./pages/NotFound";
 
 function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -27,6 +31,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route
           path="/"
@@ -39,6 +44,8 @@ function App() {
           <Route index element={<Landing />} />
           {/* Child route: renders at "/settings" */}
           <Route path="/settings" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:userId" element={<Profile />} />
         </Route>
 
         <Route element={<AdminRoute />}>
@@ -46,10 +53,11 @@ function App() {
             <Route path="users" element={<Users />} />
             <Route path="create-boss" element={<CreateBossPage />} />
             <Route path="channels" element={<Channels />} />
+            <Route path="system-settings" element={<SystemSettings />} />
           </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

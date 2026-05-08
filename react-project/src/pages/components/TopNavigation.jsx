@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import LeftHiddenNavigation from "./LeftHiddenNavigation";
 import RightHiddenNavigation from "./RightHiddenNavigation";
@@ -8,13 +8,45 @@ import { logout } from "../../utils/auth";
 import { Offcanvas } from "react-bootstrap";
 import logo from "../../assets/logo.png";
 import siteName from "../../assets/site_name.png";
+import { USER_API_URL } from "../../api/userApi";
+import { getPublicBrandingApi } from "../../api/systemSettingsApi";
+
+function resolveAvatarUrl(avatarUrl) {
+  if (!avatarUrl) {
+    return "";
+  }
+
+  return avatarUrl.startsWith("http") ? avatarUrl : `${USER_API_URL}${avatarUrl}`;
+}
 
 function TopNavigation({ isDark, setIsDark, user }) {
   const notificationCount = useSelector((state) => state.notifications.value.length);
   const displayName = user?.full_name || user?.email || "User";
   const isAdmin = user?.roles?.includes("admin");
+  const avatarUrl = resolveAvatarUrl(user?.avatar_url);
+  const [branding, setBranding] = useState({
+    site_logo_url: "",
+    site_sublogo_url: "",
+    site_head_title: "MU BOSS TIMER",
+  });
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    getPublicBrandingApi()
+      .then((data) => {
+        setBranding({
+          site_logo_url: data.site_logo_url || "",
+          site_sublogo_url: data.site_sublogo_url || "",
+          site_head_title: data.site_head_title || "MU BOSS TIMER",
+        });
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    document.title = branding.site_head_title || "MU BOSS TIMER";
+  }, [branding.site_head_title]);
 
   const handleLogout = () => {
     logout();
@@ -28,15 +60,23 @@ function TopNavigation({ isDark, setIsDark, user }) {
   const handleShow = () => setShow(true);
   const handleCloseAdminNavigation = () => setShowAdminNavigation(false);
   const handleShowAdminNavigation = () => setShowAdminNavigation(true);
+  const siteLogoUrl = branding.site_logo_url ? resolveAvatarUrl(branding.site_logo_url) : logo;
+  const siteSublogoUrl = branding.site_sublogo_url ? resolveAvatarUrl(branding.site_sublogo_url) : siteName;
+  const headTitle = branding.site_head_title || "MU BOSS TIMER";
+
   return (
     <>
       <nav className="navbar fixed-top sticky-top-navigation bg-body-tertiary border-bottom">
         <div className="container-fluid">
           <div className="d-flex align-items-center w-100 gap-3">
             <Link to="/" className="navbar-brand top-navigation-logo-link" aria-label="Go to landing page">
-              <img src={logo} alt="MU logo" className="top-navigation-logo" />
-              <img src={siteName} alt="" className="top-navigation-site-name" aria-hidden="true" />
-              <span className="visually-hidden">MU BOSS TIMER</span>
+              <img src={siteLogoUrl} alt={`${headTitle} logo`} className="top-navigation-logo" />
+              {siteSublogoUrl ? (
+                <img src={siteSublogoUrl} alt="" className="top-navigation-site-name" aria-hidden="true" />
+              ) : (
+                <span className="top-navigation-title fw-bold">{headTitle}</span>
+              )}
+              <span className="visually-hidden">{headTitle}</span>
             </Link>
 
             {isAdmin && <AdminLeftNavigation />}
@@ -52,7 +92,20 @@ function TopNavigation({ isDark, setIsDark, user }) {
             )}
 
             <div className="ms-auto d-flex align-items-center gap-2">
-              <span className="small fw-semibold text-nowrap d-none d-sm-inline">{displayName}</span>
+              <Link
+                to="/profile"
+                className="top-navigation-profile-link text-decoration-none"
+                title="Edit profile"
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="top-navigation-avatar" />
+                ) : (
+                  <span className="top-navigation-avatar-placeholder" aria-hidden="true">
+                    {displayName.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span className="small fw-semibold text-nowrap d-none d-sm-inline">{displayName}</span>
+              </Link>
               <button onClick={handleLogout} className="btn btn-sm">
                 Logout
               </button>

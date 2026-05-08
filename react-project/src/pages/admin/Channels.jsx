@@ -280,7 +280,7 @@ export default function Channels() {
     <div className="p-3 card rounded-4 unified">
       <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
         <h4 className="mb-0">Channels Management</h4>
-        <button type="button" className="btn btn-primary btn-sm" onClick={openCreateModal}>
+        <button type="button" className="btn btn-outline-success me-2" onClick={openCreateModal}>
           + Create Channel
         </button>
       </div>

@@ -6,6 +6,8 @@ from app.models.timer import BossTimer, BossHistory
 from app.models.notification import Notification, NotificationDismissal
 from app.models.preset import Preset
 from app.models.channel import Channel
+from app.models.system_setting import SystemSetting
+from app.models.password_reset_token import PasswordResetToken
 
 # Declare all table for creation
 __all__ = [
@@ -21,4 +23,6 @@ __all__ = [
     "NotificationDismissal",
     "Preset",
     "Channel",
+    "SystemSetting",
+    "PasswordResetToken",
 ]

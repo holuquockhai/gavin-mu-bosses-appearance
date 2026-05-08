@@ -45,7 +45,11 @@ export default function CreateBossPage() {
     setBossListVersion((currentVersion) => currentVersion + 1);
     setNotification({
       id: Date.now(),
-      message: `Boss deleted successfully: ${boss.name}`,
+      message: (
+        <>
+          <strong>{boss.name}</strong> has been successfully deleted!
+        </>
+      ),
     });
   };
 
@@ -66,7 +70,7 @@ export default function CreateBossPage() {
     <div className="p-3 card rounded-4 unified">
       <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
         <h4 className="mb-0">Bosses Management</h4>
-        <button type="button" className="btn btn-primary btn-sm" onClick={openCreateModal}>
+        <button type="button" className="btn btn-outline-success me-2" onClick={openCreateModal}>
           + Create Boss
         </button>
       </div>

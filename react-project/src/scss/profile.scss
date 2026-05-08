@@ -1,0 +1,130 @@
+.profile-card {
+  margin: 0 auto;
+}
+
+.profile-page-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--bs-border-color);
+  background: var(--bs-body-bg);
+}
+
+.profile-hero {
+  display: flex;
+  justify-content: center;
+  padding: 1.75rem 1.5rem;
+  border-bottom: 1px solid var(--bs-border-color);
+  background: none;
+}
+
+.profile-avatar-section {
+  display: inline-grid;
+  justify-items: center;
+  gap: 0.85rem;
+  text-align: center;
+}
+
+.profile-avatar-preview {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-tertiary-bg);
+}
+
+.profile-avatar-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--bs-secondary);
+  font-size: 3.25rem;
+  font-weight: 800;
+}
+
+.profile-detail-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--bs-secondary-color);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.profile-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.profile-meta-after-bio {
+  margin-top: 0.35rem;
+}
+
+.profile-meta-item {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.65rem 0.8rem;
+  border-left: 3px solid rgba(var(--bs-primary-rgb), 0.75);
+  background: rgba(var(--bs-body-bg-rgb), 0.72);
+}
+
+.profile-meta-item span {
+  color: var(--bs-secondary-color);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.profile-meta-item strong {
+  font-size: 0.86rem;
+}
+
+.profile-content {
+  padding: 1.5rem;
+}
+
+.profile-detail-view .profile-content {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.profile-detail-item {
+  padding: 0;
+}
+
+.profile-detail-item-wide {
+  grid-column: 1 / -1;
+}
+
+.profile-section {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.38fr) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.profile-section:first-of-type {
+  padding-top: 0;
+}
+
+.profile-section-title {
+  margin-bottom: 0.25rem;
+  font-weight: 800;
+}
+
+@media (max-width: 575.98px) {
+  .profile-hero,
+  .profile-avatar-section {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-detail-view .profile-content,
+  .profile-meta,
+  .profile-section {
+    grid-template-columns: 1fr;
+  }
+}

@@ -8,7 +8,7 @@ import { getUser } from "../../utils/auth";
 import { useState, useEffect } from "react";
 
 export default function Layout() {
-  const user = getUser();
+  const [user, setUser] = useState(() => getUser());
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     return saved ? saved === "dark" : false;
@@ -19,6 +19,13 @@ export default function Layout() {
     document.documentElement.setAttribute("data-bs-theme", theme);
     localStorage.setItem("theme", theme);
   }, [isDark]);
+
+  useEffect(() => {
+    const handleUserUpdated = (event) => setUser(event.detail || getUser());
+
+    window.addEventListener("auth:user-updated", handleUserUpdated);
+    return () => window.removeEventListener("auth:user-updated", handleUserUpdated);
+  }, []);
   return (
     <>
       <TopNavigation isDark={isDark} setIsDark={setIsDark} user={user} />

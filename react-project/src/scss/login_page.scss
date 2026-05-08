@@ -139,7 +139,8 @@
 }
 
 #login-form .form-control,
-#forgot-password-form .form-control {
+#forgot-password-form .form-control,
+#reset-password-form .form-control {
   min-height: 58px;
   border-color: #d9e1ec;
   border-radius: 0.5rem;
@@ -147,7 +148,8 @@
 }
 
 #login-form .form-control:focus,
-#forgot-password-form .form-control:focus {
+#forgot-password-form .form-control:focus,
+#reset-password-form .form-control:focus {
   border-color: #1f7a62;
   box-shadow: 0 0 0 0.25rem rgba(31, 122, 98, 0.14);
 }

@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.models.boss import Boss
+from app.models.preset import Preset
+from app.models.timer import BossHistory, BossTimer
 from app.models.user import User
 
 def create_boss(db: Session, name: str, current_user: User) -> Boss:
@@ -34,6 +36,26 @@ def get_bosse_by_name(db: Session, name: str):
 def delete_boss(db: Session, boss_id: int):
     boss = get_boss(db, boss_id)
     if boss:
+        db.query(BossTimer).filter(BossTimer.boss_id == boss_id).delete(synchronize_session=False)
+        db.query(BossHistory).filter(BossHistory.boss_id == boss_id).delete(synchronize_session=False)
+
+        presets = db.query(Preset).all()
+        for preset in presets:
+            channels = preset.channels or {}
+            updated_channels = {}
+
+            for channel, boss_ids in channels.items():
+                if isinstance(boss_ids, list):
+                    updated_channels[channel] = [
+                        saved_boss_id
+                        for saved_boss_id in boss_ids
+                        if str(saved_boss_id) != str(boss_id)
+                    ]
+                else:
+                    updated_channels[channel] = boss_ids
+
+            preset.channels = updated_channels
+
         db.delete(boss)
         db.commit()
     return boss

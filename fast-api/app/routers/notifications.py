@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.db.database import get_db
 from app.dependencies.auth import get_current_user
@@ -24,6 +24,7 @@ def list_notifications(
 
     return (
         db.query(Notification)
+        .options(joinedload(Notification.user))
         .filter(~Notification.id.in_(dismissed_notification_ids))
         .order_by(Notification.created_at.desc(), Notification.id.desc())
         .all()
@@ -47,7 +48,12 @@ def create_notification(
     db.add(notification)
     db.commit()
     db.refresh(notification)
-    return notification
+    return (
+        db.query(Notification)
+        .options(joinedload(Notification.user))
+        .filter(Notification.id == notification.id)
+        .first()
+    )
 
 
 @router.delete("/{notification_id}")

@@ -4,7 +4,34 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="" />
+    <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/db/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/db/base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/notifications.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/notifications.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/users.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/notification.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/notification.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/boss_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/boss_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/App.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/api/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/api/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/api/userApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/api/userApi.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/js/notificationSlice.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/js/notificationSlice.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/admin/AdminLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/admin/AdminLayout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/admin/Channels.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/admin/Channels.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/admin/CreateBossPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/admin/CreateBossPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/Layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/Layout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/RightHiddenNavigation.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/RightHiddenNavigation.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/TopNavigation.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/TopNavigation.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/router.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/router.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/scss/homepage.scss" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/scss/homepage.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/scss/login_page.scss" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/scss/login_page.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/utils/auth.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/utils/auth.jsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -35,30 +62,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "ai.playground.ignore.import.keys.banner.in.settings": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "codex",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/Users/holuquockhai/Documents/Gavin/gavin-mu-bosses-appearance/fast-api",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;codex&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/holuquockhai/Documents/Gavin/gavin-mu-bosses-appearance/fast-api&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -116,7 +143,8 @@
       <workItem from="1775107609492" duration="14009000" />
       <workItem from="1775187007614" duration="1938000" />
       <workItem from="1775921853198" duration="8462000" />
-      <workItem from="1777153580717" duration="3292000" />
+      <workItem from="1777153580717" duration="5286000" />
+      <workItem from="1778133263456" duration="2139000" />
     </task>
     <servers />
   </component>

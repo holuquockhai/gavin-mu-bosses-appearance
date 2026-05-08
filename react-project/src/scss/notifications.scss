@@ -1,0 +1,41 @@
+.notification-actor-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--bs-body-color);
+  font-weight: 700;
+  line-height: 1.35;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.notification-actor-link:hover,
+.notification-actor-link:focus {
+  color: var(--bs-primary);
+}
+
+.notification-actor-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--bs-border-color);
+}
+
+.notification-actor-avatar-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--bs-secondary);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.notification-actor-name {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.35;
+  vertical-align: middle;
+}

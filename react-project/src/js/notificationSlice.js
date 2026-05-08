@@ -20,6 +20,15 @@ export const notificationSlice = createSlice({
         type: notification.type,
         ...notification.payload,
         createdAt: new Date(notification.created_at).getTime(),
+        userId: notification.user_id,
+        user: notification.user
+          ? {
+              id: notification.user.id,
+              fullName: notification.user.full_name,
+              bio: notification.user.bio,
+              avatarUrl: notification.user.avatar_url,
+            }
+          : null,
       }));
     },
     setNotificationPageSize: (state, action) => {

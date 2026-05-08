@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Any
 from pydantic import BaseModel
 
+from app.schemas.user import UserPublicProfileResponse
+
 
 class NotificationCreate(BaseModel):
     type: str
@@ -15,5 +17,6 @@ class NotificationResponse(BaseModel):
     payload: dict[str, Any]
     created_at: datetime
     user_id: int
+    user: UserPublicProfileResponse | None = None
 
     model_config = {"from_attributes": True}
