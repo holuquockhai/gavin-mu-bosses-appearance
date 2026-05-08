@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr, Field
 class SystemSettingsResponse(BaseModel):
     app_secret_key: str | None = None
     app_base_url: str | None = None
+    api_base_url: str | None = None
     site_logo_url: str | None = None
     site_sublogo_url: str | None = None
     site_head_title: str = "MU BOSS TIMER"
@@ -28,6 +29,7 @@ class SystemSettingsResponse(BaseModel):
 class SystemSettingsUpdate(BaseModel):
     app_secret_key: str | None = Field(default=None, min_length=8)
     app_base_url: str | None = None
+    api_base_url: str | None = None
     site_logo_url: str | None = None
     site_sublogo_url: str | None = None
     site_head_title: str | None = None

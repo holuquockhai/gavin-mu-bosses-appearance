@@ -82,6 +82,7 @@ def _settings_response(db: Session) -> SystemSettingsResponse:
     return SystemSettingsResponse(
         app_secret_key=values.get("app_secret_key") or None,
         app_base_url=values.get("app_base_url") or None,
+        api_base_url=values.get("api_base_url") or None,
         site_logo_url=values.get("site_logo_url") or None,
         site_sublogo_url=values.get("site_sublogo_url") or None,
         site_head_title=values.get("site_head_title") or "MU BOSS TIMER",

@@ -10,6 +10,7 @@ import { USER_API_URL } from "../../api/userApi";
 const initialForm = {
   app_secret_key: "",
   app_base_url: "http://127.0.0.1:5173",
+  api_base_url: "http://127.0.0.1:8000",
   site_logo_url: "",
   site_sublogo_url: "",
   site_head_title: "MU BOSS TIMER",
@@ -100,6 +101,7 @@ function SystemSettings() {
       const nullableFields = [
         "app_secret_key",
         "app_base_url",
+        "api_base_url",
         "site_logo_url",
         "site_sublogo_url",
         "site_head_title",
@@ -198,7 +200,7 @@ function SystemSettings() {
             <div className="card">
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">Application</h5>
-                <p className="small text-muted mb-0">Core application URLs and token secret.</p>
+                <p className="small text-muted mb-0">Core application URL and token secret.</p>
               </div>
               <div className="card-body">
                 <div className="row g-3">
@@ -223,6 +225,29 @@ function SystemSettings() {
                       type="url"
                       className="form-control"
                       value={form.app_base_url || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
+                <h5 className="mb-1">API Settings</h5>
+                <p className="small text-muted mb-0">Public backend API endpoint used by deployment and emails.</p>
+              </div>
+              <div className="card-body">
+                <div className="row g-3">
+                  <div className="col-12">
+                    <label className="form-label" htmlFor="apiBaseUrl">API base URL</label>
+                    <input
+                      id="apiBaseUrl"
+                      name="api_base_url"
+                      type="url"
+                      className="form-control"
+                      placeholder="https://your-domain.com/api"
+                      value={form.api_base_url || ""}
                       onChange={handleChange}
                     />
                   </div>
