@@ -1,6 +1,9 @@
 node_modules
 dist
 .env
+.venv/
+fast-api/.venv/
+react-project/package-lock.json
 .DS_Store
 .vscode
 .idea
