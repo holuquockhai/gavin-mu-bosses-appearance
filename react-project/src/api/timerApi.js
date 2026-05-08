@@ -1,7 +1,6 @@
 import axios from "axios";
+import { API_URL } from "./config";
 import { getToken } from "../utils/auth";
-
-const API_URL = "http://127.0.0.1:8000";
 
 const authHeaders = () => ({
   "Content-Type": "application/json",

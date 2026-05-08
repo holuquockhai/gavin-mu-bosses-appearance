@@ -1,7 +1,6 @@
 import axios from "axios";
+import { API_URL } from "./config";
 import { getToken } from "../utils/auth";
-
-const API_URL = "http://127.0.0.1:8000";
 
 export const createBossApi = async (payload) => {
   const response = await axios.post(`${API_URL}/bosses/`, payload, {
@@ -58,7 +57,7 @@ export const updateBossApi = async (bossId, payload) => {
 };
 
 // const fetchData = async () => {
-//   const response = await axios.get('http://127.0.0.1:8000', {
+//   const response = await axios.get(API_URL, {
 //     headers: {
 //       'Authorization': `Bearer ${getToken()}`
 //     }
