@@ -61,7 +61,7 @@ def _branding_response(db: Session) -> PublicBrandingResponse:
     return PublicBrandingResponse(
         site_logo_url=values.get("site_logo_url") or None,
         site_sublogo_url=values.get("site_sublogo_url") or None,
-        site_head_title=values.get("site_head_title") or "MU BOSS TIMER",
+        site_head_title=values.get("site_head_title") or "WARLORDS",
     )
 
 
@@ -88,7 +88,7 @@ def _settings_response(db: Session) -> SystemSettingsResponse:
         api_base_url=values.get("api_base_url") or None,
         site_logo_url=values.get("site_logo_url") or None,
         site_sublogo_url=values.get("site_sublogo_url") or None,
-        site_head_title=values.get("site_head_title") or "MU BOSS TIMER",
+        site_head_title=values.get("site_head_title") or "WARLORDS",
         maintenance_enabled=_as_bool(values.get("maintenance_enabled")),
         maintenance_message=values.get("maintenance_message") or None,
         smtp_host=values.get("smtp_host") or None,

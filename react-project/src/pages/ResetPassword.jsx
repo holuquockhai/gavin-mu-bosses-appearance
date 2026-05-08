@@ -27,7 +27,7 @@ function ResetPassword() {
   const [branding, setBranding] = useState({
     site_logo_url: "",
     site_sublogo_url: "",
-    site_head_title: "MU BOSS TIMER",
+    site_head_title: "WARLORDS",
   });
 
   useEffect(() => {
@@ -36,14 +36,14 @@ function ResetPassword() {
         setBranding({
           site_logo_url: data.site_logo_url || "",
           site_sublogo_url: data.site_sublogo_url || "",
-          site_head_title: data.site_head_title || "MU BOSS TIMER",
+          site_head_title: data.site_head_title || "WARLORDS",
         });
       })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    document.title = `Reset password - ${branding.site_head_title || "MU BOSS TIMER"}`;
+    document.title = `Reset password - ${branding.site_head_title || "WARLORDS"}`;
   }, [branding.site_head_title]);
 
   useEffect(() => {

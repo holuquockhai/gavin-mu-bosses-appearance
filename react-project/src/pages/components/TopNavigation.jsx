@@ -27,7 +27,7 @@ function TopNavigation({ isDark, setIsDark, user }) {
   const [branding, setBranding] = useState({
     site_logo_url: "",
     site_sublogo_url: "",
-    site_head_title: "MU BOSS TIMER",
+    site_head_title: "WARLORDS",
   });
 
   const navigate = useNavigate();
@@ -38,14 +38,14 @@ function TopNavigation({ isDark, setIsDark, user }) {
         setBranding({
           site_logo_url: data.site_logo_url || "",
           site_sublogo_url: data.site_sublogo_url || "",
-          site_head_title: data.site_head_title || "MU BOSS TIMER",
+          site_head_title: data.site_head_title || "WARLORDS",
         });
       })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    document.title = branding.site_head_title || "MU BOSS TIMER";
+    document.title = branding.site_head_title || "WARLORDS";
   }, [branding.site_head_title]);
 
   const handleLogout = () => {
@@ -62,7 +62,7 @@ function TopNavigation({ isDark, setIsDark, user }) {
   const handleShowAdminNavigation = () => setShowAdminNavigation(true);
   const siteLogoUrl = branding.site_logo_url ? resolveAvatarUrl(branding.site_logo_url) : logo;
   const siteSublogoUrl = branding.site_sublogo_url ? resolveAvatarUrl(branding.site_sublogo_url) : siteName;
-  const headTitle = branding.site_head_title || "MU BOSS TIMER";
+  const headTitle = branding.site_head_title || "WARLORDS";
 
   return (
     <>

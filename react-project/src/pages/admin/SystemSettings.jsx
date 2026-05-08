@@ -17,7 +17,7 @@ const initialForm = {
   api_base_url: "http://127.0.0.1:8000",
   site_logo_url: "",
   site_sublogo_url: "",
-  site_head_title: "MU BOSS TIMER",
+  site_head_title: "WARLORDS",
   maintenance_enabled: false,
   maintenance_message: "Wardlords Site is currently under maintenance. Please check back shortly.",
   smtp_host: "",
@@ -141,7 +141,7 @@ function SystemSettings() {
       const hasBrandingUpload = brandingFiles.site_logo || brandingFiles.site_sublogo;
       if (hasBrandingUpload) {
         const savedBranding = await updateBrandingSettingsApi({
-          site_head_title: payload.site_head_title || "MU BOSS TIMER",
+          site_head_title: payload.site_head_title || "WARLORDS",
           ...brandingFiles,
         });
         savedSettings = {

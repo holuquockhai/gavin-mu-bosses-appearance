@@ -7,7 +7,7 @@ class SystemSettingsResponse(BaseModel):
     api_base_url: str | None = None
     site_logo_url: str | None = None
     site_sublogo_url: str | None = None
-    site_head_title: str = "MU BOSS TIMER"
+    site_head_title: str = "WARLORDS"
     maintenance_enabled: bool = False
     maintenance_message: str | None = None
     smtp_host: str | None = None
@@ -54,7 +54,7 @@ class SystemSettingsUpdate(BaseModel):
 class PublicBrandingResponse(BaseModel):
     site_logo_url: str | None = None
     site_sublogo_url: str | None = None
-    site_head_title: str = "MU BOSS TIMER"
+    site_head_title: str = "WARLORDS"
 
 
 class PublicMaintenanceResponse(BaseModel):

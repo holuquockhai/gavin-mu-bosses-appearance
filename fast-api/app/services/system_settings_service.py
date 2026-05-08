@@ -10,7 +10,7 @@ DEFAULT_SETTINGS = {
     "api_base_url": "http://127.0.0.1:8000",
     "site_logo_url": "",
     "site_sublogo_url": "",
-    "site_head_title": "MU BOSS TIMER",
+    "site_head_title": "WARLORDS",
     "maintenance_enabled": "false",
     "maintenance_message": "Wardlords Site is currently under maintenance. Please check back shortly.",
     "smtp_host": "",
