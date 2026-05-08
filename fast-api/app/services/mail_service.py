@@ -207,3 +207,37 @@ def send_account_activated_email(db: Session, recipient: str, full_name: str | N
         footer_note="Welcome to WARLORDS.",
     )
     send_email(db, recipient, subject, text_body, html_body)
+
+
+def send_account_inactive_email(
+    db: Session,
+    recipient: str,
+    full_name: str | None,
+    footer_note: str = "This message was sent because someone tried to sign in with this inactive account.",
+) -> None:
+    values = get_settings_map(db)
+    admin_email = (values.get("smtp_from_email") or "").strip()
+    display_name = full_name or recipient
+    contact_sentence = (
+        f"Please contact the administrator at {admin_email} for more information."
+        if admin_email
+        else "Please contact the administrator for more information."
+    )
+    subject = "Your WARLORDS account is inactive"
+    text_body = (
+        f"Hi {display_name},\n\n"
+        "Your WARLORDS account is currently inactive.\n"
+        f"{contact_sentence}\n\n"
+        "Warm regards!\n"
+        "Gavin Nguyen"
+    )
+    html_body = _build_email_html(
+        db,
+        title="Your account is inactive",
+        greeting=f"Hi {display_name},",
+        body=f"Your WARLORDS account is currently inactive. {contact_sentence}",
+        action_label="Contact administrator",
+        action_url=f"mailto:{admin_email}" if admin_email else "#",
+        footer_note=footer_note,
+    )
+    send_email(db, recipient, subject, text_body, html_body)

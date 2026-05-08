@@ -10,6 +10,7 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=6)
     full_name: str | None = None
     is_active: bool = True
+    role: str = "user"
 
 
 class UserUpdate(BaseModel):
@@ -19,6 +20,7 @@ class UserUpdate(BaseModel):
     phone_number: str | None = None
     country: str | None = None
     is_active: bool | None = None
+    role: str | None = None
 
 
 class UserResponse(BaseModel):

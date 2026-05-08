@@ -51,11 +51,11 @@ def authenticate_user(db: Session, email: str, password: str):
     if not user:
         return None, "invalid_credentials"
 
-    if not user.is_active:
-        return None, "inactive"
-
     if not verify_password(password, user.hashed_password):
         return None, "invalid_credentials"
+
+    if not user.is_active:
+        return user, "inactive"
 
     return user, None
 
@@ -64,7 +64,7 @@ def login_user(db: Session, email: str, password: str):
     user, error = authenticate_user(db, email, password)
 
     if error:
-        return None, None, error
+        return None, user, error
 
     role_names = [role.name for role in user.roles]
 

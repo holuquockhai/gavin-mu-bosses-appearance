@@ -134,7 +134,7 @@ const Landing = () => {
         </section>
 
         <div className="boss-card-grid">
-          {bosses.map((boss) => (
+          {bosses.filter((boss) => boss.isShowed).map((boss) => (
             <BossTimerCard key={boss.id} boss={boss} selectedChannel={selectedChannel} />
           ))}
         </div>

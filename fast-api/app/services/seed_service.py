@@ -61,19 +61,38 @@ def seed_admin(db: Session):
         if permission not in user_role.permissions:
             user_role.permissions.append(permission)
 
-    admin_email = "admin@example.com"
-    admin_user = db.query(User).filter_by(email=admin_email).first()
+    admin_accounts = [
+        {
+            "email": "admin@example.com",
+            "full_name": "Administrator",
+            "password": "Passw0rd",
+        },
+        {
+            "email": "holuquockhai@gmail.com",
+            "full_name": "Andy Ho",
+            "password": "P@ssw0rd",
+        },
+    ]
+    admin_user = None
 
-    if not admin_user:
-        admin_user = User(
-            email=admin_email,
-            full_name="Administrator",
-            hashed_password=hash_password("Passw0rd"),
-            is_active=True,
-        )
-        admin_user.roles.append(admin_role)
-        db.add(admin_user)
-        db.flush()
+    for account in admin_accounts:
+        user = db.query(User).filter_by(email=account["email"]).first()
+
+        if not user:
+            user = User(
+                email=account["email"],
+                full_name=account["full_name"],
+                hashed_password=hash_password(account["password"]),
+                is_active=True,
+            )
+            db.add(user)
+            db.flush()
+
+        if admin_role not in user.roles:
+            user.roles.append(admin_role)
+
+        if account["email"] == "admin@example.com":
+            admin_user = user
 
     default_channels = ["Channel 1", "Channel 2", "Channel 3"]
     channel_owner_id = admin_user.id if admin_user else None

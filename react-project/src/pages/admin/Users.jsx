@@ -16,6 +16,7 @@ const emptyForm = {
   full_name: "",
   password: "",
   is_active: true,
+  role: "user",
 };
 
 const getErrorMessage = (err, fallback) => {
@@ -131,6 +132,7 @@ export default function Users() {
       full_name: user.full_name || "",
       password: "",
       is_active: Boolean(user.is_active),
+      role: formatRoles(user.roles).includes("admin") ? "admin" : "user",
     });
     setFormError("");
     showModal("editUserModal");
@@ -185,6 +187,7 @@ export default function Users() {
         full_name: createForm.full_name.trim() || null,
         password: createForm.password,
         is_active: createForm.is_active,
+        role: createForm.role,
       });
       setUsers((currentUsers) => [createdUser, ...currentUsers]);
       setNotification({
@@ -226,6 +229,7 @@ export default function Users() {
       email: editForm.email.trim(),
       full_name: editForm.full_name.trim() || null,
       is_active: editForm.is_active,
+      role: editForm.role,
     };
 
     if (editForm.password) {
@@ -658,6 +662,25 @@ function UserForm({ form, onChange, passwordRequired = false }) {
             passwordRequired ? "" : "Leave blank to keep current password"
           }
         />
+      </div>
+
+      <div className="mb-3">
+        <label
+          className="form-label"
+          htmlFor={passwordRequired ? "createRole" : "editRole"}
+        >
+          Role
+        </label>
+        <select
+          id={passwordRequired ? "createRole" : "editRole"}
+          name="role"
+          className="form-select"
+          value={form.role}
+          onChange={onChange}
+        >
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
       </div>
 
       <div className="form-check form-switch">

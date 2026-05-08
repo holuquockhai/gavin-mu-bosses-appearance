@@ -4,14 +4,19 @@ $color-mode-type: data;
   overflow: hidden;
   max-height: 0;
   opacity: 0;
+  visibility: hidden;
   transition: all 0.5s ease-in-out;
   transform: translateY(-10px);
+  pointer-events: none;
+  transition-behavior: allow-discrete;
 }
 
 .boss-detail.show {
   max-height: 500px;
   opacity: 1;
+  visibility: visible;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
 .page-title {
@@ -61,7 +66,11 @@ $color-mode-type: data;
 }
 
 .main-row {
-  padding: 5.75rem 0.75rem 4.5rem;
+  padding: 5.75rem 0.75rem 6.5rem;
+}
+
+#main-content {
+  padding-bottom: 6rem;
 }
 
 .homepage-stack {

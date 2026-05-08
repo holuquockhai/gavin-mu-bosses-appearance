@@ -10,10 +10,16 @@ from sqlalchemy.orm import Session, selectinload
 from app.core.security import hash_password
 from app.db.database import get_db
 from app.dependencies.auth import get_current_user, require_permissions
+from app.models.boss import Boss
+from app.models.channel import Channel
+from app.models.notification import Notification, NotificationDismissal
+from app.models.password_reset_token import PasswordResetToken
+from app.models.preset import Preset
 from app.models.role import Role
+from app.models.timer import BossHistory, BossTimer
 from app.models.user import User
 from app.schemas.user import UserCreate, UserPublicProfileResponse, UserResponse, UserUpdate
-from app.services.mail_service import is_mail_configured, send_account_activated_email
+from app.services.mail_service import is_mail_configured, send_account_activated_email, send_account_inactive_email
 from app.services.system_settings_service import get_settings_map
 
 # Users Router
@@ -28,12 +34,19 @@ ALLOWED_AVATAR_TYPES = {
 }
 
 
-def _get_default_user_role(db: Session) -> Role:
-    role = db.execute(select(Role).where(Role.name == "user")).scalar_one_or_none()
+def _get_role_by_name(db: Session, role_name: str) -> Role:
+    allowed_roles = {"user", "admin"}
+    if role_name not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role must be user or admin",
+        )
+
+    role = db.execute(select(Role).where(Role.name == role_name)).scalar_one_or_none()
     if not role:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Default role 'user' does not exist",
+            detail=f"Role '{role_name}' does not exist",
         )
 
     return role
@@ -69,6 +82,21 @@ def _send_account_active_email_if_configured(db: Session, user: User) -> None:
     base_url = (values.get("app_base_url") or "http://127.0.0.1:5173").rstrip("/")
     try:
         send_account_activated_email(db, user.email, user.full_name, f"{base_url}/login")
+    except Exception:
+        pass
+
+
+def _send_account_inactive_email_if_configured(db: Session, user: User) -> None:
+    if not is_mail_configured(db):
+        return
+
+    try:
+        send_account_inactive_email(
+            db,
+            user.email,
+            user.full_name,
+            "This message was sent because an administrator changed your account status to inactive.",
+        )
     except Exception:
         pass
 
@@ -168,7 +196,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
         hashed_password=hash_password(payload.password),
         is_active=payload.is_active,
     )
-    user.roles.append(_get_default_user_role(db))
+    user.roles.append(_get_role_by_name(db, payload.role))
 
     db.add(user)
     db.commit()
@@ -186,10 +214,22 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     response_model=UserResponse,
     dependencies=[Depends(require_permissions(["user:update"]))],
 )
-def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)):
+def update_user(
+    user_id: int,
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     user = _get_user_by_id(db, user_id)
     was_inactive = not user.is_active
+    was_active = user.is_active
     data = payload.model_dump(exclude_unset=True)
+
+    if user_id == current_user.id and data.get("is_active") is False:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot deactivate your own account",
+        )
 
     if "email" in data:
         if _email_exists(db, data["email"], exclude_user_id=user_id):
@@ -208,6 +248,9 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
     if "is_active" in data:
         user.is_active = data["is_active"]
 
+    if "role" in data:
+        user.roles = [_get_role_by_name(db, data["role"])]
+
     if data.get("password"):
         user.hashed_password = hash_password(data["password"])
 
@@ -216,6 +259,9 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
 
     if was_inactive and user.is_active:
         _send_account_active_email_if_configured(db, user)
+
+    if was_active and not user.is_active:
+        _send_account_inactive_email_if_configured(db, user)
 
     return _get_user_by_id(db, user.id)
 
@@ -230,6 +276,45 @@ def delete_user(
         raise HTTPException(status_code=400, detail="You cannot delete your own account")
 
     user = _get_user_by_id(db, user_id)
+
+    db.query(Boss).filter(Boss.created_by_id == user.id).update(
+        {Boss.created_by_id: current_user.id},
+        synchronize_session=False,
+    )
+    db.query(Boss).filter(Boss.updated_by_id == user.id).update(
+        {Boss.updated_by_id: current_user.id},
+        synchronize_session=False,
+    )
+    db.query(Channel).filter(Channel.created_by_id == user.id).update(
+        {Channel.created_by_id: current_user.id},
+        synchronize_session=False,
+    )
+    db.query(Channel).filter(Channel.updated_by_id == user.id).update(
+        {Channel.updated_by_id: current_user.id},
+        synchronize_session=False,
+    )
+    db.query(BossTimer).filter(BossTimer.user_id == user.id).update(
+        {BossTimer.user_id: current_user.id},
+        synchronize_session=False,
+    )
+    db.query(BossHistory).filter(BossHistory.user_id == user.id).update(
+        {BossHistory.user_id: current_user.id},
+        synchronize_session=False,
+    )
+    db.query(Notification).filter(Notification.user_id == user.id).update(
+        {Notification.user_id: current_user.id},
+        synchronize_session=False,
+    )
+    db.query(NotificationDismissal).filter(NotificationDismissal.user_id == user.id).delete(
+        synchronize_session=False,
+    )
+    db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user.id).delete(
+        synchronize_session=False,
+    )
+    db.query(Preset).filter(Preset.user_id == user.id).delete(
+        synchronize_session=False,
+    )
+
     user.roles.clear()
     db.delete(user)
 

@@ -237,7 +237,7 @@ function Profile() {
                   </div>
                   <div className="profile-meta-item">
                     <span>Last login</span>
-                    <strong>{lastLoginText ? `Last login at ${lastLoginText}` : "-"}</strong>
+                    <strong>{lastLoginText || "-"}</strong>
                   </div>
                 </div>
               </div>
@@ -371,7 +371,7 @@ function Profile() {
                 </div>
                 <div className="profile-meta-item">
                   <span>Last login</span>
-                  <strong>{lastLoginText ? `Last login at ${lastLoginText}` : "-"}</strong>
+                  <strong>{lastLoginText || "-"}</strong>
                 </div>
               </div>
             </div>

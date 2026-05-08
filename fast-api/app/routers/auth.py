@@ -4,6 +4,7 @@ import hashlib
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func, update
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
@@ -12,7 +13,7 @@ from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
 from app.schemas.auth import ForgotPasswordRequest, LoginRequest, RegisterRequest, ResetPasswordRequest, TokenResponse
 from app.schemas.user import UserResponse
-from app.services.mail_service import is_mail_configured, send_password_reset_email
+from app.services.mail_service import is_mail_configured, send_account_inactive_email, send_password_reset_email
 from app.services.auth_service import get_user_by_email
 from app.services.auth_service import login_user, register_user
 from app.services.system_settings_service import get_settings_map
@@ -92,12 +93,29 @@ def login(
         )
 
     if error == "inactive":
+        if user and is_mail_configured(db):
+            try:
+                send_account_inactive_email(db, user.email, user.full_name)
+            except Exception:
+                pass
+
+        values = get_settings_map(db)
+        admin_email = (values.get("smtp_from_email") or "").strip()
+        message = (
+            f"Your account is inactive. Please contact administrator at {admin_email} for more information."
+            if admin_email
+            else "Your account is inactive. Please contact administrator for more information."
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your account is inactive. Please contact administrator.",
+            detail=message,
         )
 
-    user.last_login_at = datetime.utcnow()
+    db.execute(
+        update(User)
+        .where(User.id == user.id)
+        .values(last_login_at=func.now())
+    )
     db.commit()
     db.refresh(user)
 
