@@ -25,8 +25,10 @@ export const createBossApi = async (payload) => {
 
 export const getBossesApi = async (payload) => {
   const response = await axios.get(`${API_URL}/bosses/`, {
+    params: { _: Date.now() },
     headers: {
       "Content-Type": "application/json",
+      "Cache-Control": "no-cache",
       Authorization: `Bearer ${getToken()}`,
     },
   });

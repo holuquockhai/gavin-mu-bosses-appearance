@@ -101,6 +101,11 @@ export default function Users() {
   }, []);
 
   useEffect(() => {
+    window.addEventListener("warlords:users-updated", loadUsers);
+    return () => window.removeEventListener("warlords:users-updated", loadUsers);
+  }, []);
+
+  useEffect(() => {
     if (!notification) {
       return;
     }

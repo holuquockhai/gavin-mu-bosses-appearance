@@ -11,7 +11,11 @@ const authHeaders = () => ({
 
 export const getUsersApi = async () => {
   const response = await axios.get(`${API_URL}/users/`, {
-    headers: authHeaders(),
+    params: { _: Date.now() },
+    headers: {
+      ...authHeaders(),
+      "Cache-Control": "no-cache",
+    },
   });
 
   return response.data;

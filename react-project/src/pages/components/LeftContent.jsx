@@ -3,11 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { completeExpiredCountdowns, markBossAppeared, setBossTimerState } from "../../js/timerSlice";
 import { addBossAppearedNotification } from "../../js/notificationSlice";
 import { getUser } from "../../utils/auth";
-import { completeExpiredBossTimersApi, getBossTimerStateApi, markBossAppearedApi } from "../../api/timerApi";
+import { getBossTimerStateApi, markBossAppearedApi } from "../../api/timerApi";
 import { createNotificationApi } from "../../api/notificationApi";
 import { playAlertTone } from "../../utils/sound";
 
-const TIMER_SYNC_INTERVAL_MS = 3000;
 const COUNTDOWN_TICK_INTERVAL_MS = 1000;
 
 function formatRemaining(endAt) {
@@ -84,22 +83,13 @@ function LeftContent(){
             .then((data) => dispatch(setBossTimerState(data)))
             .catch(() => {});
         };
-        const handleVisibilityChange = () => {
-            if (!document.hidden) {
-                syncTimerState();
-            }
-        };
         const handleTimerRefresh = () => syncTimerState();
 
         syncTimerState();
-        const syncIntervalId = setInterval(syncTimerState, TIMER_SYNC_INTERVAL_MS);
-        document.addEventListener("visibilitychange", handleVisibilityChange);
         window.addEventListener("focus", handleTimerRefresh);
         window.addEventListener("warlords:timer-state-refresh", handleTimerRefresh);
 
         return () => {
-            clearInterval(syncIntervalId);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
             window.removeEventListener("focus", handleTimerRefresh);
             window.removeEventListener("warlords:timer-state-refresh", handleTimerRefresh);
         };
@@ -117,21 +107,10 @@ function LeftContent(){
             setTick((value) => value + 1);
             if (expiredTimers.length > 0 && !isCompletingExpiredRef.current) {
                 isCompletingExpiredRef.current = true;
-                completeExpiredBossTimersApi()
-                    .then((completedTimers) => {
-                        completedTimers.forEach((timer) => {
-                            notifyBossAppeared({
-                                bossId: timer.boss_id,
-                                bossName: timer.boss_name,
-                                channel: timer.channel,
-                            });
-                        });
-                        dispatch(completeExpiredCountdowns(completedAt));
-                    })
-                    .catch(() => {})
-                    .finally(() => {
-                        isCompletingExpiredRef.current = false;
-                    });
+                dispatch(completeExpiredCountdowns(completedAt));
+                window.setTimeout(() => {
+                    isCompletingExpiredRef.current = false;
+                }, 1000);
             }
         }, COUNTDOWN_TICK_INTERVAL_MS);
 

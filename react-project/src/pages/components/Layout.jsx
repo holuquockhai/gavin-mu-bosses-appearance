@@ -6,8 +6,11 @@ import RightContent from "./RightContent";
 import BottomContent from "./BottomContent";
 import { getUser } from "../../utils/auth";
 import { useState, useEffect } from "react";
+import { useRealtimeSync } from "../../hooks/useRealtimeSync";
 
 export default function Layout() {
+  useRealtimeSync();
+
   const [user, setUser] = useState(() => getUser());
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");

@@ -7,9 +7,6 @@ import PresetControlForm from "./components/PresetControlForm";
 import { getBossesApi } from "../api/bossApi";
 import { getChannelsApi } from "../api/channelApi";
 
-const BOSS_LIST_SYNC_INTERVAL_MS = 15000;
-const CHANNEL_LIST_SYNC_INTERVAL_MS = 15000;
-
 const Landing = () => {
   const dispatch = useDispatch();
   const [isLoadingBosses, setIsLoadingBosses] = useState(true);
@@ -26,10 +23,6 @@ const Landing = () => {
     let isMounted = true;
 
     const syncBosses = ({ showLoading = false } = {}) => {
-      if (document.hidden) {
-        return;
-      }
-
       if (showLoading) {
         setIsLoadingBosses(true);
       }
@@ -52,21 +45,12 @@ const Landing = () => {
           }
         });
     };
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        syncBosses();
-      }
-    };
 
     setIsLoadingBosses(true);
     syncBosses({ showLoading: true });
-    const intervalId = setInterval(syncBosses, BOSS_LIST_SYNC_INTERVAL_MS);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [dispatch]);
 
@@ -74,10 +58,6 @@ const Landing = () => {
     let isMounted = true;
 
     const syncChannels = () => {
-      if (document.hidden) {
-        return;
-      }
-
       setChannelError("");
 
       getChannelsApi()
@@ -93,21 +73,12 @@ const Landing = () => {
           }
         });
     };
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        syncChannels();
-      }
-    };
 
     setChannelError("");
     syncChannels();
-    const intervalId = setInterval(syncChannels, CHANNEL_LIST_SYNC_INTERVAL_MS);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [dispatch]);
 

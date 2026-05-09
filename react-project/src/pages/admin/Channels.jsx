@@ -148,6 +148,11 @@ export default function Channels() {
   }, []);
 
   useEffect(() => {
+    window.addEventListener("warlords:channels-updated", loadChannels);
+    return () => window.removeEventListener("warlords:channels-updated", loadChannels);
+  }, []);
+
+  useEffect(() => {
     if (!notification) {
       return;
     }

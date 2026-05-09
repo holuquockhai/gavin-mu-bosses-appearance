@@ -8,6 +8,7 @@ from app.dependencies.auth import get_current_user
 from app.models.notification import Notification, NotificationDismissal
 from app.models.user import User
 from app.schemas.notification import NotificationCreate, NotificationResponse
+from app.services.websocket_manager import websocket_manager
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -34,7 +35,7 @@ def list_notifications(
 
 
 @router.post("/", response_model=NotificationResponse)
-def create_notification(
+async def create_notification(
     data: NotificationCreate,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
@@ -50,6 +51,7 @@ def create_notification(
     db.add(notification)
     db.commit()
     db.refresh(notification)
+    await websocket_manager.broadcast({"type": "notifications_updated"})
     return (
         db.query(Notification)
         .options(joinedload(Notification.user))
@@ -59,7 +61,7 @@ def create_notification(
 
 
 @router.delete("/{notification_id}")
-def remove_notification(
+async def remove_notification(
     notification_id: int,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
@@ -87,12 +89,13 @@ def remove_notification(
                 )
             )
         db.commit()
+        await websocket_manager.broadcast({"type": "notifications_updated"})
 
     return {"message": "Notification removed"}
 
 
 @router.delete("/")
-def clear_notifications(
+async def clear_notifications(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
@@ -119,4 +122,5 @@ def clear_notifications(
         )
 
     db.commit()
+    await websocket_manager.broadcast({"type": "notifications_updated"})
     return {"message": "Notifications cleared"}

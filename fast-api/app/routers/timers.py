@@ -10,6 +10,7 @@ from app.models.timer import BossHistory, BossTimer
 from app.models.user import User
 from app.schemas.timer import BossAppearedRequest, BossHistoryResponse, BossTimerCreate, BossTimerResponse, BossTimerStateResponse
 from app.services.timer_service import complete_expired_timers
+from app.services.websocket_manager import websocket_manager
 
 router = APIRouter(prefix="/boss-timers", tags=["boss-timers"])
 
@@ -43,7 +44,7 @@ def list_timer_state(
 
 
 @router.post("/", response_model=BossTimerResponse)
-def upsert_timer(
+async def upsert_timer(
     data: BossTimerCreate,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
@@ -71,11 +72,18 @@ def upsert_timer(
 
     db.commit()
     db.refresh(timer)
+    await websocket_manager.broadcast({
+        "type": "timer_state_updated",
+        "action": "set",
+        "boss_id": timer.boss_id,
+        "channel": timer.channel,
+    })
+    await websocket_manager.broadcast({"type": "notifications_updated"})
     return timer
 
 
 @router.delete("/")
-def clear_timer(
+async def clear_timer(
     boss_id: Annotated[int, Query()],
     channel: Annotated[str, Query()],
     db: Annotated[Session, Depends(get_db)],
@@ -93,12 +101,18 @@ def clear_timer(
     if timer:
         db.delete(timer)
         db.commit()
+        await websocket_manager.broadcast({
+            "type": "timer_state_updated",
+            "action": "clear",
+            "boss_id": boss_id,
+            "channel": channel,
+        })
 
     return {"message": "Timer cleared"}
 
 
 @router.post("/appeared", response_model=BossHistoryResponse)
-def mark_appeared(
+async def mark_appeared(
     data: BossAppearedRequest,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
@@ -126,12 +140,27 @@ def mark_appeared(
     db.delete(timer)
     db.commit()
     db.refresh(history)
+    await websocket_manager.broadcast({
+        "type": "timer_state_updated",
+        "action": "appeared",
+        "boss_id": history.boss_id,
+        "channel": history.channel,
+    })
+    await websocket_manager.broadcast({"type": "notifications_updated"})
     return history
 
 
 @router.post("/complete-expired", response_model=list[BossHistoryResponse])
-def complete_expired(
+async def complete_expired(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    return complete_expired_timers(db)
+    history_items = complete_expired_timers(db, create_notifications=True)
+    if history_items:
+        await websocket_manager.broadcast({
+            "type": "timer_state_updated",
+            "action": "expired",
+        })
+        await websocket_manager.broadcast({"type": "notifications_updated"})
+
+    return history_items

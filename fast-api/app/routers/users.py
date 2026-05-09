@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
@@ -21,6 +21,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserPublicProfileResponse, UserResponse, UserUpdate
 from app.services.mail_service import is_mail_configured, send_account_activated_email, send_account_inactive_email
 from app.services.system_settings_service import get_settings_map
+from app.services.websocket_manager import websocket_manager
 
 # Users Router
 router = APIRouter(prefix="/users", tags=["users"])
@@ -171,7 +172,9 @@ def read_user_profile(
     response_model=list[UserResponse],
     dependencies=[Depends(require_permissions(["user:read"]))],
 )
-def list_users(db: Session = Depends(get_db)):
+def list_users(response: Response, db: Session = Depends(get_db)):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
     stmt = (
         select(User)
         .options(selectinload(User.roles).selectinload(Role.permissions))
@@ -186,7 +189,7 @@ def list_users(db: Session = Depends(get_db)):
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_permissions(["user:create"]))],
 )
-def create_user(payload: UserCreate, db: Session = Depends(get_db)):
+async def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     if _email_exists(db, payload.email):
         raise HTTPException(status_code=400, detail=f'User email "{payload.email}" already exists')
 
@@ -205,7 +208,9 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     if user.is_active:
         _send_account_active_email_if_configured(db, user)
 
-    return _get_user_by_id(db, user.id)
+    created_user = _get_user_by_id(db, user.id)
+    await websocket_manager.broadcast({"type": "users_updated", "action": "create"})
+    return created_user
 
 
 # Update user
@@ -214,7 +219,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     response_model=UserResponse,
     dependencies=[Depends(require_permissions(["user:update"]))],
 )
-def update_user(
+async def update_user(
     user_id: int,
     payload: UserUpdate,
     db: Session = Depends(get_db),
@@ -263,11 +268,13 @@ def update_user(
     if was_active and not user.is_active:
         _send_account_inactive_email_if_configured(db, user)
 
-    return _get_user_by_id(db, user.id)
+    updated_user = _get_user_by_id(db, user.id)
+    await websocket_manager.broadcast({"type": "users_updated", "action": "update"})
+    return updated_user
 
 # Delete a user
 @router.delete("/{user_id}", dependencies=[Depends(require_permissions(["user:delete"]))])
-def delete_user(
+async def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -327,4 +334,5 @@ def delete_user(
             detail="User cannot be deleted because it is linked to existing activity",
         )
 
+    await websocket_manager.broadcast({"type": "users_updated", "action": "delete"})
     return {"message": f"User {user_id} deleted successfully"}

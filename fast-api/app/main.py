@@ -7,7 +7,7 @@ from pathlib import Path
 from sqlalchemy import inspect, text
 
 from app.db.database import Base, engine, SessionLocal
-from app.routers import auth, users, admin, bosses, timers, notifications, presets, channels, system_settings
+from app.routers import auth, users, admin, bosses, timers, notifications, presets, channels, system_settings, realtime
 from app.services.seed_service import seed_admin
 from app.services.timer_scheduler import start_expired_timer_checker, stop_expired_timer_checker
 
@@ -77,6 +77,7 @@ app.include_router(presets.router)
 app.include_router(channels.router)
 app.include_router(system_settings.public_router)
 app.include_router(system_settings.router)
+app.include_router(realtime.router)
 
 
 @app.get("/")

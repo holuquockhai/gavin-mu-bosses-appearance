@@ -200,7 +200,7 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
     });
   };
 
-  useEffect(() => {
+  const loadBosses = () => {
     setIsLoading(true);
     setError("");
 
@@ -211,7 +211,16 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
         setError(getErrorMessage(err, "Failed to load bosses"));
       })
       .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    loadBosses();
   }, [refreshKey]);
+
+  useEffect(() => {
+    window.addEventListener("warlords:bosses-updated", loadBosses);
+    return () => window.removeEventListener("warlords:bosses-updated", loadBosses);
+  }, []);
 
   return (
     <>

@@ -19,6 +19,7 @@ from app.schemas.system_setting import (
 from app.services.mail_service import send_email
 from app.services.seed_service import seed_admin
 from app.services.system_settings_service import get_settings_map, save_settings_map
+from app.services.websocket_manager import websocket_manager
 
 BRANDING_UPLOAD_ROOT = Path(__file__).resolve().parents[2] / "uploads" / "branding"
 ALLOWED_BRANDING_TYPES = {
@@ -186,7 +187,7 @@ def send_test_email(
 
 
 @router.post("/factory-reset")
-def factory_reset_website(db: Annotated[Session, Depends(get_db)]):
+async def factory_reset_website(db: Annotated[Session, Depends(get_db)]):
     table_names = [table.name for table in reversed(Base.metadata.sorted_tables)]
 
     try:
@@ -203,5 +204,6 @@ def factory_reset_website(db: Annotated[Session, Depends(get_db)]):
 
     db.expunge_all()
     seed_admin(db)
+    await websocket_manager.broadcast({"type": "factory_reset_completed"})
 
     return {"message": "Website factory reset completed. Default admin users have been recreated."}
