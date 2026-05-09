@@ -7,6 +7,9 @@ import { completeExpiredBossTimersApi, getBossTimerStateApi, markBossAppearedApi
 import { createNotificationApi } from "../../api/notificationApi";
 import { playAlertTone } from "../../utils/sound";
 
+const TIMER_SYNC_INTERVAL_MS = 3000;
+const COUNTDOWN_TICK_INTERVAL_MS = 1000;
+
 function formatRemaining(endAt) {
     const seconds = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
     const hours = Math.floor(seconds / 3600);
@@ -36,18 +39,22 @@ function LeftContent(){
     const [visibleComingSoonCount, setVisibleComingSoonCount] = useState(16);
     const [defaultComingSoonListHeight, setDefaultComingSoonListHeight] = useState(0);
     const comingSoonListRef = useRef(null);
+    const isCompletingExpiredRef = useRef(false);
 
-    const notifyBossAppeared = (timer, actorName) => {
+    const notifyBossAppeared = (timer, actorName, shouldSaveNotification = true) => {
         const payload = {
             actorName,
+            bossId: timer.bossId,
             bossName: timer.bossName,
             channel: timer.channel,
         };
         dispatch(addBossAppearedNotification(payload));
-        createNotificationApi({
-            type: "boss-appeared",
-            payload,
-        }).catch(() => {});
+        if (shouldSaveNotification) {
+            createNotificationApi({
+                type: "boss-appeared",
+                payload,
+            }).catch(() => {});
+        }
         if (soundEnabled) {
             playAlertTone(soundStyle);
         }
@@ -77,27 +84,59 @@ function LeftContent(){
             .then((data) => dispatch(setBossTimerState(data)))
             .catch(() => {});
         };
-        syncTimerState();
-        const syncIntervalId = setInterval(syncTimerState, 3000);
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                syncTimerState();
+            }
+        };
+        const handleTimerRefresh = () => syncTimerState();
 
-        return () => clearInterval(syncIntervalId);
+        syncTimerState();
+        const syncIntervalId = setInterval(syncTimerState, TIMER_SYNC_INTERVAL_MS);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("focus", handleTimerRefresh);
+        window.addEventListener("warlords:timer-state-refresh", handleTimerRefresh);
+
+        return () => {
+            clearInterval(syncIntervalId);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("focus", handleTimerRefresh);
+            window.removeEventListener("warlords:timer-state-refresh", handleTimerRefresh);
+        };
     }, [dispatch]);
 
     useEffect(() => {
         const intervalId = setInterval(() => {
+            if (document.hidden) {
+                return;
+            }
+
             const completedAt = Date.now();
             const expiredTimers = timers.filter((timer) => timer.endAt <= completedAt);
 
-            expiredTimers.forEach((timer) => notifyBossAppeared(timer));
             setTick((value) => value + 1);
-            dispatch(completeExpiredCountdowns(completedAt));
-            if (expiredTimers.length > 0) {
-                completeExpiredBossTimersApi().catch(() => {});
+            if (expiredTimers.length > 0 && !isCompletingExpiredRef.current) {
+                isCompletingExpiredRef.current = true;
+                completeExpiredBossTimersApi()
+                    .then((completedTimers) => {
+                        completedTimers.forEach((timer) => {
+                            notifyBossAppeared({
+                                bossId: timer.boss_id,
+                                bossName: timer.boss_name,
+                                channel: timer.channel,
+                            });
+                        });
+                        dispatch(completeExpiredCountdowns(completedAt));
+                    })
+                    .catch(() => {})
+                    .finally(() => {
+                        isCompletingExpiredRef.current = false;
+                    });
             }
-        }, 1000);
+        }, COUNTDOWN_TICK_INTERVAL_MS);
 
         return () => clearInterval(intervalId);
-    }, [dispatch, timers]);
+    }, [dispatch, soundEnabled, soundStyle, timers]);
 
     const sortedComingSoonTimers = useMemo(() => {
         return [...timers].sort((firstTimer, secondTimer) => firstTimer.endAt - secondTimer.endAt);

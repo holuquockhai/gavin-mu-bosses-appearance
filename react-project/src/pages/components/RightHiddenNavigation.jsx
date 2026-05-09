@@ -2,8 +2,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { clearNotifications, removeNotification, setNotifications } from "../../js/notificationSlice";
 import { useEffect, useMemo, useState } from "react";
 import { clearNotificationsApi, getNotificationsApi, removeNotificationApi } from "../../api/notificationApi";
+import { getBossTimerStateApi } from "../../api/timerApi";
+import { clearBossCountdown, setBossCountdown, setBossTimerState } from "../../js/timerSlice";
 import { Link } from "react-router-dom";
 import { USER_API_URL } from "../../api/userApi";
+
+const NOTIFICATION_SYNC_INTERVAL_MS = 20000;
 
 function formatNotificationTime(value) {
     return new Intl.DateTimeFormat("en-AU", {
@@ -107,15 +111,70 @@ function RightHiddenNavigation(){
 
     useEffect(() => {
         const syncNotifications = () => {
+            if (document.hidden) {
+                return;
+            }
+
             getNotificationsApi()
-            .then((data) => dispatch(setNotifications(data)))
+            .then((data) => {
+                dispatch(setNotifications(data));
+                data.forEach((notification) => {
+                    const payload = notification.payload || {};
+
+                    if (
+                        notification.type === "boss-timer-set" &&
+                        payload.bossId &&
+                        payload.channel &&
+                        payload.endAt &&
+                        Number(payload.endAt) > Date.now()
+                    ) {
+                        dispatch(setBossCountdown({
+                            bossId: payload.bossId,
+                            bossName: payload.bossName,
+                            channel: payload.channel,
+                            hours: payload.hours || 0,
+                            minutes: payload.minutes || 0,
+                            endAt: Number(payload.endAt),
+                        }));
+                    }
+
+                    if (
+                        notification.type === "boss-appeared" &&
+                        payload.bossId &&
+                        payload.channel
+                    ) {
+                        dispatch(clearBossCountdown({
+                            bossId: payload.bossId,
+                            channel: payload.channel,
+                        }));
+                    }
+                });
+                const hasTimerChange = data.some((notification) =>
+                    ["boss-timer-set", "boss-appeared"].includes(notification.type)
+                );
+
+                if (hasTimerChange) {
+                    getBossTimerStateApi()
+                        .then((timerState) => dispatch(setBossTimerState(timerState)))
+                        .catch(() => {});
+                }
+            })
             .catch(() => {});
+        };
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                syncNotifications();
+            }
         };
 
         syncNotifications();
-        const intervalId = setInterval(syncNotifications, 5000);
+        const intervalId = setInterval(syncNotifications, NOTIFICATION_SYNC_INTERVAL_MS);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
 
-        return () => clearInterval(intervalId);
+        return () => {
+            clearInterval(intervalId);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [dispatch]);
 
     const handleRemoveNotification = (notificationId) => {

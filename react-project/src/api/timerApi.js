@@ -9,7 +9,11 @@ const authHeaders = () => ({
 
 export const getBossTimerStateApi = async () => {
   const response = await axios.get(`${API_URL}/boss-timers/`, {
-    headers: authHeaders(),
+    params: { _: Date.now() },
+    headers: {
+      ...authHeaders(),
+      "Cache-Control": "no-cache",
+    },
   });
 
   return response.data;

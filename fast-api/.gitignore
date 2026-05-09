@@ -11,3 +11,6 @@ venv/
 
 # logs
 *.log
+
+# user uploads
+uploads/

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, joinedload
 
 from app.db.database import get_db
@@ -16,6 +16,7 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 def list_notifications(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ):
     dismissed_notification_ids = (
         db.query(NotificationDismissal.notification_id)
@@ -27,6 +28,7 @@ def list_notifications(
         .options(joinedload(Notification.user))
         .filter(~Notification.id.in_(dismissed_notification_ids))
         .order_by(Notification.created_at.desc(), Notification.id.desc())
+        .limit(limit)
         .all()
     )
 

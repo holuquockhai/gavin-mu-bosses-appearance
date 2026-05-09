@@ -7,6 +7,9 @@ import PresetControlForm from "./components/PresetControlForm";
 import { getBossesApi } from "../api/bossApi";
 import { getChannelsApi } from "../api/channelApi";
 
+const BOSS_LIST_SYNC_INTERVAL_MS = 15000;
+const CHANNEL_LIST_SYNC_INTERVAL_MS = 15000;
+
 const Landing = () => {
   const dispatch = useDispatch();
   const [isLoadingBosses, setIsLoadingBosses] = useState(true);
@@ -20,26 +23,92 @@ const Landing = () => {
   const channels = useSelector((state) => state.channels.value);
 
   useEffect(() => {
-    setIsLoadingBosses(true);
-    setBossError("");
+    let isMounted = true;
 
-    getBossesApi()
-      .then((data) => dispatch(setBosses(data)))
-      .catch((err) => {
-        setBossError(err.response?.data?.detail || "Failed to load bosses");
-      })
-      .finally(() => setIsLoadingBosses(false));
+    const syncBosses = ({ showLoading = false } = {}) => {
+      if (document.hidden) {
+        return;
+      }
+
+      if (showLoading) {
+        setIsLoadingBosses(true);
+      }
+      setBossError("");
+
+      getBossesApi()
+        .then((data) => {
+          if (isMounted) {
+            dispatch(setBosses(data));
+          }
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setBossError(err.response?.data?.detail || "Failed to load bosses");
+          }
+        })
+        .finally(() => {
+          if (isMounted && showLoading) {
+            setIsLoadingBosses(false);
+          }
+        });
+    };
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        syncBosses();
+      }
+    };
+
+    setIsLoadingBosses(true);
+    syncBosses({ showLoading: true });
+    const intervalId = setInterval(syncBosses, BOSS_LIST_SYNC_INTERVAL_MS);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [dispatch]);
 
   useEffect(() => {
-    setChannelError("");
+    let isMounted = true;
 
-    getChannelsApi()
-      .then((data) => dispatch(setChannels(data)))
-      .catch((err) => {
-        setChannelError(err.response?.data?.detail || "Failed to load channels");
-        dispatch(setChannels([]));
-      });
+    const syncChannels = () => {
+      if (document.hidden) {
+        return;
+      }
+
+      setChannelError("");
+
+      getChannelsApi()
+        .then((data) => {
+          if (isMounted) {
+            dispatch(setChannels(data));
+          }
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setChannelError(err.response?.data?.detail || "Failed to load channels");
+            dispatch(setChannels([]));
+          }
+        });
+    };
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        syncChannels();
+      }
+    };
+
+    setChannelError("");
+    syncChannels();
+    const intervalId = setInterval(syncChannels, CHANNEL_LIST_SYNC_INTERVAL_MS);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [dispatch]);
 
   useEffect(() => {

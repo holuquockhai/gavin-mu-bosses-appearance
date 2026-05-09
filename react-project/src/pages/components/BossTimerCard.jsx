@@ -61,8 +61,12 @@ function BossTimerCard({boss, selectedChannel}){
         }));
         const notificationPayload = {
             actorName,
+            bossId: boss.id,
             bossName: boss.name,
             channel: selectedChannel,
+            hours: Number(selectedHour),
+            minutes: Number(selectedMinute),
+            endAt,
             period,
         };
         dispatch(addBossTimerSetNotification(notificationPayload));
@@ -70,11 +74,15 @@ function BossTimerCard({boss, selectedChannel}){
             type: "boss-timer-set",
             payload: notificationPayload,
         }).catch(() => {});
+        window.dispatchEvent(new Event("warlords:timer-state-refresh"));
     };
 
     const handleClearTimer = () => {
         clearBossTimerApi({ bossId: boss.id, channel: selectedChannel }).catch(() => {});
         dispatch(clearBossCountdown({ bossId: boss.id, channel: selectedChannel }));
+        setSelectedHour("0");
+        setSelectedMinute("0");
+        window.dispatchEvent(new Event("warlords:timer-state-refresh"));
     };
 
     return(

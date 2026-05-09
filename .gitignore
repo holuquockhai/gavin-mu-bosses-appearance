@@ -3,6 +3,7 @@ dist
 .env
 .venv/
 fast-api/.venv/
+fast-api/uploads/
 react-project/package-lock.json
 .DS_Store
 .vscode

@@ -9,7 +9,11 @@ const authHeaders = () => ({
 
 export const getNotificationsApi = async () => {
   const response = await axios.get(`${API_URL}/notifications/`, {
-    headers: authHeaders(),
+    params: { _: Date.now() },
+    headers: {
+      ...authHeaders(),
+      "Cache-Control": "no-cache",
+    },
   });
 
   return response.data;

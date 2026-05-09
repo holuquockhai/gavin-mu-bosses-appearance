@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -9,6 +9,7 @@ from app.dependencies.auth import get_current_user
 from app.models.timer import BossHistory, BossTimer
 from app.models.user import User
 from app.schemas.timer import BossAppearedRequest, BossHistoryResponse, BossTimerCreate, BossTimerResponse, BossTimerStateResponse
+from app.services.timer_service import complete_expired_timers
 
 router = APIRouter(prefix="/boss-timers", tags=["boss-timers"])
 
@@ -30,9 +31,13 @@ def get_latest_history(db: Session) -> list[BossHistory]:
 
 @router.get("/", response_model=BossTimerStateResponse)
 def list_timer_state(
+    response: Response,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    complete_expired_timers(db, create_notifications=True)
     timers = db.query(BossTimer).all()
     return {"timers": timers, "history": get_latest_history(db)}
 
@@ -62,6 +67,7 @@ def upsert_timer(
     timer.hours = data.hours
     timer.minutes = data.minutes
     timer.end_at = to_utc_naive(data.end_at)
+    timer.user_id = current_user.id
 
     db.commit()
     db.refresh(timer)
@@ -128,29 +134,4 @@ def complete_expired(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    now = datetime.utcnow()
-    expired_timers = (
-        db.query(BossTimer)
-        .filter(BossTimer.end_at <= now)
-        .all()
-    )
-    history_items = []
-
-    for timer in expired_timers:
-        history = BossHistory(
-            boss_id=timer.boss_id,
-            boss_name=timer.boss_name,
-            channel=timer.channel,
-            completed_at=now,
-            user_id=timer.user_id,
-        )
-        db.add(history)
-        db.delete(timer)
-        history_items.append(history)
-
-    db.commit()
-
-    for history in history_items:
-        db.refresh(history)
-
-    return history_items
+    return complete_expired_timers(db)

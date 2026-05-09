@@ -2,14 +2,26 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import app.db.base
+from contextlib import asynccontextmanager
 from pathlib import Path
 from sqlalchemy import inspect, text
 
 from app.db.database import Base, engine, SessionLocal
 from app.routers import auth, users, admin, bosses, timers, notifications, presets, channels, system_settings
 from app.services.seed_service import seed_admin
+from app.services.timer_scheduler import start_expired_timer_checker, stop_expired_timer_checker
 
-app = FastAPI(title="FastAPI RBAC")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    expired_timer_checker = start_expired_timer_checker()
+    try:
+        yield
+    finally:
+        await stop_expired_timer_checker(expired_timer_checker)
+
+
+app = FastAPI(title="FastAPI RBAC", lifespan=lifespan)
 
 # List the origins (URL of your React app) allowed to make requests
 origins = [
