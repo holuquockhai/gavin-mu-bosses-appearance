@@ -68,6 +68,28 @@ export const sendSystemSettingsTestEmailApi = async (recipient) => {
   return response.data;
 };
 
+export const downloadSystemSettingsBackupApi = async () => {
+  const response = await axios.get(`${API_URL}/system-settings/backup`, {
+    headers: authHeaders(),
+    responseType: "blob",
+  });
+
+  return response;
+};
+
+export const restoreSystemSettingsBackupApi = async (file) => {
+  const formData = new FormData();
+  formData.append("backup_file", file);
+
+  const response = await axios.post(`${API_URL}/system-settings/restore`, formData, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  return response.data;
+};
+
 export const factoryResetWebsiteApi = async () => {
   const response = await axios.post(`${API_URL}/system-settings/factory-reset`, null, {
     headers: authHeaders(),

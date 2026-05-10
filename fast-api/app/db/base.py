@@ -8,6 +8,10 @@ from app.models.preset import Preset
 from app.models.channel import Channel
 from app.models.system_setting import SystemSetting
 from app.models.password_reset_token import PasswordResetToken
+from app.models.email_queue import EmailQueue
+from app.models.activity_log import ActivityLog
+from app.models.cron_job_log import CronJobLog
+from app.models.chat_message import ChatMessage
 
 # Declare all table for creation
 __all__ = [
@@ -25,4 +29,8 @@ __all__ = [
     "Channel",
     "SystemSetting",
     "PasswordResetToken",
+    "EmailQueue",
+    "ActivityLog",
+    "CronJobLog",
+    "ChatMessage",
 ]

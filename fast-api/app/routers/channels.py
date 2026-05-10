@@ -7,6 +7,7 @@ from app.db.database import get_db
 from app.dependencies.auth import require_permissions
 from app.models.user import User
 from app.schemas.channel import ChannelCreate, ChannelResponse, ChannelUpdate
+from app.services.activity_log_service import log_activity
 from app.services.channel_service import (
     create_channel,
     delete_channel,
@@ -47,6 +48,14 @@ async def create(
         raise HTTPException(status_code=400, detail=f'Channel name "{channel_name}" already exists')
 
     channel = create_channel(db, channel_name, current_user=current_user)
+    log_activity(
+        db,
+        event_type="channel_created",
+        entity_type="channel",
+        entity_id=channel.id,
+        description=f'Created channel "{channel.name}"',
+        user=current_user,
+    )
     await websocket_manager.broadcast({"type": "channels_updated", "action": "create"})
     return channel
 
@@ -72,16 +81,38 @@ async def update_single_channel(
         raise HTTPException(status_code=400, detail=f'Channel name "{channel_name}" already exists')
 
     updated_channel = update_channel(db=db, channel=channel, name=channel_name, current_user=current_user)
+    log_activity(
+        db,
+        event_type="channel_updated",
+        entity_type="channel",
+        entity_id=updated_channel.id,
+        description=f'Updated channel "{updated_channel.name}"',
+        user=current_user,
+    )
     await websocket_manager.broadcast({"type": "channels_updated", "action": "update"})
     return updated_channel
 
 
 @router.delete("/{channel_id}", dependencies=[Depends(require_permissions(["channel:delete"]))])
-async def remove(channel_id: int, db: Annotated[Session, Depends(get_db)]):
+async def remove(
+    channel_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_permissions(["channel:delete"]))],
+):
+    existing_channel = get_channel(db, channel_id)
+    channel_name = existing_channel.name if existing_channel else None
     channel = delete_channel(db, channel_id)
 
     if not channel:
         raise HTTPException(status_code=404, detail="Channel not found")
 
+    log_activity(
+        db,
+        event_type="channel_deleted",
+        entity_type="channel",
+        entity_id=channel_id,
+        description=f'Channel "{channel_name}" was deleted',
+        user=current_user,
+    )
     await websocket_manager.broadcast({"type": "channels_updated", "action": "delete"})
     return {"message": "Channel deleted"}

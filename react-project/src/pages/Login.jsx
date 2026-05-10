@@ -42,7 +42,10 @@ const Login = () => {
     try {
       const data = await loginUser(email, password);
       saveAuth(data);
-      navigate("/", { replace: true });
+      navigate(data.user?.must_update_password ? "/profile" : "/", {
+        replace: true,
+        state: data.user?.must_update_password ? { requirePasswordUpdate: true } : undefined,
+      });
     } catch (err) {
       setError(
         err.response?.data?.detail ||

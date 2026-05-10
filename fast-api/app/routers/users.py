@@ -1,4 +1,5 @@
 import shutil
+import logging
 from pathlib import Path
 from uuid import uuid4
 
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.core.security import hash_password
 from app.db.database import get_db
 from app.dependencies.auth import get_current_user, require_permissions
+from app.models.activity_log import ActivityLog
 from app.models.boss import Boss
 from app.models.channel import Channel
 from app.models.notification import Notification, NotificationDismissal
@@ -19,7 +21,12 @@ from app.models.role import Role
 from app.models.timer import BossHistory, BossTimer
 from app.models.user import User
 from app.schemas.user import UserCreate, UserPublicProfileResponse, UserResponse, UserUpdate
-from app.services.mail_service import is_mail_configured, send_account_activated_email, send_account_inactive_email
+from app.services.activity_log_service import log_activity
+from app.services.email_queue_service import (
+    enqueue_account_activated_email,
+    enqueue_account_deleted_email,
+    enqueue_account_inactive_email,
+)
 from app.services.system_settings_service import get_settings_map
 from app.services.websocket_manager import websocket_manager
 
@@ -33,6 +40,7 @@ ALLOWED_AVATAR_TYPES = {
     "image/png": ".png",
     "image/webp": ".webp",
 }
+logger = logging.getLogger(__name__)
 
 
 def _get_role_by_name(db: Session, role_name: str) -> Role:
@@ -75,31 +83,44 @@ def _email_exists(db: Session, email: str, exclude_user_id: int | None = None) -
     return db.execute(stmt).scalar_one_or_none() is not None
 
 
-def _send_account_active_email_if_configured(db: Session, user: User) -> None:
-    if not is_mail_configured(db):
-        return
-
+def _send_account_active_email_if_configured(db: Session, user: User, initial_password: str | None = None) -> None:
     values = get_settings_map(db)
     base_url = (values.get("app_base_url") or "http://127.0.0.1:5173").rstrip("/")
     try:
-        send_account_activated_email(db, user.email, user.full_name, f"{base_url}/login")
+        enqueue_account_activated_email(db, user.email, user.full_name, f"{base_url}/login", initial_password)
     except Exception:
-        pass
+        db.rollback()
+        logger.exception("Could not queue account activation email for user %s", user.id)
 
 
 def _send_account_inactive_email_if_configured(db: Session, user: User) -> None:
-    if not is_mail_configured(db):
-        return
-
     try:
-        send_account_inactive_email(
+        enqueue_account_inactive_email(
             db,
             user.email,
             user.full_name,
             "This message was sent because an administrator changed your account status to inactive.",
         )
     except Exception:
-        pass
+        db.rollback()
+        logger.exception("Could not queue inactive account email for user %s", user.id)
+
+
+def _delete_user_upload_files(user_id: int, avatar_url: str | None) -> None:
+    deleted_paths: set[Path] = set()
+
+    if avatar_url and avatar_url.startswith("/uploads/avatars/"):
+        avatar_path = UPLOAD_ROOT / Path(avatar_url).name
+        deleted_paths.add(avatar_path)
+
+    deleted_paths.update(UPLOAD_ROOT.glob(f"user-{user_id}-*"))
+
+    for file_path in deleted_paths:
+        try:
+            if file_path.is_file() and file_path.resolve().parent == UPLOAD_ROOT.resolve():
+                file_path.unlink()
+        except Exception:
+            logger.exception("Could not delete upload file %s for user %s", file_path, user_id)
 
 
 # Get current user Router
@@ -137,6 +158,7 @@ def update_my_profile(
         if len(password) < 6:
             raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
         user.hashed_password = hash_password(password)
+        user.must_update_password = False
 
     if avatar and avatar.filename:
         extension = ALLOWED_AVATAR_TYPES.get(avatar.content_type or "")
@@ -189,7 +211,11 @@ def list_users(response: Response, db: Session = Depends(get_db)):
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_permissions(["user:create"]))],
 )
-async def create_user(payload: UserCreate, db: Session = Depends(get_db)):
+async def create_user(
+    payload: UserCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     if _email_exists(db, payload.email):
         raise HTTPException(status_code=400, detail=f'User email "{payload.email}" already exists')
 
@@ -198,6 +224,7 @@ async def create_user(payload: UserCreate, db: Session = Depends(get_db)):
         full_name=payload.full_name,
         hashed_password=hash_password(payload.password),
         is_active=payload.is_active,
+        must_update_password=True,
     )
     user.roles.append(_get_role_by_name(db, payload.role))
 
@@ -206,7 +233,19 @@ async def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     db.refresh(user)
 
     if user.is_active:
-        _send_account_active_email_if_configured(db, user)
+        _send_account_active_email_if_configured(db, user, payload.password)
+    else:
+        _send_account_inactive_email_if_configured(db, user)
+
+    log_activity(
+        db,
+        event_type="user_created",
+        entity_type="user",
+        entity_id=user.id,
+        description=f'Created user "{user.full_name or user.email}"',
+        details={"email": user.email, "role": payload.role, "is_active": user.is_active},
+        user=current_user,
+    )
 
     created_user = _get_user_by_id(db, user.id)
     await websocket_manager.broadcast({"type": "users_updated", "action": "create"})
@@ -258,6 +297,7 @@ async def update_user(
 
     if data.get("password"):
         user.hashed_password = hash_password(data["password"])
+        user.must_update_password = False
 
     db.commit()
     db.refresh(user)
@@ -267,6 +307,16 @@ async def update_user(
 
     if was_active and not user.is_active:
         _send_account_inactive_email_if_configured(db, user)
+
+    log_activity(
+        db,
+        event_type="user_updated",
+        entity_type="user",
+        entity_id=user.id,
+        description=f'Updated user "{user.full_name or user.email}"',
+        details={"fields": sorted(data.keys())},
+        user=current_user,
+    )
 
     updated_user = _get_user_by_id(db, user.id)
     await websocket_manager.broadcast({"type": "users_updated", "action": "update"})
@@ -283,6 +333,9 @@ async def delete_user(
         raise HTTPException(status_code=400, detail="You cannot delete your own account")
 
     user = _get_user_by_id(db, user_id)
+    deleted_user_name = user.full_name or user.email
+    deleted_user_email = user.email
+    deleted_user_avatar_url = user.avatar_url
 
     db.query(Boss).filter(Boss.created_by_id == user.id).update(
         {Boss.created_by_id: current_user.id},
@@ -321,6 +374,10 @@ async def delete_user(
     db.query(Preset).filter(Preset.user_id == user.id).delete(
         synchronize_session=False,
     )
+    db.query(ActivityLog).filter(ActivityLog.user_id == user.id).update(
+        {ActivityLog.user_id: current_user.id},
+        synchronize_session=False,
+    )
 
     user.roles.clear()
     db.delete(user)
@@ -334,5 +391,34 @@ async def delete_user(
             detail="User cannot be deleted because it is linked to existing activity",
         )
 
+    _delete_user_upload_files(user_id, deleted_user_avatar_url)
+
+    log_activity(
+        db,
+        event_type="user_deleted",
+        entity_type="user",
+        entity_id=user_id,
+        description=f'User "{deleted_user_name}" was deleted',
+        user=current_user,
+    )
+    try:
+        enqueue_account_deleted_email(db, deleted_user_email, deleted_user_name)
+    except Exception:
+        db.rollback()
+        logger.exception("Could not queue account deleted email for user %s", user_id)
+
+    db.add(
+        Notification(
+            type="user-deleted",
+            payload={
+                "userId": user_id,
+                "userName": deleted_user_name,
+            },
+            user_id=current_user.id,
+        )
+    )
+    db.commit()
+
     await websocket_manager.broadcast({"type": "users_updated", "action": "delete"})
+    await websocket_manager.broadcast({"type": "notifications_updated"})
     return {"message": f"User {user_id} deleted successfully"}

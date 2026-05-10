@@ -31,6 +31,7 @@ class UserLoginResponse(BaseModel):
     country: str | None = None
     bio: str | None = None
     avatar_url: str | None = None
+    must_update_password: bool = False
     created_at: datetime
     last_login_at: datetime | None = None
     roles: list[str]

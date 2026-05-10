@@ -4,7 +4,7 @@ from sqlalchemy.engine.url import make_url
 
 from app.core.config import settings
 
-url = make_url(settings.DATABASE_URL)
+url = make_url(settings.database_url)
 db_name = url.database
 
 if not db_name:
@@ -22,7 +22,7 @@ with server_engine.connect() as conn:
     conn.commit()
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    settings.database_url,
     pool_pre_ping=True,
     pool_recycle=3600,
 )

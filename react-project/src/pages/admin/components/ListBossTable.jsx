@@ -1,6 +1,9 @@
 import { deleteBossApi, getBossesApi, updateBossApi } from "../../../api/bossApi";
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "bootstrap";
+import AdminPagination from "./AdminPagination";
+
+const pageSize = 25;
 
 const formatDateTime = (value) => {
   if (!value) {
@@ -42,6 +45,7 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
   const [bossToDelete, setBossToDelete] = useState(null);
   const [bossToEdit, setBossToEdit] = useState(null);
   const [editName, setEditName] = useState("");
+  const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     name: "",
     createdBy: "all",
@@ -102,6 +106,16 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
       );
     });
   }, [bosses, filters]);
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredBosses.length / pageSize)),
+    [filteredBosses.length],
+  );
+
+  const paginatedBosses = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    return filteredBosses.slice(startIndex, startIndex + pageSize);
+  }, [filteredBosses, page]);
 
   const openEditModal = (boss) => {
     setBossToEdit(boss);
@@ -222,6 +236,16 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
     return () => window.removeEventListener("warlords:bosses-updated", loadBosses);
   }, []);
 
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   return (
     <>
       {error && <div className="alert alert-danger">{error}</div>}
@@ -333,7 +357,7 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
       </form>
 
       <div className="table-responsive">
-        <table className="table table-striped align-middle">
+        <table className="table table-hover align-middle">
           <thead>
             <tr>
               <th scope="col">#</th>
@@ -347,21 +371,21 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="6" className="text-center text-muted">
+                <td colSpan="6" className="text-center text-muted py-4">
                   Loading bosses...
                 </td>
               </tr>
             ) : filteredBosses.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center text-muted">
+                <td colSpan="6" className="text-center text-muted py-4">
                   No bosses match the current filters
                 </td>
               </tr>
             ) : (
-              filteredBosses.map((boss, index) => {
+              paginatedBosses.map((boss, index) => {
                 return (
                   <tr key={boss.id}>
-                    <th scope="row">{index + 1}</th>
+                    <th scope="row">{(page - 1) * pageSize + index + 1}</th>
                     <td>{boss.name}</td>
                     <td>{getUserName(boss.created_by)}</td>
                     <td>{getUserName(boss.updated_by)}</td>
@@ -389,6 +413,8 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
           </tbody>
         </table>
       </div>
+
+      <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       <div
         className="modal fade"

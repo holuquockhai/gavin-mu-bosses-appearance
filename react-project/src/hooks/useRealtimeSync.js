@@ -9,7 +9,7 @@ import { setBosses } from "../js/bossSlice";
 import { setChannels } from "../js/channelSlice";
 import { setNotifications } from "../js/notificationSlice";
 import { setBossTimerState } from "../js/timerSlice";
-import { logout } from "../utils/auth";
+import { getToken, logout } from "../utils/auth";
 
 const getRealtimeUrl = () => {
   if (API_URL.startsWith("http://")) {
@@ -80,7 +80,13 @@ export function useRealtimeSync() {
     };
 
     const connect = () => {
-      socket = new WebSocket(getRealtimeUrl());
+      const token = getToken();
+
+      if (!token) {
+        return;
+      }
+
+      socket = new WebSocket(`${getRealtimeUrl()}?token=${encodeURIComponent(token)}`);
 
       socket.onmessage = (event) => {
         try {
@@ -106,6 +112,18 @@ export function useRealtimeSync() {
 
           if (message.type === "users_updated") {
             window.dispatchEvent(new CustomEvent("warlords:users-updated", { detail: message }));
+          }
+
+          if (message.type === "logs_updated" || message.type === "email_logs_updated" || message.type === "cron_logs_updated") {
+            window.dispatchEvent(new CustomEvent("warlords:logs-updated", { detail: message }));
+          }
+
+          if (message.type === "online_users_updated") {
+            window.dispatchEvent(new CustomEvent("warlords:online-users-updated", { detail: message.users || [] }));
+          }
+
+          if (message.type === "chat_message_created") {
+            window.dispatchEvent(new CustomEvent("warlords:chat-message-created", { detail: message }));
           }
 
           if (message.type === "factory_reset_completed") {

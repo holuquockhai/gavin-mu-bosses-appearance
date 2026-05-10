@@ -84,6 +84,14 @@ function NotificationMessage({ notification }) {
         );
     }
 
+    if (notification.type === "user-deleted") {
+        return (
+            <>
+                <NotificationActor notification={notification} /> deleted user <strong>{notification.userName}</strong>.
+            </>
+        );
+    }
+
     return notification.message;
 }
 

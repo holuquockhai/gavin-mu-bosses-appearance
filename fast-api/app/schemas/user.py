@@ -32,6 +32,7 @@ class UserResponse(BaseModel):
     bio: str | None = None
     avatar_url: str | None = None
     is_active: bool
+    must_update_password: bool = False
     created_at: datetime
     last_login_at: datetime | None = None
     roles: list[RoleResponse] = []

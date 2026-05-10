@@ -10,6 +10,9 @@ import {
 import { createNotificationApi } from "../../api/notificationApi";
 import { addUserCreatedNotification } from "../../js/notificationSlice";
 import { getUser } from "../../utils/auth";
+import AdminPagination from "./components/AdminPagination";
+
+const pageSize = 25;
 
 const emptyForm = {
   email: "",
@@ -32,6 +35,15 @@ const getErrorMessage = (err, fallback) => {
 const formatRoles = (roles = []) =>
   roles.map((role) => role.name || role).filter(Boolean);
 
+const generatePassword = () => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const symbols = "!@#$%";
+  const randomChars = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]);
+  randomChars.push(symbols[Math.floor(Math.random() * symbols.length)]);
+  randomChars.push(String(Math.floor(Math.random() * 10)));
+  return randomChars.sort(() => Math.random() - 0.5).join("");
+};
+
 export default function Users() {
   const dispatch = useDispatch();
   const [users, setUsers] = useState([]);
@@ -45,6 +57,7 @@ export default function Users() {
   const [editForm, setEditForm] = useState(emptyForm);
   const [userToEdit, setUserToEdit] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     search: "",
     status: "all",
@@ -83,6 +96,16 @@ export default function Users() {
     });
   }, [filters, users]);
 
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredUsers.length / pageSize)),
+    [filteredUsers.length],
+  );
+
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    return filteredUsers.slice(startIndex, startIndex + pageSize);
+  }, [filteredUsers, page]);
+
   const loadUsers = () => {
     setIsLoading(true);
     setError("");
@@ -113,6 +136,16 @@ export default function Users() {
     const timeoutId = setTimeout(() => setNotification(null), 4000);
     return () => clearTimeout(timeoutId);
   }, [notification]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const showModal = (id) => {
     const modalElement = document.getElementById(id);
@@ -154,6 +187,13 @@ export default function Users() {
     setCreateForm((current) => ({
       ...current,
       [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleGeneratePassword = () => {
+    setCreateForm((current) => ({
+      ...current,
+      password: generatePassword(),
     }));
   };
 
@@ -291,9 +331,6 @@ export default function Users() {
     <div className="p-3 card rounded-4 unified">
       <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
         <h4 className="mb-0">Users Management</h4>
-        <span className="small text-muted">
-          Found: {filteredUsers.length} of {users.length} Users
-        </span>
         <button
           type="button"
           className="btn btn-outline-success me-2"
@@ -325,6 +362,12 @@ export default function Users() {
         className="border rounded-3 p-3 mb-3 bg-body-tertiary"
         onSubmit={(event) => event.preventDefault()}
       >
+        <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+          <h6 className="mb-0">Filter Users</h6>
+          <span className="small text-muted">
+            Found: {filteredUsers.length} of {users.length} Users
+          </span>
+        </div>
         <div className="row g-3 align-items-end">
           <div className="col-12 col-lg-5">
             <label className="form-label small text-muted" htmlFor="userSearch">
@@ -391,7 +434,7 @@ export default function Users() {
       </form>
 
       <div className="table-responsive">
-        <table className="table table-striped align-middle">
+        <table className="table table-hover align-middle">
           <thead>
             <tr>
               <th scope="col">#</th>
@@ -405,20 +448,20 @@ export default function Users() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="6" className="text-center text-muted">
+                <td colSpan="6" className="text-center text-muted py-4">
                   Loading users...
                 </td>
               </tr>
             ) : filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center text-muted">
+                <td colSpan="6" className="text-center text-muted py-4">
                   No users match the current filters
                 </td>
               </tr>
             ) : (
-              filteredUsers.map((user, index) => (
+              paginatedUsers.map((user, index) => (
                 <tr key={user.id}>
-                  <th scope="row">{index + 1}</th>
+                  <th scope="row">{(page - 1) * pageSize + index + 1}</th>
                   <td>{user.full_name || "-"}</td>
                   <td>{user.email}</td>
                   <td>
@@ -465,6 +508,8 @@ export default function Users() {
         </table>
       </div>
 
+      <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
       <div
         className="modal fade"
         id="createUserModal"
@@ -489,6 +534,7 @@ export default function Users() {
               <UserForm
                 form={createForm}
                 onChange={handleCreateChange}
+                onGeneratePassword={handleGeneratePassword}
                 passwordRequired
               />
               {formError && (
@@ -609,7 +655,7 @@ export default function Users() {
   );
 }
 
-function UserForm({ form, onChange, passwordRequired = false }) {
+function UserForm({ form, onChange, onGeneratePassword, passwordRequired = false }) {
   return (
     <>
       <div className="mb-3">
@@ -654,19 +700,33 @@ function UserForm({ form, onChange, passwordRequired = false }) {
         >
           Password
         </label>
-        <input
-          id={passwordRequired ? "createPassword" : "editPassword"}
-          type="password"
-          name="password"
-          className="form-control"
-          value={form.password}
-          onChange={onChange}
-          minLength="6"
-          required={passwordRequired}
-          placeholder={
-            passwordRequired ? "" : "Leave blank to keep current password"
-          }
-        />
+        <div className="input-group">
+          <input
+            id={passwordRequired ? "createPassword" : "editPassword"}
+            type={passwordRequired ? "text" : "password"}
+            name="password"
+            className="form-control"
+            value={form.password}
+            onChange={onChange}
+            minLength="6"
+            required={passwordRequired}
+            placeholder={
+              passwordRequired ? "" : "Leave blank to keep current password"
+            }
+          />
+          {passwordRequired && (
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={onGeneratePassword}
+            >
+              Generate
+            </button>
+          )}
+        </div>
+        {passwordRequired && (
+          <div className="form-text">This temporary password will be sent to the user by email.</div>
+        )}
       </div>
 
       <div className="mb-3">

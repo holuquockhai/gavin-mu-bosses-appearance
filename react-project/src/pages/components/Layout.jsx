@@ -1,15 +1,18 @@
 // Layout.jsx
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import TopNavigation from "./TopNavigation";
 import LeftContent from "./LeftContent";
 import RightContent from "./RightContent";
 import BottomContent from "./BottomContent";
+import ChatWidget from "./ChatWidget";
 import { getUser } from "../../utils/auth";
 import { useState, useEffect } from "react";
 import { useRealtimeSync } from "../../hooks/useRealtimeSync";
 
 export default function Layout() {
   useRealtimeSync();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [user, setUser] = useState(() => getUser());
   const [isDark, setIsDark] = useState(() => {
@@ -29,6 +32,14 @@ export default function Layout() {
     window.addEventListener("auth:user-updated", handleUserUpdated);
     return () => window.removeEventListener("auth:user-updated", handleUserUpdated);
   }, []);
+
+  useEffect(() => {
+    const currentUser = getUser();
+    if (currentUser?.must_update_password && location.pathname !== "/profile") {
+      navigate("/profile", { replace: true, state: { requirePasswordUpdate: true } });
+    }
+  }, [location.pathname, navigate]);
+
   return (
     <>
       <TopNavigation isDark={isDark} setIsDark={setIsDark} user={user} />
@@ -52,6 +63,7 @@ export default function Layout() {
           <BottomContent />
         </div>
       </main>
+      <ChatWidget />
     </>
   );
 }

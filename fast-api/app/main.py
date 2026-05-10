@@ -2,18 +2,21 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import app.db.base
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 from sqlalchemy import inspect, text
 
 from app.db.database import Base, engine, SessionLocal
-from app.routers import auth, users, admin, bosses, timers, notifications, presets, channels, system_settings, realtime
+from app.routers import auth, users, admin, bosses, timers, notifications, presets, channels, system_settings, realtime, logs, chat
 from app.services.seed_service import seed_admin
 from app.services.timer_scheduler import start_expired_timer_checker, stop_expired_timer_checker
+from app.services.websocket_manager import websocket_manager
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    websocket_manager.bind_loop(asyncio.get_running_loop())
     expired_timer_checker = start_expired_timer_checker()
     try:
         yield
@@ -59,6 +62,11 @@ with engine.begin() as conn:
         conn.execute(text("ALTER TABLE users ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP"))
     if "last_login_at" not in user_columns:
         conn.execute(text("ALTER TABLE users ADD COLUMN last_login_at DATETIME NULL"))
+    if "must_update_password" not in user_columns:
+        conn.execute(text("ALTER TABLE users ADD COLUMN must_update_password BOOLEAN NOT NULL DEFAULT FALSE"))
+    chat_columns = {column["name"] for column in inspect(conn).get_columns("chat_messages")}
+    if "created_at" not in chat_columns:
+        conn.execute(text("ALTER TABLE chat_messages ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP"))
 
 db = SessionLocal()
 try:
@@ -78,6 +86,9 @@ app.include_router(channels.router)
 app.include_router(system_settings.public_router)
 app.include_router(system_settings.router)
 app.include_router(realtime.router)
+app.include_router(logs.router)
+app.include_router(logs.internal_router)
+app.include_router(chat.router)
 
 
 @app.get("/")

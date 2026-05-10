@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.notification import Notification
 from app.models.timer import BossHistory, BossTimer
+from app.services.activity_log_service import log_activity
 
 
 def complete_expired_timers(db: Session, create_notifications: bool = False) -> list[BossHistory]:
@@ -42,6 +43,15 @@ def complete_expired_timers(db: Session, create_notifications: bool = False) -> 
 
         db.delete(timer)
         history_items.append(history)
+        log_activity(
+            db,
+            event_type="boss_timer_expired",
+            entity_type="boss_history",
+            entity_id=timer.boss_id,
+            description=f'Boss "{timer.boss_name}" appeared on "{timer.channel}" after timer expired',
+            details={"boss_id": timer.boss_id, "boss_name": timer.boss_name, "channel": timer.channel},
+            commit=False,
+        )
 
     if history_items:
         db.commit()

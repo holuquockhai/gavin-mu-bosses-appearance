@@ -18,6 +18,7 @@ class SystemSettingsResponse(BaseModel):
     smtp_from_name: str | None = None
     smtp_use_tls: bool = True
     smtp_use_ssl: bool = False
+    email_queue_batch_size: int = 20
     mysql_host: str | None = None
     mysql_port: int = 3306
     mysql_database: str | None = None
@@ -43,6 +44,7 @@ class SystemSettingsUpdate(BaseModel):
     smtp_from_name: str | None = None
     smtp_use_tls: bool = True
     smtp_use_ssl: bool = False
+    email_queue_batch_size: int = Field(default=20, ge=1, le=200)
     mysql_host: str | None = None
     mysql_port: int = Field(default=3306, ge=1, le=65535)
     mysql_database: str | None = None

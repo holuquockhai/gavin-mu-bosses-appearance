@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Modal } from "bootstrap";
 import { useNavigate } from "react-router-dom";
 import {
+  downloadSystemSettingsBackupApi,
   factoryResetWebsiteApi,
   getSystemSettingsApi,
+  restoreSystemSettingsBackupApi,
   sendSystemSettingsTestEmailApi,
   updateBrandingSettingsApi,
   updateSystemSettingsApi,
@@ -28,6 +30,7 @@ const initialForm = {
   smtp_from_name: "Wardlords",
   smtp_use_tls: true,
   smtp_use_ssl: false,
+  email_queue_batch_size: 20,
   mysql_host: "127.0.0.1",
   mysql_port: 3306,
   mysql_database: "mu_bosses",
@@ -53,7 +56,11 @@ function SystemSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isDownloadingBackup, setIsDownloadingBackup] = useState(false);
+  const [isRestoringBackup, setIsRestoringBackup] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
+  const [restoreFile, setRestoreFile] = useState(null);
+  const [restoreInputKey, setRestoreInputKey] = useState(0);
   const [smtpPasswordConfigured, setSmtpPasswordConfigured] = useState(false);
   const [mysqlPasswordConfigured, setMysqlPasswordConfigured] = useState(false);
   const [brandingFiles, setBrandingFiles] = useState({
@@ -98,6 +105,17 @@ function SystemSettings() {
     }));
   };
 
+  const applySavedSettings = (settings) => {
+    setForm({
+      ...initialForm,
+      ...settings,
+      smtp_password: "",
+      mysql_password: "",
+    });
+    setSmtpPasswordConfigured(Boolean(settings.smtp_password_configured));
+    setMysqlPasswordConfigured(Boolean(settings.mysql_password_configured));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsSaving(true);
@@ -127,6 +145,7 @@ function SystemSettings() {
       const payload = {
         ...form,
         smtp_port: Number(form.smtp_port) || 587,
+        email_queue_batch_size: Number(form.email_queue_batch_size) || 20,
         mysql_port: Number(form.mysql_port) || 3306,
       };
 
@@ -151,14 +170,7 @@ function SystemSettings() {
         setBrandingFiles({ site_logo: null, site_sublogo: null });
       }
 
-      setForm({
-        ...initialForm,
-        ...savedSettings,
-        smtp_password: "",
-        mysql_password: "",
-      });
-      setSmtpPasswordConfigured(Boolean(savedSettings.smtp_password_configured));
-      setMysqlPasswordConfigured(Boolean(savedSettings.mysql_password_configured));
+      applySavedSettings(savedSettings);
       setMessage("System settings have been saved successfully.");
     } catch (err) {
       setError(getErrorMessage(err, "Failed to save system settings"));
@@ -184,6 +196,55 @@ function SystemSettings() {
       setError(getErrorMessage(err, "Could not send test email"));
     } finally {
       setIsTesting(false);
+    }
+  };
+
+  const handleDownloadBackup = async () => {
+    setIsDownloadingBackup(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await downloadSystemSettingsBackupApi();
+      const contentDisposition = response.headers["content-disposition"] || "";
+      const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+      const filename = filenameMatch?.[1] || "warlords-system-settings-backup.json";
+      const downloadUrl = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(downloadUrl);
+      setMessage("System settings backup has been downloaded.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to download system settings backup"));
+    } finally {
+      setIsDownloadingBackup(false);
+    }
+  };
+
+  const handleRestoreBackup = async () => {
+    if (!restoreFile) {
+      setError("Choose a JSON backup file before restoring settings.");
+      return;
+    }
+
+    setIsRestoringBackup(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const restoredSettings = await restoreSystemSettingsBackupApi(restoreFile);
+      applySavedSettings(restoredSettings);
+      setRestoreFile(null);
+      setRestoreInputKey((currentKey) => currentKey + 1);
+      setMessage("System settings backup has been restored successfully.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to restore system settings backup"));
+    } finally {
+      setIsRestoringBackup(false);
     }
   };
 
@@ -514,6 +575,33 @@ function SystemSettings() {
 
             <div className="card">
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
+                <h5 className="mb-1">Email Queue</h5>
+                <p className="small text-muted mb-0">Control how many queued emails the mail worker sends per run.</p>
+              </div>
+              <div className="card-body">
+                <div className="row g-3">
+                  <div className="col-12 col-lg-4">
+                    <label className="form-label" htmlFor="emailQueueBatchSize">Emails per cron run</label>
+                    <input
+                      id="emailQueueBatchSize"
+                      name="email_queue_batch_size"
+                      type="number"
+                      min="1"
+                      max="200"
+                      className="form-control"
+                      value={form.email_queue_batch_size || 20}
+                      onChange={handleChange}
+                    />
+                    <p className="small text-muted mb-0 mt-1">
+                      Maximum queued emails sent each time the mail worker runs.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">MySQL Server</h5>
                 <p className="small text-muted mb-0">
                   Store database server information for deployment and administration.
@@ -601,11 +689,59 @@ function SystemSettings() {
               </div>
             </div>
 
+            <div className="card">
+              <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
+                <h5 className="mb-1">Backup & Restore Settings</h5>
+                <p className="small text-muted mb-0">Download or restore system settings with a JSON backup file.</p>
+              </div>
+              <div className="card-body">
+                <div className="row g-3 align-items-end">
+                  <div className="col-12 col-lg-4">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary w-100"
+                      onClick={handleDownloadBackup}
+                      disabled={isDownloadingBackup}
+                    >
+                      {isDownloadingBackup ? "Downloading..." : "Download Settings JSON"}
+                    </button>
+                  </div>
+
+                  <div className="col-12 col-lg-5">
+                    <label className="form-label" htmlFor="settingsBackupFile">Restore JSON file</label>
+                    <input
+                      key={restoreInputKey}
+                      id="settingsBackupFile"
+                      type="file"
+                      className="form-control"
+                      accept="application/json,.json"
+                      onChange={(event) => setRestoreFile(event.target.files?.[0] || null)}
+                      disabled={isRestoringBackup}
+                    />
+                  </div>
+
+                  <div className="col-12 col-lg-3">
+                    <button
+                      type="button"
+                      className="btn btn-outline-warning w-100"
+                      onClick={handleRestoreBackup}
+                      disabled={isRestoringBackup || !restoreFile}
+                    >
+                      {isRestoringBackup ? "Restoring..." : "Restore Settings"}
+                    </button>
+                  </div>
+                </div>
+                <p className="small text-muted mb-0 mt-2">
+                  Backup files include secret keys, SMTP passwords, and MySQL passwords. Keep them private.
+                </p>
+              </div>
+            </div>
+
             <div className="card border-danger">
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1 text-danger">Website Factory Reset</h5>
                 <p className="small text-muted mb-0">
-                  Truncate all database tables and recreate the default admin users.
+                  Reset website data while keeping current users, roles, and permissions.
                 </p>
               </div>
               <div className="card-body">
@@ -613,7 +749,8 @@ function SystemSettings() {
                   <div>
                     <p className="mb-1 fw-semibold">This action permanently removes all website data.</p>
                     <p className="small text-muted mb-0">
-                      Users, bosses, channels, timers, history, presets, notifications, and settings will be reset.
+                      Bosses, channels, timers, history, presets, notifications, logs, and settings will be reset.
+                      Users, roles, and permissions will be preserved.
                     </p>
                   </div>
                   <button
@@ -686,8 +823,8 @@ function SystemSettings() {
             </div>
             <div className="modal-body">
               <p>
-                This will truncate all database tables and recreate the default admin users. You will be logged out
-                after the reset completes.
+                This will reset website data and settings, but it will keep users, roles, and permissions. You will be
+                logged out after the reset completes.
               </p>
               <label className="form-label" htmlFor="factoryResetConfirm">
                 Type RESET to continue

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { getCurrentUserApi, getUserProfileApi, updateProfileApi, USER_API_URL } from "../api/userApi";
 import { getUser, updateStoredUser } from "../utils/auth";
 
@@ -80,6 +80,7 @@ function formatLastLogin(value) {
 
 function Profile() {
   const { userId } = useParams();
+  const location = useLocation();
   const storedUser = getUser();
   const isOwnProfile = !userId || Number(userId) === Number(storedUser?.id);
   const [fullName, setFullName] = useState(storedUser?.full_name || "");
@@ -97,6 +98,7 @@ function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const mustUpdatePassword = Boolean(storedUser?.must_update_password);
 
   const previewUrl = useMemo(() => {
     if (avatarFile) {
@@ -147,6 +149,12 @@ function Profile() {
 
     setIsSaving(true);
     try {
+      if (mustUpdatePassword && !password) {
+        setError("Please set a new password before continuing.");
+        setIsSaving(false);
+        return;
+      }
+
       const user = await updateProfileApi({
         full_name: fullName,
         phone_number: phoneNumber,
@@ -274,6 +282,11 @@ function Profile() {
         </div>
 
         <div className="profile-content">
+        {(mustUpdatePassword || location.state?.requirePasswordUpdate) && (
+          <div className="alert alert-warning">
+            Please update your temporary password before continuing.
+          </div>
+        )}
         {message && <div className="alert alert-success">{message}</div>}
         {error && <div className="alert alert-danger">{error}</div>}
 
@@ -392,6 +405,7 @@ function Profile() {
                     type="password"
                     className="form-control"
                     minLength={6}
+                    required={mustUpdatePassword}
                     value={password}
                     disabled={isLoading || isSaving}
                     onChange={(event) => setPassword(event.target.value)}
@@ -405,6 +419,7 @@ function Profile() {
                     type="password"
                     className="form-control"
                     minLength={6}
+                    required={mustUpdatePassword}
                     value={confirmPassword}
                     disabled={isLoading || isSaving}
                     onChange={(event) => setConfirmPassword(event.target.value)}

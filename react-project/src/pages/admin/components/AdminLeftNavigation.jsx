@@ -5,6 +5,7 @@ const adminLinks = [
   { to: "/admin/users", label: "Users", icon: "people" },
   { to: "/admin/create-boss", label: "Bosses", icon: "shield" },
   { to: "/admin/channels", label: "Channels", icon: "diagram-3" },
+  { to: "/admin/logs", label: "Logs", icon: "journal-text" },
   { to: "/admin/system-settings", label: "System Settings", icon: "gear" },
 ];
 

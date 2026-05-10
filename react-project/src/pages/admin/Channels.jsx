@@ -13,6 +13,9 @@ import {
   setChannels,
   updateChannel,
 } from "../../js/channelSlice";
+import AdminPagination from "./components/AdminPagination";
+
+const pageSize = 25;
 
 const getErrorMessage = (err, fallback) => {
   const detail = err.response?.data?.detail;
@@ -56,6 +59,7 @@ export default function Channels() {
   const [channelName, setChannelName] = useState("");
   const [channelToEdit, setChannelToEdit] = useState(null);
   const [channelToDelete, setChannelToDelete] = useState(null);
+  const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     name: "",
     createdBy: "all",
@@ -117,6 +121,16 @@ export default function Channels() {
     });
   }, [channels, filters]);
 
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredChannels.length / pageSize)),
+    [filteredChannels.length],
+  );
+
+  const paginatedChannels = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    return filteredChannels.slice(startIndex, startIndex + pageSize);
+  }, [filteredChannels, page]);
+
   const showModal = (id) => {
     const modalElement = document.getElementById(id);
     Modal.getOrCreateInstance(modalElement).show();
@@ -160,6 +174,16 @@ export default function Channels() {
     const timeoutId = setTimeout(() => setNotification(null), 4000);
     return () => clearTimeout(timeoutId);
   }, [notification]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const openCreateModal = () => {
     setChannelName("");
@@ -415,7 +439,7 @@ export default function Channels() {
       </form>
 
       <div className="table-responsive">
-        <table className="table table-striped align-middle">
+        <table className="table table-hover align-middle">
           <thead>
             <tr>
               <th scope="col">#</th>
@@ -429,21 +453,21 @@ export default function Channels() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="6" className="text-center text-muted">
+                <td colSpan="6" className="text-center text-muted py-4">
                   Loading channels...
                 </td>
               </tr>
             ) : filteredChannels.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center text-muted">
+                <td colSpan="6" className="text-center text-muted py-4">
                   No channels match the current filters
                 </td>
               </tr>
             ) : (
-              filteredChannels.map((channel, index) => {
+              paginatedChannels.map((channel, index) => {
                 return (
                   <tr key={channel.id}>
-                    <th scope="row">{index + 1}</th>
+                    <th scope="row">{(page - 1) * pageSize + index + 1}</th>
                     <td>{channel.name}</td>
                     <td>{getUserName(channel.created_by)}</td>
                     <td>{getUserName(channel.updated_by)}</td>
@@ -471,6 +495,8 @@ export default function Channels() {
           </tbody>
         </table>
       </div>
+
+      <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       <ChannelFormModal
         id="createChannelModal"

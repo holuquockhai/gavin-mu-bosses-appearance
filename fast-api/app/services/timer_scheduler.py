@@ -19,6 +19,7 @@ async def run_expired_timer_checker() -> None:
                     "action": "expired",
                 })
                 await websocket_manager.broadcast({"type": "notifications_updated"})
+                await websocket_manager.broadcast({"type": "logs_updated", "scope": "activities"})
         except Exception:
             db.rollback()
         finally:

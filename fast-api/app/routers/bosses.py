@@ -8,6 +8,7 @@ from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.services.boss_service import create_boss, get_bosses, get_boss_by_name, get_boss, delete_boss, update_boss
 from app.dependencies.auth import require_permissions
+from app.services.activity_log_service import log_activity
 from app.services.websocket_manager import websocket_manager
 
 router = APIRouter(prefix="/bosses", tags=["bosses"])
@@ -25,6 +26,14 @@ async def create(data: BossCreate, db: Annotated[Session, Depends(get_db)], curr
         raise HTTPException(status_code=400, detail=f'Boss name "{boss_name}" already exists')
 
     created_boss = create_boss(db, boss_name, current_user=current_user)
+    log_activity(
+        db,
+        event_type="boss_created",
+        entity_type="boss",
+        entity_id=created_boss.id,
+        description=f'Created boss "{created_boss.name}"',
+        user=current_user,
+    )
     await websocket_manager.broadcast({"type": "bosses_updated", "action": "create"})
     return created_boss
 
@@ -60,14 +69,36 @@ async def update_single_boss(
         raise HTTPException(status_code=400, detail=f'Boss name "{data.name.strip()}" already exists')
 
     updated_boss = update_boss(db=db, boss=boss, name=data.name, current_user=current_user)
+    log_activity(
+        db,
+        event_type="boss_updated",
+        entity_type="boss",
+        entity_id=updated_boss.id,
+        description=f'Updated boss "{updated_boss.name}"',
+        user=current_user,
+    )
     await websocket_manager.broadcast({"type": "bosses_updated", "action": "update"})
     return updated_boss
 
 @router.delete("/{boss_id}",
                dependencies=[Depends(require_permissions(["boss:delete"]))])
-async def remove(boss_id: int, db: Annotated[Session, Depends(get_db)]):
+async def remove(
+    boss_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    existing_boss = get_boss(db, boss_id)
+    boss_name = existing_boss.name if existing_boss else None
     boss = delete_boss(db, boss_id)
     if not boss:
         raise HTTPException(status_code=404, detail="Boss not found")
+    log_activity(
+        db,
+        event_type="boss_deleted",
+        entity_type="boss",
+        entity_id=boss_id,
+        description=f'Boss "{boss_name}" was deleted',
+        user=current_user,
+    )
     await websocket_manager.broadcast({"type": "bosses_updated", "action": "delete"})
     return {"message": "Boss deleted"}

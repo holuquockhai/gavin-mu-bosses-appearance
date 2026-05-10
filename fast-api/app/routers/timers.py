@@ -9,6 +9,7 @@ from app.dependencies.auth import get_current_user
 from app.models.timer import BossHistory, BossTimer
 from app.models.user import User
 from app.schemas.timer import BossAppearedRequest, BossHistoryResponse, BossTimerCreate, BossTimerResponse, BossTimerStateResponse
+from app.services.activity_log_service import log_activity
 from app.services.timer_service import complete_expired_timers
 from app.services.websocket_manager import websocket_manager
 
@@ -72,6 +73,22 @@ async def upsert_timer(
 
     db.commit()
     db.refresh(timer)
+    log_activity(
+        db,
+        event_type="boss_timer_set",
+        entity_type="boss_timer",
+        entity_id=timer.id,
+        description=f'{current_user.full_name or current_user.email} set timer for "{timer.boss_name}" on "{timer.channel}"',
+        details={
+            "boss_id": timer.boss_id,
+            "boss_name": timer.boss_name,
+            "channel": timer.channel,
+            "hours": timer.hours,
+            "minutes": timer.minutes,
+            "end_at": timer.end_at,
+        },
+        user=current_user,
+    )
     await websocket_manager.broadcast({
         "type": "timer_state_updated",
         "action": "set",
@@ -99,8 +116,18 @@ async def clear_timer(
     )
 
     if timer:
+        boss_name = timer.boss_name
         db.delete(timer)
         db.commit()
+        log_activity(
+            db,
+            event_type="boss_timer_cleared",
+            entity_type="boss_timer",
+            entity_id=boss_id,
+            description=f'{current_user.full_name or current_user.email} cleared timer for "{boss_name}" on "{channel}"',
+            details={"boss_id": boss_id, "boss_name": boss_name, "channel": channel},
+            user=current_user,
+        )
         await websocket_manager.broadcast({
             "type": "timer_state_updated",
             "action": "clear",
@@ -140,6 +167,15 @@ async def mark_appeared(
     db.delete(timer)
     db.commit()
     db.refresh(history)
+    log_activity(
+        db,
+        event_type="boss_appeared",
+        entity_type="boss_history",
+        entity_id=history.id,
+        description=f'{current_user.full_name or current_user.email} marked "{history.boss_name}" appeared on "{history.channel}"',
+        details={"boss_id": history.boss_id, "boss_name": history.boss_name, "channel": history.channel},
+        user=current_user,
+    )
     await websocket_manager.broadcast({
         "type": "timer_state_updated",
         "action": "appeared",
@@ -162,5 +198,6 @@ async def complete_expired(
             "action": "expired",
         })
         await websocket_manager.broadcast({"type": "notifications_updated"})
+        await websocket_manager.broadcast({"type": "logs_updated", "scope": "activities"})
 
     return history_items

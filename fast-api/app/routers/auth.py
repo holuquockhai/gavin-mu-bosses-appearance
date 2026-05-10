@@ -1,6 +1,7 @@
 from typing import Annotated
 from datetime import datetime, timedelta
 import hashlib
+import logging
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -13,12 +14,14 @@ from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
 from app.schemas.auth import ForgotPasswordRequest, LoginRequest, RegisterRequest, ResetPasswordRequest, TokenResponse
 from app.schemas.user import UserResponse
-from app.services.mail_service import is_mail_configured, send_account_inactive_email, send_password_reset_email
 from app.services.auth_service import get_user_by_email
 from app.services.auth_service import login_user, register_user
+from app.services.activity_log_service import log_activity
+from app.services.email_queue_service import enqueue_account_inactive_email, enqueue_password_reset_email
 from app.services.system_settings_service import get_settings_map
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger(__name__)
 
 
 def _hash_reset_token(token: str) -> str:
@@ -27,7 +30,7 @@ def _hash_reset_token(token: str) -> str:
 
 def _create_password_reset_token(db: Session, user_id: int) -> str:
     token = secrets.token_urlsafe(48)
-    expires_at = datetime.utcnow() + timedelta(minutes=30)
+    expires_at = datetime.utcnow() + timedelta(minutes=60)
 
     db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(
         synchronize_session=False,
@@ -93,11 +96,12 @@ def login(
         )
 
     if error == "inactive":
-        if user and is_mail_configured(db):
+        if user:
             try:
-                send_account_inactive_email(db, user.email, user.full_name)
+                enqueue_account_inactive_email(db, user.email, user.full_name)
             except Exception:
-                pass
+                db.rollback()
+                logger.exception("Could not queue inactive login email for user %s", user.id)
 
         values = get_settings_map(db)
         admin_email = (values.get("smtp_from_email") or "").strip()
@@ -118,6 +122,14 @@ def login(
     )
     db.commit()
     db.refresh(user)
+    log_activity(
+        db,
+        event_type="user_login",
+        entity_type="user",
+        entity_id=user.id,
+        description=f'{user.full_name or user.email} logged in',
+        user=user,
+    )
 
     return {
         "access_token": token,
@@ -130,6 +142,7 @@ def login(
             "country": user.country,
             "bio": user.bio,
             "avatar_url": user.avatar_url,
+            "must_update_password": user.must_update_password,
             "created_at": user.created_at,
             "last_login_at": user.last_login_at,
             "roles": [role.name for role in user.roles],
@@ -144,19 +157,28 @@ def forgot_password(
 ):
     user = get_user_by_email(db, data.email)
 
-    if user and is_mail_configured(db):
+    if user:
         values = get_settings_map(db)
         base_url = (values.get("app_base_url") or "http://127.0.0.1:5173").rstrip("/")
         token = _create_password_reset_token(db, user.id)
         reset_url = f"{base_url}/reset-password?token={token}"
         try:
-            send_password_reset_email(db, user.email, user.full_name, reset_url)
+            enqueue_password_reset_email(db, user.email, user.full_name, reset_url)
+            log_activity(
+                db,
+                event_type="password_reset_requested",
+                entity_type="user",
+                entity_id=user.id,
+                description=f'Password reset email queued for "{user.email}"',
+                user=user,
+            )
         except Exception:
+            db.rollback()
             db.query(PasswordResetToken).filter(
                 PasswordResetToken.token_hash == _hash_reset_token(token),
             ).delete(synchronize_session=False)
             db.commit()
-            pass
+            logger.exception("Could not queue password reset email for user %s", user.id)
 
     return {
         "message": "If this email exists, password reset instructions will be sent shortly.",
@@ -188,6 +210,7 @@ def reset_password(
         raise HTTPException(status_code=404, detail="User not found")
 
     user.hashed_password = hash_password(data.password)
+    user.must_update_password = False
     db.delete(reset_token)
     db.commit()
 

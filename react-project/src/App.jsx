@@ -9,6 +9,7 @@ import CreateBossPage from "./pages/admin/CreateBossPage";
 import Users from "./pages/admin/Users";
 import Channels from "./pages/admin/Channels";
 import SystemSettings from "./pages/admin/SystemSettings";
+import Logs from "./pages/admin/Logs";
 import Layout from "./pages/components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
@@ -53,6 +54,7 @@ function App() {
             <Route path="users" element={<Users />} />
             <Route path="create-boss" element={<CreateBossPage />} />
             <Route path="channels" element={<Channels />} />
+            <Route path="logs" element={<Logs />} />
             <Route path="system-settings" element={<SystemSettings />} />
           </Route>
         </Route>
