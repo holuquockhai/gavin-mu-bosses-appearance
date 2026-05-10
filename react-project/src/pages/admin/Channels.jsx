@@ -14,6 +14,7 @@ import {
   updateChannel,
 } from "../../js/channelSlice";
 import AdminPagination from "./components/AdminPagination";
+import { formatUserDateTime, parseApiDate } from "../../utils/dateTime";
 
 const pageSize = 25;
 
@@ -28,14 +29,10 @@ const getErrorMessage = (err, fallback) => {
 };
 
 const formatDateTime = (value) => {
-  if (!value) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("en-AU", {
+  return formatUserDateTime(value, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
+  }) || "-";
 };
 
 const getUserName = (user) => user?.full_name || user?.email || "-";
@@ -100,7 +97,7 @@ export default function Channels() {
     const endDate = filters.endDate ? new Date(`${filters.endDate}T23:59:59`) : null;
 
     return channels.filter((channel) => {
-      const updatedAt = channel.updated_at ? new Date(channel.updated_at) : null;
+      const updatedAt = parseApiDate(channel.updated_at);
       const matchesName = !searchName || channel.name.toLowerCase().includes(searchName);
       const matchesCreatedBy =
         filters.createdBy === "all" ||

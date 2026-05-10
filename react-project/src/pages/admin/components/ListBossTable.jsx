@@ -2,18 +2,15 @@ import { deleteBossApi, getBossesApi, updateBossApi } from "../../../api/bossApi
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "bootstrap";
 import AdminPagination from "./AdminPagination";
+import { formatUserDateTime, parseApiDate } from "../../../utils/dateTime";
 
 const pageSize = 25;
 
 const formatDateTime = (value) => {
-  if (!value) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("en-AU", {
+  return formatUserDateTime(value, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
+  }) || "-";
 };
 
 const getErrorMessage = (err, fallback) => {
@@ -86,7 +83,7 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
     const endDate = filters.endDate ? new Date(`${filters.endDate}T23:59:59`) : null;
 
     return bosses.filter((boss) => {
-      const updatedAt = boss.updated_at ? new Date(boss.updated_at) : null;
+      const updatedAt = parseApiDate(boss.updated_at);
       const matchesName = !searchName || boss.name.toLowerCase().includes(searchName);
       const matchesCreatedBy =
         filters.createdBy === "all" ||

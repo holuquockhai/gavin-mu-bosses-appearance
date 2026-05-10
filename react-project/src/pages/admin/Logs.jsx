@@ -8,6 +8,7 @@ import {
   sendEmailLogNowApi,
 } from "../../api/logApi";
 import AdminPagination from "./components/AdminPagination";
+import { formatUserDateTime } from "../../utils/dateTime";
 
 const pageSize = 25;
 
@@ -45,17 +46,7 @@ const initialCronFilters = {
 };
 
 const formatDateTime = (value) => {
-  if (!value) {
-    return "-";
-  }
-
-  return new Date(value).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatUserDateTime(value) || "-";
 };
 
 const statusClass = {

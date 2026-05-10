@@ -7,22 +7,12 @@ import { getBossTimerStateApi, getComingSoonBossTimersApi, markBossAppearedApi }
 import { createNotificationApi } from "../../api/notificationApi";
 import { playAlertTone } from "../../utils/sound";
 import OnlineUsersCard from "./OnlineUsersCard";
+import { getApiDateTime } from "../../utils/dateTime";
 
 const COUNTDOWN_TICK_INTERVAL_MS = 1000;
 const COMING_SOON_TOP_LIMIT = 8;
 const COMING_SOON_SHOW_ALL_LIMIT = 16;
 const COMING_SOON_BATCH_LIMIT = 12;
-
-const parseDatabaseDate = (value) => {
-    if (!value) {
-        return Date.now();
-    }
-
-    const valueString = String(value);
-    const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(valueString);
-
-    return new Date(hasTimezone ? valueString : `${valueString}Z`).getTime();
-};
 
 const mapTimer = (timer) => ({
     id: `${timer.channel}-${timer.boss_id}`,
@@ -32,7 +22,7 @@ const mapTimer = (timer) => ({
     channel: timer.channel,
     hours: timer.hours,
     minutes: timer.minutes,
-    endAt: parseDatabaseDate(timer.end_at),
+    endAt: getApiDateTime(timer.end_at),
 });
 
 function formatRemaining(endAt) {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { getCurrentUserApi, getUserProfileApi, updateProfileApi, USER_API_URL } from "../api/userApi";
 import { getUser, updateStoredUser } from "../utils/auth";
+import { formatUserDate, formatUserDateTime } from "../utils/dateTime";
 
 const COUNTRY_OPTIONS = [
   "Australia",
@@ -41,41 +42,11 @@ function mergeUserForSession(baseUser, updatedUser) {
 }
 
 function formatJoinedDate(value) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("en-AU", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
+  return formatUserDate(value);
 }
 
 function formatLastLogin(value) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("en-AU", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  return formatUserDateTime(value);
 }
 
 function Profile() {

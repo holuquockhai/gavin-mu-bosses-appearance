@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { getApiDateTime } from "../utils/dateTime";
 
 const createNotification = (type, payload) => ({
   id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -19,7 +20,7 @@ export const notificationSlice = createSlice({
         id: notification.id,
         type: notification.type,
         ...notification.payload,
-        createdAt: new Date(notification.created_at).getTime(),
+        createdAt: getApiDateTime(notification.created_at),
         userId: notification.user_id,
         user: notification.user
           ? {

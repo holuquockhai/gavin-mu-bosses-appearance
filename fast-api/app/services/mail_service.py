@@ -45,7 +45,11 @@ def _absolute_url(base_url: str, path_or_url: str) -> str:
 
 
 def _email_logo_url(values: dict[str, str]) -> str:
-    base_url = values.get("api_base_url") or values.get("app_base_url") or "http://127.0.0.1:8000"
+    base_url = _clean_header_value(
+        values.get("api_base_url")
+        or values.get("app_base_url")
+        or "http://127.0.0.1:8000"
+    )
     logo_url = values.get("site_logo_url") or ""
 
     if logo_url:
@@ -67,12 +71,13 @@ def _build_email_html(
     values = get_settings_map(db)
     site_title = (values.get("site_head_title") or "WARLORDS").replace("MU BOSS TIMER", "WARLORDS")
     logo_url = _email_logo_url(values)
+    escaped_logo_url = escape(logo_url, quote=True)
     rendered_body = body_html or escape(body)
     logo_markup = (
         '<table role="presentation" align="center" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 18px;">'
         '<tr>'
         '<td align="center" valign="middle" width="72" height="72" style="width:72px;height:72px;line-height:0;text-align:center;">'
-        f'<img src="{escape(logo_url)}" alt="{escape(site_title)}" '
+        f'<img src="{escaped_logo_url}" data-logo-url="{escaped_logo_url}" alt="{escape(site_title, quote=True)}" '
         'width="72" height="72" border="0" '
         'style="display:block;border:0;outline:none;text-decoration:none;width:72px;height:72px;max-width:72px;max-height:72px;" />'
         '</td>'

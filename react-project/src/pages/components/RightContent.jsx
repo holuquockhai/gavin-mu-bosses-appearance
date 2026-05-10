@@ -2,21 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { getBossHistoryApi } from "../../api/timerApi";
 import { USER_API_URL } from "../../api/userApi";
+import { formatUserTimeDate, getApiDateTime } from "../../utils/dateTime";
 
 const HISTORY_TOP_LIMIT = 5;
 const HISTORY_SHOW_ALL_LIMIT = 10;
 const HISTORY_BATCH_LIMIT = 10;
-
-const parseDatabaseDate = (value) => {
-    if (!value) {
-        return Date.now();
-    }
-
-    const valueString = String(value);
-    const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(valueString);
-
-    return new Date(hasTimezone ? valueString : `${valueString}Z`).getTime();
-};
 
 const getAvatarUrl = (avatarUrl) => {
     if (!avatarUrl) {
@@ -34,25 +24,14 @@ const mapHistory = (history) => ({
     bossId: history.boss_id,
     bossName: history.boss_name,
     channel: history.channel,
-    completedAt: parseDatabaseDate(history.completed_at),
+    completedAt: getApiDateTime(history.completed_at),
     appearedByName: history.appeared_by_name || history.user?.full_name || history.user?.email || "System",
     appearedByType: history.appeared_by_type || (history.user ? "user" : "system"),
     appearedByUser: history.user || null,
 });
 
 function formatHistoryTime(value) {
-    const date = new Date(value);
-    const timeText = new Intl.DateTimeFormat("en-AU", {
-        hour: "2-digit",
-        minute: "2-digit",
-    }).format(date);
-    const dateText = new Intl.DateTimeFormat("en-AU", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-    }).format(date);
-
-    return `${timeText}, ${dateText}`;
+    return formatUserTimeDate(value);
 }
 
 function formatChannelLabel(channel) {

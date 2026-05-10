@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { getApiDateTime } from "../utils/dateTime";
 
 const hoursList = Array.from({ length: 25 }, (_, index) => ({
         id: index.toString(),
@@ -11,17 +12,6 @@ const minuteList = Array.from({ length: 60 }, (_, index) => ({
     value: index.toString(),
     label: String(index).padStart(2, "0")
 }));
-
-const parseDatabaseDate = (value) => {
-    if (!value) {
-        return Date.now();
-    }
-
-    const valueString = String(value);
-    const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(valueString);
-
-    return new Date(hasTimezone ? valueString : `${valueString}Z`).getTime();
-};
 
 export const timerHourSlice = createSlice({
     name: "timerHours",
@@ -57,7 +47,7 @@ export const bossCountdownSlice = createSlice({
                 channel: timer.channel,
                 hours: timer.hours,
                 minutes: timer.minutes,
-                endAt: parseDatabaseDate(timer.end_at),
+                endAt: getApiDateTime(timer.end_at),
             }));
             state.history = action.payload.history.map((history) => ({
                 id: `history-${history.id}`,
@@ -65,7 +55,7 @@ export const bossCountdownSlice = createSlice({
                 bossId: history.boss_id,
                 bossName: history.boss_name,
                 channel: history.channel,
-                completedAt: parseDatabaseDate(history.completed_at),
+                completedAt: getApiDateTime(history.completed_at),
             }));
         },
         setBossCountdown: (state, action) => {

@@ -15,6 +15,7 @@ server_url = url.set(database=None)
 server_engine = create_engine(
     server_url,
     pool_pre_ping=True,
+    connect_args={"init_command": "SET time_zone = '+00:00'"},
 )
 
 with server_engine.connect() as conn:
@@ -28,6 +29,7 @@ engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
     pool_recycle=3600,
+    connect_args={"init_command": "SET time_zone = '+00:00'"},
 )
 
 SessionLocal = sessionmaker(

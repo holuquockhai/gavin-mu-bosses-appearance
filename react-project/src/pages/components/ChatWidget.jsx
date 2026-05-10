@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createChatMessageApi, getChatMessagesApi } from "../../api/chatApi";
 import { USER_API_URL } from "../../api/userApi";
 import { getUser } from "../../utils/auth";
+import { formatUserDateTime } from "../../utils/dateTime";
 
 const messageLimit = 25;
 const unreadPreviewLimit = 10;
@@ -51,28 +52,7 @@ const chatIconCategories = [
   },
 ];
 
-const parseDatabaseDate = (value) => {
-  if (!value) {
-    return null;
-  }
-
-  return new Date(value);
-};
-
-const formatMessageTime = (value) => {
-  const date = parseDatabaseDate(value);
-  if (!date) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("en-AU", {
-    hour: "2-digit",
-    minute: "2-digit",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-};
+const formatMessageTime = (value) => formatUserDateTime(value);
 
 const getAvatarUrl = (avatarUrl) => {
   if (!avatarUrl) {

@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { clearNotificationsApi, getNotificationsApi, removeNotificationApi } from "../../api/notificationApi";
 import { Link } from "react-router-dom";
 import { USER_API_URL } from "../../api/userApi";
+import { formatUserDateTime } from "../../utils/dateTime";
 
 function formatNotificationTime(value) {
-    return new Intl.DateTimeFormat("en-AU", {
+    return formatUserDateTime(value, {
         dateStyle: "medium",
         timeStyle: "short",
-    }).format(new Date(value));
+    });
 }
 
 function resolveAvatarUrl(avatarUrl) {
