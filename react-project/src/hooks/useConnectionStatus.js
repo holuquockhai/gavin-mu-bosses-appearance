@@ -44,6 +44,6 @@ export function useConnectionStatus() {
 
   return useMemo(() => ({
     ...connection,
-    isBlocked: connection.status !== "connected",
+    isBlocked: connection.status !== "connected" && connection.status !== "connecting",
   }), [connection]);
 }

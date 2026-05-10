@@ -32,6 +32,8 @@ DEFAULT_SETTINGS = {
     "smtp_use_tls": "true",
     "smtp_use_ssl": "false",
     "email_queue_batch_size": "20",
+    "chat_message_retention_days": "30",
+    "logs_retention_days": "60",
     "mysql_host": settings.MYSQL_HOST,
     "mysql_port": str(settings.MYSQL_PORT),
     "mysql_database": settings.MYSQL_DATABASE,

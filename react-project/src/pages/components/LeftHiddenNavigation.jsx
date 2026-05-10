@@ -3,13 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setNotificationPageSize } from "../../js/notificationSlice";
 import { setSoundEnabled, setSoundStyle } from "../../js/systemSettingsSlice";
 
-function LeftHiddenNavigation({
-  isDark,
-  setIsDark,
-  user,
-  isShow,
-  handleClose,
-}) {
+function LeftHiddenNavigation({ isShow, handleClose }) {
   const dispatch = useDispatch();
   const notificationPageSize = useSelector(
     (state) => state.notifications.pageSize,

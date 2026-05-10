@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import { markBossAsShowed } from '../../js/bossSlice';
 import BossTimerCard from "./BossTimerCard";
@@ -12,9 +12,6 @@ function MainContent(){
     const bosses = useSelector(state => state.bosses.value);
 
     const channels = useSelector(state => state.channels.value);
-
-    // use currentPreset usestate to determine preset's showed cards
-    const [currenPreset, setCurrentPreset] = useState({});
 
     return (
         <>
@@ -37,7 +34,7 @@ function MainContent(){
                                     role="switch" 
                                     id={`switchCheck-${boss.name}`}
                                     checked={boss.isShowed}
-                                    onChange={(e) => dispatch(markBossAsShowed(boss.id))}
+                                    onChange={() => dispatch(markBossAsShowed(boss.id))}
                                 />
                                     <label className="form-check-label" htmlFor={`switchCheck-${boss.name}`}>{boss.name}</label>
                                 </div>

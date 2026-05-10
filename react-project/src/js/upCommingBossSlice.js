@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { Value } from "sass";
 
 export const upCommingBossesSlice = createSlice({
     name: "upCommingBosses",
@@ -14,11 +13,8 @@ export const upCommingBossesSlice = createSlice({
             },
         ]
     },
-    reducer: {
-
-        updateBossAppearance: (state, actions) =>{
-
-        }
+    reducers: {
+        updateBossAppearance: () => {}
     }
 
 });

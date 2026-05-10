@@ -19,6 +19,8 @@ class SystemSettingsResponse(BaseModel):
     smtp_use_tls: bool = True
     smtp_use_ssl: bool = False
     email_queue_batch_size: int = 20
+    chat_message_retention_days: int = 30
+    logs_retention_days: int = 60
     mysql_host: str | None = None
     mysql_port: int = 3306
     mysql_database: str | None = None
@@ -45,6 +47,8 @@ class SystemSettingsUpdate(BaseModel):
     smtp_use_tls: bool = True
     smtp_use_ssl: bool = False
     email_queue_batch_size: int = Field(default=20, ge=1, le=200)
+    chat_message_retention_days: int = Field(default=30, ge=1, le=3650)
+    logs_retention_days: int = Field(default=60, ge=1, le=3650)
     mysql_host: str | None = None
     mysql_port: int = Field(default=3306, ge=1, le=65535)
     mysql_database: str | None = None

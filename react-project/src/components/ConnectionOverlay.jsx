@@ -1,5 +1,5 @@
 function ConnectionOverlay({ status, message }) {
-  if (status === "connected") {
+  if (status === "connected" || status === "connecting") {
     return null;
   }
 

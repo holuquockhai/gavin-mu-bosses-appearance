@@ -15,6 +15,8 @@ PYTHON_BIN = (
     else Path(sys.executable).resolve()
 )
 LOG_FILE = PROJECT_ROOT / "email_queue_cron.log"
+CHAT_CLEANUP_LOG_FILE = PROJECT_ROOT / "chat_cleanup_cron.log"
+LOGS_CLEANUP_LOG_FILE = PROJECT_ROOT / "logs_cleanup_cron.log"
 CRON_START = "# WARLORDS_EMAIL_QUEUE_CRON_START"
 CRON_END = "# WARLORDS_EMAIL_QUEUE_CRON_END"
 
@@ -55,19 +57,31 @@ def main() -> None:
     if not shutil.which("crontab"):
         raise RuntimeError("crontab command was not found on this server")
 
-    process_script = PROJECT_ROOT / "scripts" / "process_email_queue.py"
-    cron_command = (
-        f"*/5 * * * * cd {PROJECT_ROOT} && {PYTHON_BIN} {process_script.relative_to(PROJECT_ROOT)} "
+    email_process_script = PROJECT_ROOT / "scripts" / "process_email_queue.py"
+    chat_cleanup_script = PROJECT_ROOT / "scripts" / "process_chat_cleanup.py"
+    logs_cleanup_script = PROJECT_ROOT / "scripts" / "process_logs_cleanup.py"
+    email_cron_command = (
+        f"*/5 * * * * cd {PROJECT_ROOT} && {PYTHON_BIN} {email_process_script.relative_to(PROJECT_ROOT)} "
         f">> {LOG_FILE} 2>&1"
     )
-    managed_block = "\n".join([CRON_START, cron_command, CRON_END])
+    chat_cleanup_cron_command = (
+        f"15 3 * * * cd {PROJECT_ROOT} && {PYTHON_BIN} {chat_cleanup_script.relative_to(PROJECT_ROOT)} "
+        f">> {CHAT_CLEANUP_LOG_FILE} 2>&1"
+    )
+    logs_cleanup_cron_command = (
+        f"30 3 * * * cd {PROJECT_ROOT} && {PYTHON_BIN} {logs_cleanup_script.relative_to(PROJECT_ROOT)} "
+        f">> {LOGS_CLEANUP_LOG_FILE} 2>&1"
+    )
+    managed_block = "\n".join([CRON_START, email_cron_command, chat_cleanup_cron_command, logs_cleanup_cron_command, CRON_END])
     current_crontab = _read_current_crontab()
     unmanaged_crontab = _without_managed_block(current_crontab)
     next_crontab = "\n\n".join(part for part in [unmanaged_crontab, managed_block] if part)
 
     _install_crontab(next_crontab)
-    print("Installed WARLORDS email queue cronjob:")
-    print(cron_command)
+    print("Installed WARLORDS managed cronjobs:")
+    print(email_cron_command)
+    print(chat_cleanup_cron_command)
+    print(logs_cleanup_cron_command)
 
 
 if __name__ == "__main__":

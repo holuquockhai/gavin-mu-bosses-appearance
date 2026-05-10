@@ -14,7 +14,9 @@ from app.db.database import get_db
 from app.dependencies.auth import get_current_user, require_permissions
 from app.models.activity_log import ActivityLog
 from app.models.boss import Boss
+from app.models.chat_message import ChatMessage
 from app.models.channel import Channel
+from app.models.email_queue import EmailQueue
 from app.models.notification import Notification, NotificationDismissal
 from app.models.password_reset_token import PasswordResetToken
 from app.models.preset import Preset
@@ -375,6 +377,7 @@ async def delete_user(
     deleted_user_email = user.email
     deleted_user_avatar_url = user.avatar_url
 
+    # Bosses and channels are shared records, so keep them and transfer audit ownership.
     db.query(Boss).filter(Boss.created_by_id == user.id).update(
         {Boss.created_by_id: current_user.id},
         synchronize_session=False,
@@ -391,19 +394,35 @@ async def delete_user(
         {Channel.updated_by_id: current_user.id},
         synchronize_session=False,
     )
-    db.query(BossTimer).filter(BossTimer.user_id == user.id).update(
-        {BossTimer.user_id: current_user.id},
-        synchronize_session=False,
-    )
-    db.query(BossHistory).filter(BossHistory.user_id == user.id).update(
-        {BossHistory.user_id: current_user.id},
-        synchronize_session=False,
-    )
-    db.query(Notification).filter(Notification.user_id == user.id).update(
-        {Notification.user_id: current_user.id},
-        synchronize_session=False,
-    )
+
+    user_notification_ids = [
+        notification_id
+        for (notification_id,) in db.query(Notification.id)
+        .filter(Notification.user_id == user.id)
+        .all()
+    ]
+
+    if user_notification_ids:
+        db.query(NotificationDismissal).filter(NotificationDismissal.notification_id.in_(user_notification_ids)).delete(
+            synchronize_session=False,
+        )
+
     db.query(NotificationDismissal).filter(NotificationDismissal.user_id == user.id).delete(
+        synchronize_session=False,
+    )
+    db.query(Notification).filter(Notification.user_id == user.id).delete(
+        synchronize_session=False,
+    )
+    db.query(BossTimer).filter(BossTimer.user_id == user.id).delete(
+        synchronize_session=False,
+    )
+    db.query(BossHistory).filter(BossHistory.user_id == user.id).delete(
+        synchronize_session=False,
+    )
+    db.query(ChatMessage).filter(ChatMessage.user_id == user.id).delete(
+        synchronize_session=False,
+    )
+    db.query(EmailQueue).filter(EmailQueue.recipient == deleted_user_email).delete(
         synchronize_session=False,
     )
     db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user.id).delete(
@@ -412,8 +431,7 @@ async def delete_user(
     db.query(Preset).filter(Preset.user_id == user.id).delete(
         synchronize_session=False,
     )
-    db.query(ActivityLog).filter(ActivityLog.user_id == user.id).update(
-        {ActivityLog.user_id: current_user.id},
+    db.query(ActivityLog).filter(ActivityLog.user_id == user.id).delete(
         synchronize_session=False,
     )
 

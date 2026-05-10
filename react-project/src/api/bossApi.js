@@ -23,7 +23,7 @@ export const createBossApi = async (payload) => {
 //   return response.data;
 // }
 
-export const getBossesApi = async (payload) => {
+export const getBossesApi = async () => {
   const response = await axios.get(`${API_URL}/bosses/`, {
     params: { _: Date.now() },
     headers: {

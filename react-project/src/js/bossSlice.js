@@ -82,7 +82,7 @@ export const bossesSlice = createSlice({
       }));
     },
 
-    deleteTodo: (state, action) => {
+    deleteTodo: (state) => {
       const text = 'New Todo';
       state.value = state.value.filter(t => t.name !== text);
     },

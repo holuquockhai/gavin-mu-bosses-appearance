@@ -52,7 +52,7 @@ export const getUser = () => {
 
   try {
     return JSON.parse(raw);
-  } catch (err) {
+  } catch {
     console.error("Invalid user JSON:", raw);
     clearSessionCookie("user");
     sessionStorage.removeItem("user");

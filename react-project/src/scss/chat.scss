@@ -349,11 +349,17 @@
     height: min(520px, calc(100vh - 7.5rem));
   }
 
-  .chat-icon-picker {
-    width: min(330px, calc(100vw - 2rem));
+  .chat-compose-input {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .chat-icon-page {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+  .chat-compose-input .form-control {
+    border-top-right-radius: var(--bs-border-radius);
+    border-bottom-right-radius: var(--bs-border-radius);
+  }
+
+  .chat-icon-picker,
+  .chat-icon-picker-toggle {
+    display: none;
   }
 }

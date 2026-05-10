@@ -12,8 +12,6 @@ import { bossCountdownSlice, timerHourSlice, timerminuteSlice } from "./js/timer
 import { presetSettingSlice } from "./js/presetSlice.js";
 import { notificationSlice } from "./js/notificationSlice.js";
 import { systemSettingsSlice } from "./js/systemSettingsSlice.js";
-import { RouterProvider } from "react-router-dom";
-import router from "./router.jsx";
 
 const store = configureStore({
   reducer: {
@@ -32,7 +30,6 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
       <App />
-      {/* <RouterProvider router={router} /> */}
     </Provider>
   </StrictMode>,
 );

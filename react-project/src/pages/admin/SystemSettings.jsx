@@ -33,6 +33,8 @@ const initialForm = {
   smtp_use_tls: true,
   smtp_use_ssl: false,
   email_queue_batch_size: 20,
+  chat_message_retention_days: 30,
+  logs_retention_days: 60,
   mysql_host: "127.0.0.1",
   mysql_port: 3306,
   mysql_database: "mu_bosses",
@@ -40,6 +42,21 @@ const initialForm = {
   mysql_password: "",
   mysql_charset: "utf8mb4",
 };
+
+const settingsTabs = [
+  { id: "application", label: "Application", icon: "bi-shield-lock" },
+  { id: "api", label: "API", icon: "bi-hdd-network" },
+  { id: "branding", label: "Branding", icon: "bi-image" },
+  { id: "maintenance", label: "Maintenance", icon: "bi-tools" },
+  { id: "mail", label: "SMTP Mail", icon: "bi-envelope" },
+  { id: "email-queue", label: "Email Queue", icon: "bi-send-check" },
+  { id: "chat", label: "Chat Setting", icon: "bi-chat-dots" },
+  { id: "logs", label: "Logs Setting", icon: "bi-journal-text" },
+  { id: "mysql", label: "MySQL", icon: "bi-database" },
+  { id: "database-backup", label: "Database Backup", icon: "bi-cloud-download" },
+  { id: "settings-backup", label: "Settings Backup", icon: "bi-file-earmark-arrow-down" },
+  { id: "factory-reset", label: "Factory Reset", icon: "bi-exclamation-triangle" },
+];
 
 const getErrorMessage = (err, fallback) => {
   const detail = err.response?.data?.detail;
@@ -88,6 +105,7 @@ function LoadingLabel({ isLoading, loadingText, children }) {
 
 function SystemSettings() {
   const navigate = useNavigate();
+  const [activeSettingsTab, setActiveSettingsTab] = useState("application");
   const [form, setForm] = useState(initialForm);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -150,6 +168,11 @@ function SystemSettings() {
     }));
   };
 
+  const sectionClass = (sectionId, extraClass = "") => {
+    const classes = ["card", extraClass, activeSettingsTab === sectionId ? "" : "d-none"];
+    return classes.filter(Boolean).join(" ");
+  };
+
   const applySavedSettings = (settings) => {
     setForm({
       ...initialForm,
@@ -191,6 +214,8 @@ function SystemSettings() {
         ...form,
         smtp_port: Number(form.smtp_port) || 587,
         email_queue_batch_size: Number(form.email_queue_batch_size) || 20,
+        chat_message_retention_days: Number(form.chat_message_retention_days) || 30,
+        logs_retention_days: Number(form.logs_retention_days) || 60,
         mysql_port: Number(form.mysql_port) || 3306,
       };
 
@@ -407,12 +432,27 @@ function SystemSettings() {
       {message && <div className="alert alert-success">{message}</div>}
       {error && <div className="alert alert-danger">{error}</div>}
 
+      <ul className="nav nav-tabs mb-3">
+        {settingsTabs.map((tab) => (
+          <li className="nav-item" key={tab.id}>
+            <button
+              type="button"
+              className={`nav-link ${activeSettingsTab === tab.id ? "active" : ""}`}
+              onClick={() => setActiveSettingsTab(tab.id)}
+            >
+              <i className={`bi ${tab.icon} me-2`} aria-hidden="true"></i>
+              {tab.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+
       {isLoading ? (
         <p className="small text-muted mb-0">Loading settings...</p>
       ) : (
         <form onSubmit={handleSubmit}>
           <div className="d-grid gap-3">
-            <div className="card">
+            <div className={sectionClass("application")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">Application</h5>
                 <p className="small text-muted mb-0">Core application URL and token secret.</p>
@@ -447,7 +487,7 @@ function SystemSettings() {
               </div>
             </div>
 
-            <div className="card">
+            <div className={sectionClass("api")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">API Settings</h5>
                 <p className="small text-muted mb-0">Public backend API endpoint used by deployment and emails.</p>
@@ -470,7 +510,7 @@ function SystemSettings() {
               </div>
             </div>
 
-            <div className="card">
+            <div className={sectionClass("branding")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">Site Branding</h5>
                 <p className="small text-muted mb-0">Upload the main logo, sublogo, and navigation title.</p>
@@ -532,7 +572,7 @@ function SystemSettings() {
               </div>
             </div>
 
-            <div className="card">
+            <div className={sectionClass("maintenance")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">Maintenance</h5>
                 <p className="small text-muted mb-0">Temporarily block normal users while admins continue working.</p>
@@ -570,7 +610,7 @@ function SystemSettings() {
               </div>
             </div>
 
-            <div className="card">
+            <div className={sectionClass("mail")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">SMTP Mail</h5>
                 <p className="small text-muted mb-0">Used for forgot password and account activation emails.</p>
@@ -686,7 +726,7 @@ function SystemSettings() {
               </div>
             </div>
 
-            <div className="card">
+            <div className={sectionClass("email-queue")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">Email Queue</h5>
                 <p className="small text-muted mb-0">Control how many queued emails the mail worker sends per run.</p>
@@ -713,7 +753,67 @@ function SystemSettings() {
               </div>
             </div>
 
-            <div className="card">
+            <div className={sectionClass("chat")}>
+              <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
+                <h5 className="mb-1">Chat Setting</h5>
+                <p className="small text-muted mb-0">Control how long chat messages stay in the database.</p>
+              </div>
+              <div className="card-body">
+                <div className="row g-3">
+                  <div className="col-12 col-lg-4">
+                    <label className="form-label" htmlFor="chatMessageRetentionDays">Delete messages after</label>
+                    <div className="input-group">
+                      <input
+                        id="chatMessageRetentionDays"
+                        name="chat_message_retention_days"
+                        type="number"
+                        min="1"
+                        max="3650"
+                        className="form-control"
+                        value={form.chat_message_retention_days || 30}
+                        onChange={handleChange}
+                      />
+                      <span className="input-group-text">days</span>
+                    </div>
+                    <p className="small text-muted mb-0 mt-1">
+                      The managed chat cleanup cronjob runs daily and removes messages older than this period.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={sectionClass("logs")}>
+              <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
+                <h5 className="mb-1">Logs Setting</h5>
+                <p className="small text-muted mb-0">Control how long admin logs stay in the database.</p>
+              </div>
+              <div className="card-body">
+                <div className="row g-3">
+                  <div className="col-12 col-lg-4">
+                    <label className="form-label" htmlFor="logsRetentionDays">Delete logs after</label>
+                    <div className="input-group">
+                      <input
+                        id="logsRetentionDays"
+                        name="logs_retention_days"
+                        type="number"
+                        min="1"
+                        max="3650"
+                        className="form-control"
+                        value={form.logs_retention_days || 60}
+                        onChange={handleChange}
+                      />
+                      <span className="input-group-text">days</span>
+                    </div>
+                    <p className="small text-muted mb-0 mt-1">
+                      The managed logs cleanup cronjob runs daily and removes old activity, email, and cronjob logs.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={sectionClass("mysql")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">MySQL Server</h5>
                 <p className="small text-muted mb-0">
@@ -803,7 +903,7 @@ function SystemSettings() {
               </div>
             </div>
 
-            <div className="card">
+            <div className={sectionClass("database-backup")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">MySQL Database Backup & Restore</h5>
                 <p className="small text-muted mb-0">
@@ -859,7 +959,7 @@ function SystemSettings() {
               </div>
             </div>
 
-            <div className="card">
+            <div className={sectionClass("settings-backup")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1">Backup & Restore Settings</h5>
                 <p className="small text-muted mb-0">Download or restore system settings with a JSON backup file.</p>
@@ -913,7 +1013,7 @@ function SystemSettings() {
               </div>
             </div>
 
-            <div className="card border-danger">
+            <div className={sectionClass("factory-reset", "border-danger")}>
               <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
                 <h5 className="mb-1 text-danger">Website Factory Reset</h5>
                 <p className="small text-muted mb-0">
@@ -950,7 +1050,7 @@ function SystemSettings() {
         </form>
       )}
 
-      <div className="card mt-4">
+      <div className={`card mt-4 ${activeSettingsTab === "mail" ? "" : "d-none"}`}>
         <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
           <h5 className="mb-1">Send Test Email</h5>
           <p className="small text-muted mb-0">Verify the saved SMTP settings with a test recipient.</p>

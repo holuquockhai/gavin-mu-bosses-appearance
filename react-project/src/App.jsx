@@ -17,7 +17,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 function App() {
-  const [isDark, setIsDark] = useState(() => {
+  const [isDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     return saved ? saved === "dark" : false;
   });

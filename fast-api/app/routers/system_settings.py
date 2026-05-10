@@ -301,6 +301,8 @@ def _settings_response(db: Session) -> SystemSettingsResponse:
         smtp_use_tls=str(values.get("smtp_use_tls", "true")).lower() == "true",
         smtp_use_ssl=str(values.get("smtp_use_ssl", "false")).lower() == "true",
         email_queue_batch_size=int(values.get("email_queue_batch_size") or 20),
+        chat_message_retention_days=int(values.get("chat_message_retention_days") or 30),
+        logs_retention_days=int(values.get("logs_retention_days") or 60),
         mysql_host=values.get("mysql_host") or None,
         mysql_port=int(values.get("mysql_port") or 3306),
         mysql_database=values.get("mysql_database") or None,
