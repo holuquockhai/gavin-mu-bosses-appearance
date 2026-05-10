@@ -56,10 +56,7 @@ const parseDatabaseDate = (value) => {
     return null;
   }
 
-  const valueString = String(value);
-  const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(valueString);
-
-  return new Date(hasTimezone ? valueString : `${valueString}Z`);
+  return new Date(value);
 };
 
 const formatMessageTime = (value) => {

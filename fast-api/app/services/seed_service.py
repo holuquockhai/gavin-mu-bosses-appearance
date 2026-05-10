@@ -67,12 +67,7 @@ def seed_admin(db: Session):
             "email": "admin@example.com",
             "full_name": "Administrator",
             "password": "P@ssw0rd",
-        },
-        {
-            "email": "holuquockhai@gmail.com",
-            "full_name": "Andy Ho",
-            "password": "P@ssw0rd",
-        },
+        }
     ]
     admin_user = None
 
