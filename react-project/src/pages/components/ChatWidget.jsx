@@ -51,17 +51,30 @@ const chatIconCategories = [
   },
 ];
 
-const formatMessageTime = (value) => {
+const parseDatabaseDate = (value) => {
   if (!value) {
+    return null;
+  }
+
+  const valueString = String(value);
+  const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(valueString);
+
+  return new Date(hasTimezone ? valueString : `${valueString}Z`);
+};
+
+const formatMessageTime = (value) => {
+  const date = parseDatabaseDate(value);
+  if (!date) {
     return "";
   }
 
-  return new Date(value).toLocaleString(undefined, {
-    month: "short",
-    day: "2-digit",
+  return new Intl.DateTimeFormat("en-AU", {
     hour: "2-digit",
     minute: "2-digit",
-  });
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 };
 
 const getAvatarUrl = (avatarUrl) => {
