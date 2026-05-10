@@ -26,3 +26,10 @@ class BossResponse(BaseModel):
     updated_by: BossUserInfo
 
     model_config = {"from_attributes": True}
+
+
+class BossListResponse(BaseModel):
+    items: list[BossResponse]
+    total: int
+    page: int
+    page_size: int

@@ -1,10 +1,11 @@
 import shutil
 import logging
+from datetime import date, datetime, time
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile, status
+from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
@@ -20,7 +21,7 @@ from app.models.preset import Preset
 from app.models.role import Role
 from app.models.timer import BossHistory, BossTimer
 from app.models.user import User
-from app.schemas.user import UserCreate, UserPublicProfileResponse, UserResponse, UserUpdate
+from app.schemas.user import UserCreate, UserListResponse, UserPublicProfileResponse, UserResponse, UserUpdate
 from app.services.activity_log_service import log_activity
 from app.services.email_queue_service import (
     enqueue_account_activated_email,
@@ -41,6 +42,14 @@ ALLOWED_AVATAR_TYPES = {
     "image/webp": ".webp",
 }
 logger = logging.getLogger(__name__)
+
+
+def _date_start(value: date | None) -> datetime | None:
+    return datetime.combine(value, time.min) if value else None
+
+
+def _date_end(value: date | None) -> datetime | None:
+    return datetime.combine(value, time.max) if value else None
 
 
 def _get_role_by_name(db: Session, role_name: str) -> Role:
@@ -191,18 +200,47 @@ def read_user_profile(
 # get user Router
 @router.get(
     "/",
-    response_model=list[UserResponse],
+    response_model=list[UserResponse] | UserListResponse,
     dependencies=[Depends(require_permissions(["user:read"]))],
 )
-def list_users(response: Response, db: Session = Depends(get_db)):
+def list_users(
+    response: Response,
+    db: Session = Depends(get_db),
+    page: int | None = Query(default=None, ge=1),
+    page_size: int = Query(default=25, ge=1, le=100),
+    search: str | None = None,
+    status_filter: str | None = Query(default=None, alias="status"),
+    role: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+):
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
-    stmt = (
-        select(User)
-        .options(selectinload(User.roles).selectinload(Role.permissions))
-        .order_by(User.id.desc())
-    )
-    return db.execute(stmt).scalars().all()
+
+    query = db.query(User).options(selectinload(User.roles).selectinload(Role.permissions))
+
+    if search:
+        search_pattern = f"%{search.strip()}%"
+        query = query.filter(or_(User.full_name.ilike(search_pattern), User.email.ilike(search_pattern)))
+    if status_filter == "active":
+        query = query.filter(User.is_active.is_(True))
+    elif status_filter == "inactive":
+        query = query.filter(User.is_active.is_(False))
+    if role and role != "all":
+        query = query.join(User.roles).filter(Role.name == role)
+    if date_from:
+        query = query.filter(User.created_at >= _date_start(date_from))
+    if date_to:
+        query = query.filter(User.created_at <= _date_end(date_to))
+
+    query = query.order_by(User.id.desc())
+
+    if page is None:
+        return query.all()
+
+    total = query.count()
+    items = query.offset((page - 1) * page_size).limit(page_size).all()
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 # Create user
 @router.post(

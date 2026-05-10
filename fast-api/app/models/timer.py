@@ -32,6 +32,8 @@ class BossHistory(Base):
     channel = Column(String(80), nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    appeared_by_name = Column(String(255), nullable=True)
+    appeared_by_type = Column(String(40), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     user = relationship("User")

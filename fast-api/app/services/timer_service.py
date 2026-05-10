@@ -24,6 +24,8 @@ def complete_expired_timers(db: Session, create_notifications: bool = False) -> 
             channel=timer.channel,
             completed_at=now,
             user_id=timer.user_id,
+            appeared_by_name="System",
+            appeared_by_type="system",
         )
         db.add(history)
 

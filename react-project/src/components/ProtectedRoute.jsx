@@ -33,8 +33,24 @@ export default function ProtectedRoute({ children }) {
   });
 
   useEffect(() => {
+    let isMounted = true;
+    const fallbackTimerId = window.setTimeout(() => {
+      if (isMounted) {
+        setMaintenance({
+          isLoading: false,
+          enabled: false,
+          message: "",
+        });
+      }
+    }, 5000);
+
     getPublicMaintenanceApi()
       .then((data) => {
+        if (!isMounted) {
+          return;
+        }
+
+        window.clearTimeout(fallbackTimerId);
         setMaintenance({
           isLoading: false,
           enabled: Boolean(data.maintenance_enabled),
@@ -42,12 +58,22 @@ export default function ProtectedRoute({ children }) {
         });
       })
       .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        window.clearTimeout(fallbackTimerId);
         setMaintenance({
           isLoading: false,
           enabled: false,
           message: "",
         });
       });
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(fallbackTimerId);
+    };
   }, []);
 
   if (!isAuthenticated()) {

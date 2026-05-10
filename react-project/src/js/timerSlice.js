@@ -113,7 +113,7 @@ export const bossCountdownSlice = createSlice({
                     completedAt: completedAt || Date.now(),
                 },
                 ...state.history,
-            ].slice(0, 5);
+            ].slice(0, 100);
         },
         completeExpiredCountdowns: (state, action) => {
             const completedAt = action.payload || Date.now();
@@ -129,7 +129,7 @@ export const bossCountdownSlice = createSlice({
             }));
 
             state.value = state.value.filter((timer) => timer.endAt > completedAt);
-            state.history = [...historyItems, ...state.history].slice(0, 5);
+            state.history = [...historyItems, ...state.history].slice(0, 100);
         },
     }
 });

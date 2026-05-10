@@ -2,13 +2,21 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.db.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.timer import BossHistory, BossTimer
 from app.models.user import User
-from app.schemas.timer import BossAppearedRequest, BossHistoryResponse, BossTimerCreate, BossTimerResponse, BossTimerStateResponse
+from app.schemas.timer import (
+    BossAppearedRequest,
+    BossHistoryListResponse,
+    BossHistoryResponse,
+    BossTimerCreate,
+    BossTimerListResponse,
+    BossTimerResponse,
+    BossTimerStateResponse,
+)
 from app.services.activity_log_service import log_activity
 from app.services.timer_service import complete_expired_timers
 from app.services.websocket_manager import websocket_manager
@@ -22,11 +30,12 @@ def to_utc_naive(value: datetime) -> datetime:
     return value
 
 
-def get_latest_history(db: Session) -> list[BossHistory]:
+def get_latest_history(db: Session, limit: int = 100) -> list[BossHistory]:
     return (
         db.query(BossHistory)
+        .options(selectinload(BossHistory.user))
         .order_by(BossHistory.completed_at.desc(), BossHistory.id.desc())
-        .limit(5)
+        .limit(limit)
         .all()
     )
 
@@ -42,6 +51,43 @@ def list_timer_state(
     complete_expired_timers(db, create_notifications=True)
     timers = db.query(BossTimer).all()
     return {"timers": timers, "history": get_latest_history(db)}
+
+
+@router.get("/coming-soon", response_model=BossTimerListResponse)
+def list_coming_soon_timers(
+    response: Response,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 8,
+):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    complete_expired_timers(db, create_notifications=True)
+    query = db.query(BossTimer).order_by(BossTimer.end_at.asc(), BossTimer.id.asc())
+    total = query.count()
+    items = query.offset(offset).limit(limit).all()
+    return {"items": items, "total": total, "offset": offset, "limit": limit}
+
+
+@router.get("/history", response_model=BossHistoryListResponse)
+def list_history(
+    response: Response,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 5,
+):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    query = (
+        db.query(BossHistory)
+        .options(selectinload(BossHistory.user))
+        .order_by(BossHistory.completed_at.desc(), BossHistory.id.desc())
+    )
+    total = query.count()
+    items = query.offset(offset).limit(limit).all()
+    return {"items": items, "total": total, "offset": offset, "limit": limit}
 
 
 @router.post("/", response_model=BossTimerResponse)
@@ -162,6 +208,8 @@ async def mark_appeared(
         channel=timer.channel,
         completed_at=to_utc_naive(data.completed_at) if data.completed_at else datetime.utcnow(),
         user_id=current_user.id,
+        appeared_by_name=current_user.full_name or current_user.email,
+        appeared_by_type="user",
     )
     db.add(history)
     db.delete(timer)

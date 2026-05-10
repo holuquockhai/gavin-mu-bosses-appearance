@@ -28,6 +28,15 @@ class BossAppearedRequest(BaseModel):
     completed_at: datetime | None = None
 
 
+class BossHistoryUserInfo(BaseModel):
+    id: int
+    email: str
+    full_name: str | None = None
+    avatar_url: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
 class BossHistoryResponse(BaseModel):
     id: int
     boss_id: int
@@ -35,6 +44,9 @@ class BossHistoryResponse(BaseModel):
     channel: str
     completed_at: datetime
     user_id: int
+    appeared_by_name: str | None = None
+    appeared_by_type: str | None = None
+    user: BossHistoryUserInfo | None = None
 
     model_config = {"from_attributes": True}
 
@@ -42,3 +54,17 @@ class BossHistoryResponse(BaseModel):
 class BossTimerStateResponse(BaseModel):
     timers: list[BossTimerResponse]
     history: list[BossHistoryResponse]
+
+
+class BossTimerListResponse(BaseModel):
+    items: list[BossTimerResponse]
+    total: int
+    offset: int
+    limit: int
+
+
+class BossHistoryListResponse(BaseModel):
+    items: list[BossHistoryResponse]
+    total: int
+    offset: int
+    limit: int

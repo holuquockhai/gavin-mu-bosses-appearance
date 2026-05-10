@@ -116,6 +116,11 @@ def _backup_filename() -> str:
     return f"warlords-system-settings-{timestamp}.json"
 
 
+def _database_backup_filename() -> str:
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    return f"warlords-database-{timestamp}.sql"
+
+
 def _settings_backup_payload(db: Session) -> dict[str, object]:
     return {
         "name": "WARLORDS system settings backup",
@@ -140,6 +145,120 @@ def _settings_from_backup_payload(payload: object) -> dict[str, object | None]:
         raise HTTPException(status_code=400, detail="Backup file does not contain any supported settings")
 
     return settings_values
+
+
+def _sql_identifier(value: str) -> str:
+    return f"`{value.replace('`', '``')}`"
+
+
+def _sql_literal(value: object) -> str:
+    if value is None:
+        return "NULL"
+
+    if isinstance(value, bool):
+        return "1" if value else "0"
+
+    if isinstance(value, int | float):
+        return str(value)
+
+    if isinstance(value, datetime):
+        value = value.strftime("%Y-%m-%d %H:%M:%S")
+
+    if isinstance(value, dict | list):
+        value = json.dumps(value, ensure_ascii=False)
+
+    text_value = str(value)
+    escaped_value = (
+        text_value
+        .replace("\\", "\\\\")
+        .replace("\0", "\\0")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\x1a", "\\Z")
+        .replace("'", "\\'")
+    )
+    return f"'{escaped_value}'"
+
+
+def _database_backup_sql(db: Session) -> tuple[str, dict[str, int]]:
+    lines = [
+        "-- WARLORDS MySQL database backup",
+        f"-- Exported at {datetime.now(timezone.utc).isoformat()}",
+        "SET FOREIGN_KEY_CHECKS=0;",
+        "",
+    ]
+    table_counts = {}
+
+    for table in Base.metadata.sorted_tables:
+        rows = db.execute(table.select()).mappings().all()
+        table_counts[table.name] = len(rows)
+        table_name = _sql_identifier(table.name)
+        columns = [_sql_identifier(column.name) for column in table.columns]
+
+        lines.append(f"-- Table: {table.name}")
+        lines.append(f"TRUNCATE TABLE {table_name};")
+
+        for row in rows:
+            values = [_sql_literal(row[column.name]) for column in table.columns]
+            lines.append(
+                f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({', '.join(values)});"
+            )
+
+        lines.append("")
+
+    lines.append("SET FOREIGN_KEY_CHECKS=1;")
+    lines.append("")
+    return "\n".join(lines), table_counts
+
+
+def _strip_sql_line_comments(sql: str) -> str:
+    return "\n".join(
+        line
+        for line in sql.splitlines()
+        if not line.lstrip().startswith("--") and not line.lstrip().startswith("#")
+    )
+
+
+def _split_sql_statements(sql: str) -> list[str]:
+    statements = []
+    buffer = []
+    quote_char = ""
+    is_escaped = False
+
+    for char in sql:
+        buffer.append(char)
+
+        if quote_char:
+            if is_escaped:
+                is_escaped = False
+            elif char == "\\":
+                is_escaped = True
+            elif char == quote_char:
+                quote_char = ""
+            continue
+
+        if char in {"'", '"', "`"}:
+            quote_char = char
+            continue
+
+        if char == ";":
+            statement = "".join(buffer).strip()
+            if statement:
+                statements.append(statement)
+            buffer = []
+
+    trailing_statement = "".join(buffer).strip()
+    if trailing_statement:
+        statements.append(trailing_statement)
+
+    return statements
+
+
+def _execute_raw_sql(connection, statement: str) -> None:
+    connection.exec_driver_sql(
+        statement,
+        execution_options={"no_parameters": True},
+    )
 
 
 def _mysql_settings_values(values: dict[str, object | None]) -> dict[str, object | None]:
@@ -351,6 +470,77 @@ async def restore_system_settings_backup(
     )
 
     return _settings_response(db)
+
+
+@router.get("/mysql/backup")
+def download_mysql_database_backup(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_roles(["admin"]))],
+):
+    sql_dump, table_counts = _database_backup_sql(db)
+    log_activity(
+        db,
+        event_type="mysql_database_backup_downloaded",
+        entity_type="system_settings",
+        description="Downloaded MySQL database backup",
+        details={"tables": table_counts},
+        user=current_user,
+    )
+
+    return Response(
+        content=sql_dump,
+        media_type="application/sql",
+        headers={"Content-Disposition": f'attachment; filename="{_database_backup_filename()}"'},
+    )
+
+
+@router.post("/mysql/restore")
+async def restore_mysql_database_backup(
+    backup_file: Annotated[UploadFile, File()],
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_roles(["admin"]))],
+):
+    if not (backup_file.filename or "").lower().endswith(".sql"):
+        raise HTTPException(status_code=400, detail="Please upload a MySQL .sql database backup file")
+
+    try:
+        raw_content = await backup_file.read()
+        sql_content = raw_content.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=400, detail="Backup file must be a UTF-8 encoded SQL file") from exc
+
+    statements = _split_sql_statements(_strip_sql_line_comments(sql_content))
+    if not statements:
+        raise HTTPException(status_code=400, detail="Backup file does not contain any SQL statements")
+
+    try:
+        connection = db.connection()
+        _execute_raw_sql(connection, "SET FOREIGN_KEY_CHECKS=0")
+        for statement in statements:
+            _execute_raw_sql(connection, statement)
+        _execute_raw_sql(connection, "SET FOREIGN_KEY_CHECKS=1")
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        try:
+            _execute_raw_sql(db.connection(), "SET FOREIGN_KEY_CHECKS=1")
+            db.commit()
+        except Exception:
+            db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database restore failed: {exc}") from exc
+
+    restored_user = db.get(User, current_user.id)
+    log_activity(
+        db,
+        event_type="mysql_database_restored",
+        entity_type="system_settings",
+        description="Restored MySQL database backup",
+        details={"filename": backup_file.filename, "statements": len(statements)},
+        user=restored_user,
+    )
+    await websocket_manager.broadcast({"type": "factory_reset_completed"})
+
+    return {"message": "MySQL database backup has been restored successfully."}
 
 
 @router.post("/factory-reset")

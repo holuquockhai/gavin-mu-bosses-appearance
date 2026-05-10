@@ -26,6 +26,12 @@ const getRealtimeUrl = () => {
   return `${protocol}//${window.location.host}/ws/realtime`;
 };
 
+const emitConnectionStatus = (status, message = "") => {
+  window.dispatchEvent(new CustomEvent("warlords:connection-status", {
+    detail: { status, message },
+  }));
+};
+
 export function useRealtimeSync() {
   const dispatch = useDispatch();
   const soundEnabled = useSelector((state) => state.systemSettings.soundEnabled);
@@ -35,6 +41,8 @@ export function useRealtimeSync() {
     let socket;
     let reconnectTimerId;
     let refreshTimerId;
+    let heartbeatTimerId;
+    let heartbeatTimeoutId;
     let isClosed = false;
     const pendingRefresh = {
       timers: false,
@@ -71,7 +79,10 @@ export function useRealtimeSync() {
 
         if (refresh.timers) {
           getBossTimerStateApi()
-            .then((data) => dispatch(setBossTimerState(data)))
+            .then((data) => {
+              dispatch(setBossTimerState(data));
+              window.dispatchEvent(new Event("warlords:timer-list-refresh"));
+            })
             .catch(() => {});
         }
 
@@ -83,6 +94,38 @@ export function useRealtimeSync() {
       }, 150);
     };
 
+    const clearHeartbeat = () => {
+      window.clearInterval(heartbeatTimerId);
+      window.clearTimeout(heartbeatTimeoutId);
+    };
+
+    const startHeartbeat = () => {
+      clearHeartbeat();
+
+      heartbeatTimerId = window.setInterval(() => {
+        if (!socket || socket.readyState !== WebSocket.OPEN || !navigator.onLine) {
+          emitConnectionStatus(
+            navigator.onLine ? "reconnecting" : "offline",
+            "Loading website data...",
+          );
+          socket?.close();
+          return;
+        }
+
+        try {
+          socket.send(JSON.stringify({ type: "ping" }));
+          window.clearTimeout(heartbeatTimeoutId);
+          heartbeatTimeoutId = window.setTimeout(() => {
+            emitConnectionStatus("reconnecting", "Loading website data...");
+            socket?.close();
+          }, 8000);
+        } catch {
+          emitConnectionStatus("reconnecting", "Loading website data...");
+          socket?.close();
+        }
+      }, 5000);
+    };
+
     const connect = () => {
       const token = getToken();
 
@@ -90,11 +133,32 @@ export function useRealtimeSync() {
         return;
       }
 
+      emitConnectionStatus(
+        navigator.onLine ? "connecting" : "offline",
+        "Loading website data...",
+      );
       socket = new WebSocket(`${getRealtimeUrl()}?token=${encodeURIComponent(token)}`);
+
+      socket.onopen = () => {
+        if (!navigator.onLine) {
+          emitConnectionStatus("offline", "Loading website data...");
+          socket?.close();
+          return;
+        }
+
+        emitConnectionStatus("connected");
+        startHeartbeat();
+      };
 
       socket.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
+
+          window.clearTimeout(heartbeatTimeoutId);
+          if (message.type === "pong") {
+            emitConnectionStatus("connected");
+            return;
+          }
 
           if (message.type === "timer_state_updated") {
             const currentUser = getUser();
@@ -139,6 +203,14 @@ export function useRealtimeSync() {
             window.dispatchEvent(new CustomEvent("warlords:chat-message-created", { detail: message }));
           }
 
+          if (message.type === "chat_user_left") {
+            window.dispatchEvent(new CustomEvent("warlords:chat-user-left", { detail: message }));
+          }
+
+          if (message.type === "chat_user_joined") {
+            window.dispatchEvent(new CustomEvent("warlords:chat-user-joined", { detail: message }));
+          }
+
           if (message.type === "factory_reset_completed") {
             isClosed = true;
             socket?.close();
@@ -151,7 +223,12 @@ export function useRealtimeSync() {
       };
 
       socket.onclose = () => {
+        clearHeartbeat();
         if (!isClosed) {
+          emitConnectionStatus(
+            navigator.onLine ? "reconnecting" : "offline",
+            "Loading website data...",
+          );
           reconnectTimerId = window.setTimeout(connect, 3000);
         }
       };
@@ -163,10 +240,28 @@ export function useRealtimeSync() {
 
     connect();
 
+    const handleBrowserOnline = () => {
+      if (!isClosed) {
+        emitConnectionStatus("reconnecting", "Loading website data...");
+        socket?.close();
+      }
+    };
+
+    const handleBrowserOffline = () => {
+      emitConnectionStatus("offline", "Loading website data...");
+      socket?.close();
+    };
+
+    window.addEventListener("online", handleBrowserOnline);
+    window.addEventListener("offline", handleBrowserOffline);
+
     return () => {
       isClosed = true;
+      clearHeartbeat();
       window.clearTimeout(reconnectTimerId);
       window.clearTimeout(refreshTimerId);
+      window.removeEventListener("online", handleBrowserOnline);
+      window.removeEventListener("offline", handleBrowserOffline);
       socket?.close();
     };
   }, [dispatch, soundEnabled, soundStyle]);

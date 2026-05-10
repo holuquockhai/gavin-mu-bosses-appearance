@@ -16,8 +16,11 @@ class WebSocketManager:
         await websocket.accept()
         self.active_connections[websocket] = user
 
-    def disconnect(self, websocket: WebSocket) -> None:
-        self.active_connections.pop(websocket, None)
+    def disconnect(self, websocket: WebSocket) -> dict | None:
+        return self.active_connections.pop(websocket, None)
+
+    def has_user_connection(self, user_id: int) -> bool:
+        return any(user and user.get("id") == user_id for user in self.active_connections.values())
 
     def get_online_users(self) -> list[dict]:
         users_by_id = {}

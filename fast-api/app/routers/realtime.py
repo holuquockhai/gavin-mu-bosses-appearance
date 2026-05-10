@@ -1,3 +1,6 @@
+import json
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 
@@ -48,12 +51,32 @@ async def realtime_socket(websocket: WebSocket):
         await websocket.close(code=1008)
         return
 
+    was_online = websocket_manager.has_user_connection(user["id"])
     await websocket_manager.connect(websocket, user)
     await websocket_manager.broadcast_online_users()
+    if not was_online:
+        await websocket_manager.broadcast({
+            "type": "chat_user_joined",
+            "user": user,
+            "joined_at": datetime.now(timezone.utc).isoformat(),
+        })
 
     try:
         while True:
-            await websocket.receive_text()
+            message = await websocket.receive_text()
+            try:
+                payload = json.loads(message)
+            except json.JSONDecodeError:
+                continue
+
+            if payload.get("type") == "ping":
+                await websocket.send_text(json.dumps({"type": "pong"}))
     except WebSocketDisconnect:
-        websocket_manager.disconnect(websocket)
+        disconnected_user = websocket_manager.disconnect(websocket)
         await websocket_manager.broadcast_online_users()
+        if disconnected_user and not websocket_manager.has_user_connection(disconnected_user["id"]):
+            await websocket_manager.broadcast({
+                "type": "chat_user_left",
+                "user": disconnected_user,
+                "left_at": datetime.now(timezone.utc).isoformat(),
+            })

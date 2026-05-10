@@ -7,36 +7,48 @@ const authHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
-export const getActivityLogsApi = async ({ page = 1, pageSize = 25 } = {}) => {
+const cleanParams = (params) => Object.fromEntries(
+  Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ""),
+);
+
+export const getActivityLogsApi = async ({ page = 1, pageSize = 25, filters = {} } = {}) => {
   const response = await axios.get(`${API_URL}/admin/logs/activities`, {
-    params: { page, page_size: pageSize },
+    params: cleanParams({ page, page_size: pageSize, ...filters }),
     headers: authHeaders(),
   });
 
   return response.data;
 };
 
-export const getEmailLogsApi = async ({ page = 1, pageSize = 25 } = {}) => {
+export const getEmailLogsApi = async ({ page = 1, pageSize = 25, filters = {} } = {}) => {
   const response = await axios.get(`${API_URL}/admin/logs/emails`, {
-    params: { page, page_size: pageSize },
+    params: cleanParams({ page, page_size: pageSize, ...filters }),
     headers: authHeaders(),
   });
 
   return response.data;
 };
 
-export const getCronJobLogsApi = async ({ page = 1, pageSize = 25 } = {}) => {
+export const getCronJobLogsApi = async ({ page = 1, pageSize = 25, filters = {} } = {}) => {
   const response = await axios.get(`${API_URL}/admin/logs/cronjobs`, {
-    params: { page, page_size: pageSize },
+    params: cleanParams({ page, page_size: pageSize, ...filters }),
     headers: authHeaders(),
   });
 
   return response.data;
 };
 
-export const getSystemSettingLogsApi = async ({ page = 1, pageSize = 25 } = {}) => {
+export const getSystemSettingLogsApi = async ({ page = 1, pageSize = 25, filters = {} } = {}) => {
   const response = await axios.get(`${API_URL}/admin/logs/system-settings`, {
-    params: { page, page_size: pageSize },
+    params: cleanParams({ page, page_size: pageSize, ...filters }),
+    headers: authHeaders(),
+  });
+
+  return response.data;
+};
+
+export const getLogFilterOptionsApi = async () => {
+  const response = await axios.get(`${API_URL}/admin/logs/filter-options`, {
     headers: authHeaders(),
   });
 

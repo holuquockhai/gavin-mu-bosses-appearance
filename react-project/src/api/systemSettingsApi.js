@@ -22,7 +22,9 @@ export const getPublicBrandingApi = async () => {
 };
 
 export const getPublicMaintenanceApi = async () => {
-  const response = await axios.get(`${API_URL}/system-settings/maintenance`);
+  const response = await axios.get(`${API_URL}/system-settings/maintenance`, {
+    timeout: 5000,
+  });
 
   return response.data;
 };
@@ -68,16 +70,17 @@ export const sendSystemSettingsTestEmailApi = async (recipient) => {
   return response.data;
 };
 
-export const downloadSystemSettingsBackupApi = async () => {
+export const downloadSystemSettingsBackupApi = async (onDownloadProgress) => {
   const response = await axios.get(`${API_URL}/system-settings/backup`, {
     headers: authHeaders(),
+    onDownloadProgress,
     responseType: "blob",
   });
 
   return response;
 };
 
-export const restoreSystemSettingsBackupApi = async (file) => {
+export const restoreSystemSettingsBackupApi = async (file, onUploadProgress) => {
   const formData = new FormData();
   formData.append("backup_file", file);
 
@@ -85,6 +88,31 @@ export const restoreSystemSettingsBackupApi = async (file) => {
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },
+    onUploadProgress,
+  });
+
+  return response.data;
+};
+
+export const downloadMysqlDatabaseBackupApi = async (onDownloadProgress) => {
+  const response = await axios.get(`${API_URL}/system-settings/mysql/backup`, {
+    headers: authHeaders(),
+    onDownloadProgress,
+    responseType: "blob",
+  });
+
+  return response;
+};
+
+export const restoreMysqlDatabaseBackupApi = async (file, onUploadProgress) => {
+  const formData = new FormData();
+  formData.append("backup_file", file);
+
+  const response = await axios.post(`${API_URL}/system-settings/mysql/restore`, formData, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+    onUploadProgress,
   });
 
   return response.data;

@@ -5,12 +5,15 @@ import LeftContent from "./LeftContent";
 import RightContent from "./RightContent";
 import BottomContent from "./BottomContent";
 import ChatWidget from "./ChatWidget";
+import ConnectionOverlay from "../../components/ConnectionOverlay";
 import { getUser } from "../../utils/auth";
 import { useState, useEffect } from "react";
+import { useConnectionStatus } from "../../hooks/useConnectionStatus";
 import { useRealtimeSync } from "../../hooks/useRealtimeSync";
 
 export default function Layout() {
   useRealtimeSync();
+  const connection = useConnectionStatus();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -64,6 +67,7 @@ export default function Layout() {
         </div>
       </main>
       <ChatWidget />
+      <ConnectionOverlay status={connection.status} message={connection.message} />
     </>
   );
 }

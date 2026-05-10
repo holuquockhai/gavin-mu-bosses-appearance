@@ -3,6 +3,7 @@ from app.models.user import User
 from app.models.role import Role
 from app.models.permission import Permission
 from app.models.channel import Channel
+from app.models.boss import Boss
 from app.core.security import hash_password
 
 
@@ -104,6 +105,28 @@ def seed_admin(db: Session):
                 name=channel_name,
                 created_by_id=channel_owner_id,
                 updated_by_id=channel_owner_id,
+            ))
+
+    default_bosses = [
+        "Kundun",
+        "Medusa",
+        "Nightmare",
+        "Selupan",
+        "Silvester",
+        "Core",
+        "Ferea",
+        "Nyx",
+        "God",
+    ]
+    boss_owner_id = admin_user.id if admin_user else None
+
+    for boss_name in default_bosses:
+        existing_boss = db.query(Boss).filter_by(name=boss_name).first()
+        if not existing_boss and boss_owner_id:
+            db.add(Boss(
+                name=boss_name,
+                created_by_id=boss_owner_id,
+                updated_by_id=boss_owner_id,
             ))
 
     db.commit()

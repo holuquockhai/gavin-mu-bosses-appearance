@@ -1,12 +1,15 @@
 from typing import Annotated
+from datetime import date, datetime, time
 
-from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from sqlalchemy import or_
+from sqlalchemy.orm import Session, selectinload
 
 from app.db.database import get_db
 from app.dependencies.auth import require_permissions
+from app.models.channel import Channel
 from app.models.user import User
-from app.schemas.channel import ChannelCreate, ChannelResponse, ChannelUpdate
+from app.schemas.channel import ChannelCreate, ChannelListResponse, ChannelResponse, ChannelUpdate
 from app.services.activity_log_service import log_activity
 from app.services.channel_service import (
     create_channel,
@@ -22,15 +25,61 @@ from app.services.websocket_manager import websocket_manager
 router = APIRouter(prefix="/channels", tags=["channels"])
 
 
+def _date_start(value: date | None) -> datetime | None:
+    return datetime.combine(value, time.min) if value else None
+
+
+def _date_end(value: date | None) -> datetime | None:
+    return datetime.combine(value, time.max) if value else None
+
+
 @router.get(
     "/",
-    response_model=list[ChannelResponse],
+    response_model=list[ChannelResponse] | ChannelListResponse,
     dependencies=[Depends(require_permissions(["channel:read"]))],
 )
-def list_all(response: Response, db: Annotated[Session, Depends(get_db)]):
+def list_all(
+    response: Response,
+    db: Annotated[Session, Depends(get_db)],
+    page: int | None = Query(default=None, ge=1),
+    page_size: int = Query(default=25, ge=1, le=100),
+    name: str | None = None,
+    created_by: str | None = None,
+    updated_by: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+):
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
-    return get_channels(db)
+    query = db.query(Channel).options(selectinload(Channel.created_by), selectinload(Channel.updated_by))
+
+    if name:
+        query = query.filter(Channel.name.ilike(f"%{name.strip()}%"))
+    if created_by and created_by != "all":
+        created_by_pattern = f"%{created_by.strip()}%"
+        if created_by.isdigit():
+            query = query.filter(Channel.created_by_id == int(created_by))
+        else:
+            query = query.join(Channel.created_by).filter(or_(User.full_name.ilike(created_by_pattern), User.email.ilike(created_by_pattern)))
+    if updated_by and updated_by != "all":
+        updated_by_pattern = f"%{updated_by.strip()}%"
+        if updated_by.isdigit():
+            query = query.filter(Channel.updated_by_id == int(updated_by))
+        else:
+            query = query.join(Channel.updated_by).filter(or_(User.full_name.ilike(updated_by_pattern), User.email.ilike(updated_by_pattern)))
+    if date_from:
+        query = query.filter(Channel.updated_at >= _date_start(date_from))
+    if date_to:
+        query = query.filter(Channel.updated_at <= _date_end(date_to))
+
+    query = query.order_by(Channel.id.asc())
+
+    if page is None:
+        return query.all()
+
+    total = query.count()
+    items = query.offset((page - 1) * page_size).limit(page_size).all()
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 @router.post("/", response_model=ChannelResponse)

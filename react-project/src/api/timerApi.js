@@ -19,6 +19,30 @@ export const getBossTimerStateApi = async () => {
   return response.data;
 };
 
+export const getComingSoonBossTimersApi = async ({ offset = 0, limit = 8 } = {}) => {
+  const response = await axios.get(`${API_URL}/boss-timers/coming-soon`, {
+    params: { offset, limit, _: Date.now() },
+    headers: {
+      ...authHeaders(),
+      "Cache-Control": "no-cache",
+    },
+  });
+
+  return response.data;
+};
+
+export const getBossHistoryApi = async ({ offset = 0, limit = 5 } = {}) => {
+  const response = await axios.get(`${API_URL}/boss-timers/history`, {
+    params: { offset, limit, _: Date.now() },
+    headers: {
+      ...authHeaders(),
+      "Cache-Control": "no-cache",
+    },
+  });
+
+  return response.data;
+};
+
 export const createBossTimerApi = async (payload) => {
   const response = await axios.post(`${API_URL}/boss-timers/`, payload, {
     headers: authHeaders(),

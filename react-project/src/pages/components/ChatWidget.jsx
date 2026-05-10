@@ -99,12 +99,17 @@ function ChatWidget() {
 
   const getUnreadCount = (messageList, readMessageId = lastReadMessageId) => {
     return messageList.filter((message) => (
-      message.id > readMessageId && message.user?.id !== currentUser?.id
+      message.type !== "system" && message.id > readMessageId && message.user?.id !== currentUser?.id
     )).length;
   };
 
   const markMessagesRead = (messageList = messages) => {
-    const latestMessageId = Math.max(0, ...messageList.map((message) => message.id));
+    const latestMessageId = Math.max(
+      0,
+      ...messageList
+        .filter((message) => message.type !== "system")
+        .map((message) => message.id),
+    );
 
     if (latestMessageId <= 0) {
       return;
@@ -254,6 +259,47 @@ function ChatWidget() {
   }, [canMarkRead, isOpen]);
 
   useEffect(() => {
+    const createSystemMessage = (event, actionText, dateField) => {
+      const user = event.detail?.user;
+      if (!user || user.id === currentUser?.id) {
+        return null;
+      }
+
+      const displayName = user.full_name || user.email || "A user";
+      return {
+        id: `${actionText}-${user.id}-${event.detail?.[dateField] || Date.now()}`,
+        type: "system",
+        message: `${displayName} ${actionText} the chat`,
+        created_at: event.detail?.[dateField] || new Date().toISOString(),
+      };
+    };
+
+    const addSystemMessage = (systemMessage) => {
+      if (!systemMessage || !isOpen) {
+        return;
+      }
+
+      setMessages((currentMessages) => [...currentMessages, systemMessage]);
+      scrollToBottom();
+    };
+
+    const handleChatUserJoined = (event) => {
+      addSystemMessage(createSystemMessage(event, "joined", "joined_at"));
+    };
+
+    const handleChatUserLeft = (event) => {
+      addSystemMessage(createSystemMessage(event, "left", "left_at"));
+    };
+
+    window.addEventListener("warlords:chat-user-joined", handleChatUserJoined);
+    window.addEventListener("warlords:chat-user-left", handleChatUserLeft);
+    return () => {
+      window.removeEventListener("warlords:chat-user-joined", handleChatUserJoined);
+      window.removeEventListener("warlords:chat-user-left", handleChatUserLeft);
+    };
+  }, [currentUser?.id, isOpen]);
+
+  useEffect(() => {
     if (!isIconPickerOpen) {
       return undefined;
     }
@@ -358,6 +404,15 @@ function ChatWidget() {
               <p className="small text-muted text-center mb-0 py-4">No chat messages yet.</p>
             ) : (
               messages.map((message) => {
+                if (message.type === "system") {
+                  return (
+                    <div className="chat-system-message" key={message.id}>
+                      <span>{message.message}</span>
+                      <time>{formatMessageTime(message.created_at)}</time>
+                    </div>
+                  );
+                }
+
                 const isMine = message.user?.id === currentUser?.id;
                 const isUnread = !isMine && message.id > lastReadMessageId;
                 const displayName = message.user?.full_name || message.user?.email || "Unknown user";

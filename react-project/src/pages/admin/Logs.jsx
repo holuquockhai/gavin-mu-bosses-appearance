@@ -3,12 +3,46 @@ import {
   getActivityLogsApi,
   getCronJobLogsApi,
   getEmailLogsApi,
+  getLogFilterOptionsApi,
   getSystemSettingLogsApi,
   sendEmailLogNowApi,
 } from "../../api/logApi";
 import AdminPagination from "./components/AdminPagination";
 
 const pageSize = 25;
+
+const initialActivityFilters = {
+  search: "",
+  event_type: "",
+  user: "",
+  entity_type: "",
+  date_from: "",
+  date_to: "",
+};
+
+const initialSystemSettingFilters = {
+  search: "",
+  event_type: "",
+  user: "",
+  date_from: "",
+  date_to: "",
+};
+
+const initialEmailFilters = {
+  search: "",
+  email_type: "",
+  status: "",
+  date_from: "",
+  date_to: "",
+};
+
+const initialCronFilters = {
+  search: "",
+  job_name: "",
+  status: "",
+  date_from: "",
+  date_to: "",
+};
 
 const formatDateTime = (value) => {
   if (!value) {
@@ -75,6 +109,19 @@ function Logs() {
   const [systemSettings, setSystemSettings] = useState({ items: [], total: 0, page: 1, page_size: pageSize });
   const [emails, setEmails] = useState({ items: [], total: 0, page: 1, page_size: pageSize });
   const [cronJobs, setCronJobs] = useState({ items: [], total: 0, page: 1, page_size: pageSize });
+  const [activityFilters, setActivityFilters] = useState(initialActivityFilters);
+  const [systemSettingFilters, setSystemSettingFilters] = useState(initialSystemSettingFilters);
+  const [emailFilters, setEmailFilters] = useState(initialEmailFilters);
+  const [cronFilters, setCronFilters] = useState(initialCronFilters);
+  const [filterOptions, setFilterOptions] = useState({
+    activity_event_types: [],
+    activity_entity_types: [],
+    system_setting_event_types: [],
+    email_types: [],
+    email_statuses: [],
+    cron_job_names: [],
+    cron_statuses: [],
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [sendingId, setSendingId] = useState(null);
   const [message, setMessage] = useState("");
@@ -85,11 +132,17 @@ function Logs() {
   const emailTotalPages = useMemo(() => Math.max(1, Math.ceil(emails.total / pageSize)), [emails.total]);
   const cronTotalPages = useMemo(() => Math.max(1, Math.ceil(cronJobs.total / pageSize)), [cronJobs.total]);
 
+  useEffect(() => {
+    getLogFilterOptionsApi()
+      .then((data) => setFilterOptions((currentOptions) => ({ ...currentOptions, ...data })))
+      .catch(() => {});
+  }, []);
+
   const loadActivities = async () => {
     setIsLoading(true);
     setError("");
     try {
-      const data = await getActivityLogsApi({ page: activityPage, pageSize });
+      const data = await getActivityLogsApi({ page: activityPage, pageSize, filters: activityFilters });
       setActivities(data);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load activity logs");
@@ -102,7 +155,7 @@ function Logs() {
     setIsLoading(true);
     setError("");
     try {
-      const data = await getSystemSettingLogsApi({ page: systemSettingPage, pageSize });
+      const data = await getSystemSettingLogsApi({ page: systemSettingPage, pageSize, filters: systemSettingFilters });
       setSystemSettings(data);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load system setting logs");
@@ -115,7 +168,7 @@ function Logs() {
     setIsLoading(true);
     setError("");
     try {
-      const data = await getEmailLogsApi({ page: emailPage, pageSize });
+      const data = await getEmailLogsApi({ page: emailPage, pageSize, filters: emailFilters });
       setEmails(data);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load email logs");
@@ -128,7 +181,7 @@ function Logs() {
     setIsLoading(true);
     setError("");
     try {
-      const data = await getCronJobLogsApi({ page: cronPage, pageSize });
+      const data = await getCronJobLogsApi({ page: cronPage, pageSize, filters: cronFilters });
       setCronJobs(data);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load cronjob logs");
@@ -147,7 +200,17 @@ function Logs() {
     } else {
       loadCronJobs();
     }
-  }, [activeTab, activityPage, systemSettingPage, emailPage, cronPage]);
+  }, [
+    activeTab,
+    activityPage,
+    systemSettingPage,
+    emailPage,
+    cronPage,
+    activityFilters,
+    systemSettingFilters,
+    emailFilters,
+    cronFilters,
+  ]);
 
   useEffect(() => {
     let refreshTimerId;
@@ -183,7 +246,21 @@ function Logs() {
       window.clearTimeout(refreshTimerId);
       window.removeEventListener("warlords:logs-updated", handleLogsUpdated);
     };
-  }, [activeTab, activityPage, systemSettingPage, emailPage]);
+  }, [activeTab, activityPage, systemSettingPage, emailPage, cronPage, activityFilters, systemSettingFilters, emailFilters, cronFilters]);
+
+  const updateFilters = (setter, setPage) => (event) => {
+    const { name, value } = event.target;
+    setter((currentFilters) => ({
+      ...currentFilters,
+      [name]: value,
+    }));
+    setPage(1);
+  };
+
+  const resetFilters = (setter, initialFilters, setPage) => {
+    setter(initialFilters);
+    setPage(1);
+  };
 
   const handleSendNow = async (emailId) => {
     setSendingId(emailId);
@@ -255,6 +332,48 @@ function Logs() {
           </button>
         </li>
       </ul>
+
+      {activeTab === "activities" && (
+        <ActivityLogFilters
+          title="Filter Activities"
+          filters={activityFilters}
+          onChange={updateFilters(setActivityFilters, setActivityPage)}
+          onReset={() => resetFilters(setActivityFilters, initialActivityFilters, setActivityPage)}
+          eventOptions={filterOptions.activity_event_types}
+          entityOptions={filterOptions.activity_entity_types}
+          showEntity
+        />
+      )}
+
+      {activeTab === "system-settings" && (
+        <ActivityLogFilters
+          title="Filter System Setting Logs"
+          filters={systemSettingFilters}
+          onChange={updateFilters(setSystemSettingFilters, setSystemSettingPage)}
+          onReset={() => resetFilters(setSystemSettingFilters, initialSystemSettingFilters, setSystemSettingPage)}
+          eventOptions={filterOptions.system_setting_event_types}
+        />
+      )}
+
+      {activeTab === "emails" && (
+        <EmailLogFilters
+          filters={emailFilters}
+          onChange={updateFilters(setEmailFilters, setEmailPage)}
+          onReset={() => resetFilters(setEmailFilters, initialEmailFilters, setEmailPage)}
+          typeOptions={filterOptions.email_types}
+          statusOptions={filterOptions.email_statuses}
+        />
+      )}
+
+      {activeTab === "cronjobs" && (
+        <CronJobLogFilters
+          filters={cronFilters}
+          onChange={updateFilters(setCronFilters, setCronPage)}
+          onReset={() => resetFilters(setCronFilters, initialCronFilters, setCronPage)}
+          jobOptions={filterOptions.cron_job_names}
+          statusOptions={filterOptions.cron_statuses}
+        />
+      )}
 
       {isLoading ? (
         <p className="small text-muted mb-0">Loading logs...</p>
@@ -334,6 +453,233 @@ function Logs() {
         />
       )}
     </div>
+  );
+}
+
+function ActivityLogFilters({ title, filters, onChange, onReset, eventOptions = [], entityOptions = [], showEntity = false }) {
+  return (
+    <form className="border rounded-3 p-3 mb-3 bg-body-tertiary" onSubmit={(event) => event.preventDefault()}>
+      <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+        <h6 className="mb-0">{title}</h6>
+      </div>
+      <div className="row g-3 align-items-end">
+        <div className="col-12 col-lg-3">
+          <label className="form-label small text-muted" htmlFor={`${title}-search`}>Search</label>
+          <input
+            id={`${title}-search`}
+            type="search"
+            name="search"
+            className="form-control"
+            placeholder="Description or details..."
+            value={filters.search}
+            onChange={onChange}
+          />
+        </div>
+        <div className="col-12 col-sm-6 col-lg-2">
+          <label className="form-label small text-muted" htmlFor={`${title}-event`}>Event</label>
+          <select
+            id={`${title}-event`}
+            name="event_type"
+            className="form-select"
+            value={filters.event_type}
+            onChange={onChange}
+          >
+            <option value="">All events</option>
+            {eventOptions.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-12 col-sm-6 col-lg-2">
+          <label className="form-label small text-muted" htmlFor={`${title}-user`}>User</label>
+          <input
+            id={`${title}-user`}
+            type="search"
+            name="user"
+            className="form-control"
+            placeholder="Name or email"
+            value={filters.user}
+            onChange={onChange}
+          />
+        </div>
+        {showEntity && (
+          <div className="col-12 col-sm-6 col-lg-2">
+            <label className="form-label small text-muted" htmlFor={`${title}-entity`}>Entity</label>
+            <select
+              id={`${title}-entity`}
+              name="entity_type"
+              className="form-select"
+              value={filters.entity_type}
+              onChange={onChange}
+            >
+              <option value="">All entities</option>
+              {entityOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <DateFilters filters={filters} onChange={onChange} />
+        <div className="col-12 col-lg-1">
+          <button type="button" className="btn btn-outline-secondary w-100" onClick={onReset}>
+            Reset
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function EmailLogFilters({ filters, onChange, onReset, typeOptions = [], statusOptions = [] }) {
+  const selectableStatuses = statusOptions.length ? statusOptions : ["pending", "sending", "sent", "failed"];
+
+  return (
+    <form className="border rounded-3 p-3 mb-3 bg-body-tertiary" onSubmit={(event) => event.preventDefault()}>
+      <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+        <h6 className="mb-0">Filter Email Logs</h6>
+      </div>
+      <div className="row g-3 align-items-end">
+        <div className="col-12 col-lg-3">
+          <label className="form-label small text-muted" htmlFor="emailLogSearch">Search</label>
+          <input
+            id="emailLogSearch"
+            type="search"
+            name="search"
+            className="form-control"
+            placeholder="Recipient, subject, error..."
+            value={filters.search}
+            onChange={onChange}
+          />
+        </div>
+        <div className="col-12 col-sm-6 col-lg-2">
+          <label className="form-label small text-muted" htmlFor="emailLogType">Type</label>
+          <select
+            id="emailLogType"
+            name="email_type"
+            className="form-select"
+            value={filters.email_type}
+            onChange={onChange}
+          >
+            <option value="">All types</option>
+            {typeOptions.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-12 col-sm-6 col-lg-2">
+          <label className="form-label small text-muted" htmlFor="emailLogStatus">Status</label>
+          <select
+            id="emailLogStatus"
+            name="status"
+            className="form-select"
+            value={filters.status}
+            onChange={onChange}
+          >
+            <option value="">All statuses</option>
+            {selectableStatuses.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+        <DateFilters filters={filters} onChange={onChange} />
+        <div className="col-12 col-lg-1">
+          <button type="button" className="btn btn-outline-secondary w-100" onClick={onReset}>
+            Reset
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function CronJobLogFilters({ filters, onChange, onReset, jobOptions = [], statusOptions = [] }) {
+  const selectableStatuses = statusOptions.length ? statusOptions : ["running", "success", "failed"];
+
+  return (
+    <form className="border rounded-3 p-3 mb-3 bg-body-tertiary" onSubmit={(event) => event.preventDefault()}>
+      <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+        <h6 className="mb-0">Filter Cronjob Logs</h6>
+      </div>
+      <div className="row g-3 align-items-end">
+        <div className="col-12 col-lg-3">
+          <label className="form-label small text-muted" htmlFor="cronLogSearch">Search</label>
+          <input
+            id="cronLogSearch"
+            type="search"
+            name="search"
+            className="form-control"
+            placeholder="Message or error..."
+            value={filters.search}
+            onChange={onChange}
+          />
+        </div>
+        <div className="col-12 col-sm-6 col-lg-2">
+          <label className="form-label small text-muted" htmlFor="cronLogJob">Job</label>
+          <select
+            id="cronLogJob"
+            name="job_name"
+            className="form-select"
+            value={filters.job_name}
+            onChange={onChange}
+          >
+            <option value="">All jobs</option>
+            {jobOptions.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-12 col-sm-6 col-lg-2">
+          <label className="form-label small text-muted" htmlFor="cronLogStatus">Status</label>
+          <select
+            id="cronLogStatus"
+            name="status"
+            className="form-select"
+            value={filters.status}
+            onChange={onChange}
+          >
+            <option value="">All statuses</option>
+            {selectableStatuses.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+        <DateFilters filters={filters} onChange={onChange} />
+        <div className="col-12 col-lg-1">
+          <button type="button" className="btn btn-outline-secondary w-100" onClick={onReset}>
+            Reset
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function DateFilters({ filters, onChange }) {
+  return (
+    <>
+      <div className="col-12 col-sm-6 col-lg-2">
+        <label className="form-label small text-muted" htmlFor={`dateFrom-${Object.keys(filters).join("-")}`}>From</label>
+        <input
+          id={`dateFrom-${Object.keys(filters).join("-")}`}
+          type="date"
+          name="date_from"
+          className="form-control"
+          value={filters.date_from}
+          onChange={onChange}
+        />
+      </div>
+      <div className="col-12 col-sm-6 col-lg-2">
+        <label className="form-label small text-muted" htmlFor={`dateTo-${Object.keys(filters).join("-")}`}>To</label>
+        <input
+          id={`dateTo-${Object.keys(filters).join("-")}`}
+          type="date"
+          name="date_to"
+          className="form-control"
+          value={filters.date_to}
+          onChange={onChange}
+        />
+      </div>
+    </>
   );
 }
 

@@ -30,3 +30,10 @@ class ChannelResponse(BaseModel):
     updated_by: ChannelUserInfo | None = None
 
     model_config = {"from_attributes": True}
+
+
+class ChannelListResponse(BaseModel):
+    items: list[ChannelResponse]
+    total: int
+    page: int
+    page_size: int

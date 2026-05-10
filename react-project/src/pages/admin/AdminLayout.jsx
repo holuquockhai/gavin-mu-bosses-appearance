@@ -3,13 +3,15 @@ import { Outlet } from "react-router-dom";
 import TopNavigation from "../components/TopNavigation";
 import BottomContent from "../components/BottomContent";
 import ChatWidget from "../components/ChatWidget";
-import OnlineUsersCard from "../components/OnlineUsersCard";
+import ConnectionOverlay from "../../components/ConnectionOverlay";
 import { getUser } from "../../utils/auth";
 import { useState, useEffect } from "react";
+import { useConnectionStatus } from "../../hooks/useConnectionStatus";
 import { useRealtimeSync } from "../../hooks/useRealtimeSync";
 
 export default function Layout() {
   useRealtimeSync();
+  const connection = useConnectionStatus();
 
   const [user, setUser] = useState(() => getUser());
   const [isDark, setIsDark] = useState(() => {
@@ -36,12 +38,8 @@ export default function Layout() {
       <main>
         <div id="main-content" className="container-fluid min-vh-100">
           <section className="row main-row g-3 align-items-start">
-            <div className="col-12 col-xl-9 order-1">
+            <div className="col-12">
               <Outlet />
-            </div>
-
-            <div className="col-12 col-xl-3 order-2">
-              <OnlineUsersCard className="admin-online-users-card" />
             </div>
           </section>
 
@@ -49,6 +47,7 @@ export default function Layout() {
         </div>
       </main>
       <ChatWidget />
+      <ConnectionOverlay status={connection.status} message={connection.message} />
     </>
   );
 }

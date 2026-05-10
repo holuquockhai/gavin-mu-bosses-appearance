@@ -5,9 +5,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/ChatWidget.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/ChatWidget.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/bosses.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/bosses.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/channels.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/channels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/logs.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/logs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/system_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/system_settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/timers.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/timers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routers/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/users.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/boss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/channel.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/channel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/timer.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/timer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/activity_log_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/activity_log_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/seed_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/seed_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/api/logApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/api/logApi.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/api/systemSettingsApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/api/systemSettingsApi.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/api/timerApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/api/timerApi.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/hooks/useRealtimeSync.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/hooks/useRealtimeSync.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/js/timerSlice.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/js/timerSlice.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/admin/AdminLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/admin/AdminLayout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/admin/Logs.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/admin/Logs.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/admin/SystemSettings.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/admin/SystemSettings.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/LeftContent.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/LeftContent.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/RightContent.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/RightContent.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/scss/chat.scss" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/scss/chat.scss" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../react-project/src/scss/homepage.scss" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/scss/homepage.scss" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -122,7 +141,7 @@
       <workItem from="1775187007614" duration="1938000" />
       <workItem from="1775921853198" duration="8462000" />
       <workItem from="1777153580717" duration="5286000" />
-      <workItem from="1778133263456" duration="13865000" />
+      <workItem from="1778133263456" duration="14464000" />
     </task>
     <servers />
   </component>

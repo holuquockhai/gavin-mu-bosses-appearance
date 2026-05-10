@@ -9,6 +9,7 @@ from sqlalchemy import inspect, text
 
 from app.db.database import Base, engine, SessionLocal
 from app.routers import auth, users, admin, bosses, timers, notifications, presets, channels, system_settings, realtime, logs, chat
+from app.services.cron_install_service import ensure_managed_cronjobs
 from app.services.seed_service import seed_admin
 from app.services.timer_scheduler import start_expired_timer_checker, stop_expired_timer_checker
 from app.services.websocket_manager import websocket_manager
@@ -17,6 +18,7 @@ from app.services.websocket_manager import websocket_manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     websocket_manager.bind_loop(asyncio.get_running_loop())
+    await asyncio.to_thread(ensure_managed_cronjobs)
     expired_timer_checker = start_expired_timer_checker()
     try:
         yield
@@ -71,6 +73,11 @@ with engine.begin() as conn:
     if "created_at" not in chat_columns:
         conn.execute(text("ALTER TABLE chat_messages ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP"))
     conn.execute(text("ALTER TABLE chat_messages CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
+    boss_history_columns = {column["name"] for column in inspect(conn).get_columns("boss_history")}
+    if "appeared_by_name" not in boss_history_columns:
+        conn.execute(text("ALTER TABLE boss_history ADD COLUMN appeared_by_name VARCHAR(255) NULL"))
+    if "appeared_by_type" not in boss_history_columns:
+        conn.execute(text("ALTER TABLE boss_history ADD COLUMN appeared_by_type VARCHAR(40) NULL"))
 
 db = SessionLocal()
 try:

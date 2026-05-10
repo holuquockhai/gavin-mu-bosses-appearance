@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Modal } from "bootstrap";
 import { useNavigate } from "react-router-dom";
 import {
+  downloadMysqlDatabaseBackupApi,
   downloadSystemSettingsBackupApi,
   factoryResetWebsiteApi,
   getSystemSettingsApi,
+  restoreMysqlDatabaseBackupApi,
   restoreSystemSettingsBackupApi,
   sendSystemSettingsTestEmailApi,
   updateBrandingSettingsApi,
@@ -49,6 +51,41 @@ const getErrorMessage = (err, fallback) => {
   return detail || fallback;
 };
 
+const getProgressPercent = (event) => {
+  if (!event.total) {
+    return 25;
+  }
+
+  return Math.min(100, Math.round((event.loaded * 100) / event.total));
+};
+
+function ProgressStatus({ label, value }) {
+  if (value === null) {
+    return null;
+  }
+
+  return (
+    <div className="mt-2">
+      <div className="d-flex justify-content-between small text-muted mb-1">
+        <span>{label}</span>
+        <span>{value}%</span>
+      </div>
+      <div className="progress" role="progressbar" aria-label={label} aria-valuenow={value} aria-valuemin="0" aria-valuemax="100">
+        <div className="progress-bar progress-bar-striped progress-bar-animated" style={{ width: `${value}%` }}></div>
+      </div>
+    </div>
+  );
+}
+
+function LoadingLabel({ isLoading, loadingText, children }) {
+  return isLoading ? (
+    <>
+      <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+      {loadingText}
+    </>
+  ) : children;
+}
+
 function SystemSettings() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
@@ -58,9 +95,17 @@ function SystemSettings() {
   const [isResetting, setIsResetting] = useState(false);
   const [isDownloadingBackup, setIsDownloadingBackup] = useState(false);
   const [isRestoringBackup, setIsRestoringBackup] = useState(false);
+  const [isDownloadingDatabaseBackup, setIsDownloadingDatabaseBackup] = useState(false);
+  const [isRestoringDatabaseBackup, setIsRestoringDatabaseBackup] = useState(false);
+  const [settingsBackupProgress, setSettingsBackupProgress] = useState(null);
+  const [settingsRestoreProgress, setSettingsRestoreProgress] = useState(null);
+  const [databaseBackupProgress, setDatabaseBackupProgress] = useState(null);
+  const [databaseRestoreProgress, setDatabaseRestoreProgress] = useState(null);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [restoreFile, setRestoreFile] = useState(null);
   const [restoreInputKey, setRestoreInputKey] = useState(0);
+  const [databaseRestoreFile, setDatabaseRestoreFile] = useState(null);
+  const [databaseRestoreInputKey, setDatabaseRestoreInputKey] = useState(0);
   const [smtpPasswordConfigured, setSmtpPasswordConfigured] = useState(false);
   const [mysqlPasswordConfigured, setMysqlPasswordConfigured] = useState(false);
   const [brandingFiles, setBrandingFiles] = useState({
@@ -201,11 +246,14 @@ function SystemSettings() {
 
   const handleDownloadBackup = async () => {
     setIsDownloadingBackup(true);
+    setSettingsBackupProgress(0);
     setMessage("");
     setError("");
 
     try {
-      const response = await downloadSystemSettingsBackupApi();
+      const response = await downloadSystemSettingsBackupApi((event) => {
+        setSettingsBackupProgress(getProgressPercent(event));
+      });
       const contentDisposition = response.headers["content-disposition"] || "";
       const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
       const filename = filenameMatch?.[1] || "warlords-system-settings-backup.json";
@@ -217,11 +265,13 @@ function SystemSettings() {
       link.click();
       link.remove();
       URL.revokeObjectURL(downloadUrl);
+      setSettingsBackupProgress(100);
       setMessage("System settings backup has been downloaded.");
     } catch (err) {
       setError(getErrorMessage(err, "Failed to download system settings backup"));
     } finally {
       setIsDownloadingBackup(false);
+      window.setTimeout(() => setSettingsBackupProgress(null), 800);
     }
   };
 
@@ -232,19 +282,82 @@ function SystemSettings() {
     }
 
     setIsRestoringBackup(true);
+    setSettingsRestoreProgress(0);
     setMessage("");
     setError("");
 
     try {
-      const restoredSettings = await restoreSystemSettingsBackupApi(restoreFile);
+      const restoredSettings = await restoreSystemSettingsBackupApi(restoreFile, (event) => {
+        setSettingsRestoreProgress(getProgressPercent(event));
+      });
       applySavedSettings(restoredSettings);
       setRestoreFile(null);
       setRestoreInputKey((currentKey) => currentKey + 1);
+      setSettingsRestoreProgress(100);
       setMessage("System settings backup has been restored successfully.");
     } catch (err) {
       setError(getErrorMessage(err, "Failed to restore system settings backup"));
     } finally {
       setIsRestoringBackup(false);
+      window.setTimeout(() => setSettingsRestoreProgress(null), 800);
+    }
+  };
+
+  const handleDownloadDatabaseBackup = async () => {
+    setIsDownloadingDatabaseBackup(true);
+    setDatabaseBackupProgress(0);
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await downloadMysqlDatabaseBackupApi((event) => {
+        setDatabaseBackupProgress(getProgressPercent(event));
+      });
+      const contentDisposition = response.headers["content-disposition"] || "";
+      const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+      const filename = filenameMatch?.[1] || "warlords-database-backup.sql";
+      const downloadUrl = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(downloadUrl);
+      setDatabaseBackupProgress(100);
+      setMessage("MySQL database backup has been downloaded.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to download MySQL database backup"));
+    } finally {
+      setIsDownloadingDatabaseBackup(false);
+      window.setTimeout(() => setDatabaseBackupProgress(null), 800);
+    }
+  };
+
+  const handleRestoreDatabaseBackup = async () => {
+    if (!databaseRestoreFile) {
+      setError("Choose a MySQL .sql database backup file before restoring database.");
+      return;
+    }
+
+    setIsRestoringDatabaseBackup(true);
+    setDatabaseRestoreProgress(0);
+    setMessage("");
+    setError("");
+
+    try {
+      const data = await restoreMysqlDatabaseBackupApi(databaseRestoreFile, (event) => {
+        setDatabaseRestoreProgress(getProgressPercent(event));
+      });
+      setDatabaseRestoreFile(null);
+      setDatabaseRestoreInputKey((currentKey) => currentKey + 1);
+      setDatabaseRestoreProgress(100);
+      setMessage(data.message || "MySQL database backup has been restored successfully.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to restore MySQL database backup"));
+    } finally {
+      setIsRestoringDatabaseBackup(false);
+      window.setTimeout(() => setDatabaseRestoreProgress(null), 800);
     }
   };
 
@@ -685,7 +798,64 @@ function SystemSettings() {
                       onChange={handleChange}
                     />
                   </div>
+
                 </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-header fw-bold" style={{ backgroundColor: "#d9dde2" }}>
+                <h5 className="mb-1">MySQL Database Backup & Restore</h5>
+                <p className="small text-muted mb-0">
+                  Download or restore all application database tables with a MySQL .sql backup file.
+                </p>
+              </div>
+              <div className="card-body">
+                <div className="row g-3 align-items-end">
+                  <div className="col-12 col-lg-4">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary w-100"
+                      onClick={handleDownloadDatabaseBackup}
+                      disabled={isDownloadingDatabaseBackup}
+                    >
+                      <LoadingLabel isLoading={isDownloadingDatabaseBackup} loadingText="Downloading...">
+                        Download Database SQL
+                      </LoadingLabel>
+                    </button>
+                    <ProgressStatus label="Downloading database" value={databaseBackupProgress} />
+                  </div>
+
+                  <div className="col-12 col-lg-5">
+                    <label className="form-label" htmlFor="databaseBackupFile">Restore database SQL file</label>
+                    <input
+                      key={databaseRestoreInputKey}
+                      id="databaseBackupFile"
+                      type="file"
+                      className="form-control"
+                      accept=".sql,application/sql,text/sql,text/plain"
+                      onChange={(event) => setDatabaseRestoreFile(event.target.files?.[0] || null)}
+                      disabled={isRestoringDatabaseBackup}
+                    />
+                    <ProgressStatus label="Uploading database backup" value={databaseRestoreProgress} />
+                  </div>
+
+                  <div className="col-12 col-lg-3">
+                    <button
+                      type="button"
+                      className="btn btn-outline-warning w-100"
+                      onClick={handleRestoreDatabaseBackup}
+                      disabled={isRestoringDatabaseBackup || !databaseRestoreFile}
+                    >
+                      <LoadingLabel isLoading={isRestoringDatabaseBackup} loadingText="Restoring...">
+                        Restore Database
+                      </LoadingLabel>
+                    </button>
+                  </div>
+                </div>
+                <p className="small text-muted mb-0 mt-2">
+                  Restoring a database backup replaces the tables included in the file. Keep database backups private.
+                </p>
               </div>
             </div>
 
@@ -703,8 +873,11 @@ function SystemSettings() {
                       onClick={handleDownloadBackup}
                       disabled={isDownloadingBackup}
                     >
-                      {isDownloadingBackup ? "Downloading..." : "Download Settings JSON"}
+                      <LoadingLabel isLoading={isDownloadingBackup} loadingText="Downloading...">
+                        Download Settings JSON
+                      </LoadingLabel>
                     </button>
+                    <ProgressStatus label="Downloading settings" value={settingsBackupProgress} />
                   </div>
 
                   <div className="col-12 col-lg-5">
@@ -718,6 +891,7 @@ function SystemSettings() {
                       onChange={(event) => setRestoreFile(event.target.files?.[0] || null)}
                       disabled={isRestoringBackup}
                     />
+                    <ProgressStatus label="Uploading settings backup" value={settingsRestoreProgress} />
                   </div>
 
                   <div className="col-12 col-lg-3">
@@ -727,7 +901,9 @@ function SystemSettings() {
                       onClick={handleRestoreBackup}
                       disabled={isRestoringBackup || !restoreFile}
                     >
-                      {isRestoringBackup ? "Restoring..." : "Restore Settings"}
+                      <LoadingLabel isLoading={isRestoringBackup} loadingText="Restoring...">
+                        Restore Settings
+                      </LoadingLabel>
                     </button>
                   </div>
                 </div>

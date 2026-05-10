@@ -9,6 +9,8 @@ from app.services.websocket_manager import websocket_manager
 SYSTEM_SETTING_EVENT_TYPES = {
     "branding_settings_saved",
     "factory_reset_completed",
+    "mysql_database_backup_downloaded",
+    "mysql_database_restored",
     "system_settings_backup_downloaded",
     "system_settings_restored",
     "system_settings_saved",

@@ -1,14 +1,39 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { completeExpiredCountdowns, markBossAppeared, setBossTimerState } from "../../js/timerSlice";
 import { addBossAppearedNotification } from "../../js/notificationSlice";
 import { getUser } from "../../utils/auth";
-import { getBossTimerStateApi, markBossAppearedApi } from "../../api/timerApi";
+import { getBossTimerStateApi, getComingSoonBossTimersApi, markBossAppearedApi } from "../../api/timerApi";
 import { createNotificationApi } from "../../api/notificationApi";
 import { playAlertTone } from "../../utils/sound";
 import OnlineUsersCard from "./OnlineUsersCard";
 
 const COUNTDOWN_TICK_INTERVAL_MS = 1000;
+const COMING_SOON_TOP_LIMIT = 8;
+const COMING_SOON_SHOW_ALL_LIMIT = 16;
+const COMING_SOON_BATCH_LIMIT = 12;
+
+const parseDatabaseDate = (value) => {
+    if (!value) {
+        return Date.now();
+    }
+
+    const valueString = String(value);
+    const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(valueString);
+
+    return new Date(hasTimezone ? valueString : `${valueString}Z`).getTime();
+};
+
+const mapTimer = (timer) => ({
+    id: `${timer.channel}-${timer.boss_id}`,
+    dbId: timer.id,
+    bossId: timer.boss_id,
+    bossName: timer.boss_name,
+    channel: timer.channel,
+    hours: timer.hours,
+    minutes: timer.minutes,
+    endAt: parseDatabaseDate(timer.end_at),
+});
 
 function formatRemaining(endAt) {
     const seconds = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
@@ -36,9 +61,15 @@ function LeftContent(){
     const soundStyle = useSelector((state) => state.systemSettings.soundStyle);
     const [, setTick] = useState(0);
     const [showAllComingSoon, setShowAllComingSoon] = useState(false);
-    const [visibleComingSoonCount, setVisibleComingSoonCount] = useState(16);
+    const [comingSoonTimers, setComingSoonTimers] = useState([]);
+    const [comingSoonTotal, setComingSoonTotal] = useState(0);
+    const [isLoadingComingSoon, setIsLoadingComingSoon] = useState(true);
+    const [isLoadingMoreComingSoon, setIsLoadingMoreComingSoon] = useState(false);
     const [defaultComingSoonListHeight, setDefaultComingSoonListHeight] = useState(0);
     const comingSoonListRef = useRef(null);
+    const comingSoonTimersRef = useRef([]);
+    const showAllComingSoonRef = useRef(false);
+    const comingSoonTopHeightRef = useRef(0);
     const isCompletingExpiredRef = useRef(false);
 
     const notifyBossAppeared = (timer, actorName, shouldSaveNotification = true) => {
@@ -76,23 +107,68 @@ function LeftContent(){
             channel: timer.channel,
             completedAt,
         }));
+        loadComingSoon({ offset: 0, limit: showAllComingSoon ? COMING_SOON_SHOW_ALL_LIMIT : COMING_SOON_TOP_LIMIT });
     };
+
+    const loadComingSoon = ({ offset = 0, limit = COMING_SOON_TOP_LIMIT, append = false, showLoading = true } = {}) => {
+        if (append) {
+            setIsLoadingMoreComingSoon(true);
+        } else if (showLoading && comingSoonTimersRef.current.length === 0) {
+            setIsLoadingComingSoon(true);
+        }
+
+        return getComingSoonBossTimersApi({ offset, limit })
+            .then((data) => {
+                const mappedItems = data.items.map(mapTimer);
+                setComingSoonTotal(data.total);
+                if (data.total <= COMING_SOON_TOP_LIMIT) {
+                    setShowAllComingSoon(false);
+                }
+                setComingSoonTimers((currentTimers) => {
+                    const nextTimers = append ? [...currentTimers, ...mappedItems] : mappedItems;
+                    comingSoonTimersRef.current = nextTimers;
+                    return nextTimers;
+                });
+            })
+            .catch(() => {
+                if (!append && comingSoonTimersRef.current.length === 0) {
+                    setComingSoonTimers([]);
+                    setComingSoonTotal(0);
+                }
+            })
+            .finally(() => {
+                if (append) {
+                    setIsLoadingMoreComingSoon(false);
+                } else {
+                    setIsLoadingComingSoon(false);
+                }
+            });
+    };
+
+    useEffect(() => {
+        showAllComingSoonRef.current = showAllComingSoon;
+    }, [showAllComingSoon]);
 
     useEffect(() => {
         const syncTimerState = () => {
             getBossTimerStateApi()
             .then((data) => dispatch(setBossTimerState(data)))
             .catch(() => {});
+            loadComingSoon({
+                offset: 0,
+                limit: showAllComingSoonRef.current ? COMING_SOON_SHOW_ALL_LIMIT : COMING_SOON_TOP_LIMIT,
+                showLoading: comingSoonTimersRef.current.length === 0,
+            });
         };
         const handleTimerRefresh = () => syncTimerState();
 
         syncTimerState();
-        window.addEventListener("focus", handleTimerRefresh);
         window.addEventListener("warlords:timer-state-refresh", handleTimerRefresh);
+        window.addEventListener("warlords:timer-list-refresh", handleTimerRefresh);
 
         return () => {
-            window.removeEventListener("focus", handleTimerRefresh);
             window.removeEventListener("warlords:timer-state-refresh", handleTimerRefresh);
+            window.removeEventListener("warlords:timer-list-refresh", handleTimerRefresh);
         };
     }, [dispatch]);
 
@@ -118,26 +194,32 @@ function LeftContent(){
         return () => clearInterval(intervalId);
     }, [dispatch, soundEnabled, soundStyle, timers]);
 
-    const sortedComingSoonTimers = useMemo(() => {
-        return [...timers].sort((firstTimer, secondTimer) => firstTimer.endAt - secondTimer.endAt);
-    }, [timers]);
-    const comingSoonTimers = showAllComingSoon
-        ? sortedComingSoonTimers.slice(0, visibleComingSoonCount)
-        : sortedComingSoonTimers.slice(0, 8);
-    const hasMoreComingSoonTimers = showAllComingSoon && visibleComingSoonCount < sortedComingSoonTimers.length;
+    const hasMoreComingSoonTimers = showAllComingSoon && comingSoonTimers.length < comingSoonTotal;
 
     useEffect(() => {
-        setVisibleComingSoonCount(16);
+        loadComingSoon({
+            offset: 0,
+            limit: showAllComingSoon ? COMING_SOON_SHOW_ALL_LIMIT : COMING_SOON_TOP_LIMIT,
+            showLoading: comingSoonTimersRef.current.length === 0,
+        });
     }, [showAllComingSoon]);
 
     useEffect(() => {
         if (!showAllComingSoon && comingSoonListRef.current) {
-            setDefaultComingSoonListHeight(comingSoonListRef.current.offsetHeight);
+            const nextHeight = comingSoonListRef.current.offsetHeight;
+            comingSoonTopHeightRef.current = nextHeight;
+            setDefaultComingSoonListHeight(nextHeight);
         }
     }, [comingSoonTimers.length, showAllComingSoon]);
 
+    useEffect(() => {
+        if (showAllComingSoon && comingSoonTotal <= COMING_SOON_TOP_LIMIT) {
+            setShowAllComingSoon(false);
+        }
+    }, [comingSoonTotal, showAllComingSoon]);
+
     const handleComingSoonScroll = (event) => {
-        if (!showAllComingSoon || !hasMoreComingSoonTimers) {
+        if (!showAllComingSoon || !hasMoreComingSoonTimers || isLoadingMoreComingSoon) {
             return;
         }
 
@@ -145,7 +227,12 @@ function LeftContent(){
         const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
 
         if (distanceFromBottom < 80) {
-            setVisibleComingSoonCount((currentCount) => Math.min(currentCount + 12, sortedComingSoonTimers.length));
+            loadComingSoon({
+                offset: comingSoonTimers.length,
+                limit: COMING_SOON_BATCH_LIMIT,
+                append: true,
+                showLoading: false,
+            });
         }
     };
 
@@ -156,7 +243,7 @@ function LeftContent(){
                     <h5 className="card-title mb-0">
                         Coming Soon Boss {showAllComingSoon ? "(All)" : "(Top 8)"}
                     </h5>
-                    {sortedComingSoonTimers.length > 8 && (
+                    {comingSoonTotal > COMING_SOON_TOP_LIMIT && (
                         <button
                             type="button"
                             className="btn btn-sm btn-outline-secondary"
@@ -173,12 +260,17 @@ function LeftContent(){
                     onScroll={handleComingSoonScroll}
                     tabIndex={showAllComingSoon ? 0 : undefined}
                     style={
-                        showAllComingSoon && defaultComingSoonListHeight
-                            ? { "--coming-soon-list-height": `${defaultComingSoonListHeight}px` }
+                        showAllComingSoon && (defaultComingSoonListHeight || comingSoonTopHeightRef.current)
+                            ? { "--coming-soon-list-height": `${defaultComingSoonListHeight || comingSoonTopHeightRef.current}px` }
                             : undefined
                     }
                 >
-                    {comingSoonTimers.length === 0 ? (
+                    {isLoadingComingSoon ? (
+                        <div className="boss-loading-box">
+                            <span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                            <span>Loading coming soon bosses...</span>
+                        </div>
+                    ) : comingSoonTimers.length === 0 ? (
                         <p className="small text-muted mb-0">Set a boss timer to show countdown here.</p>
                     ) : (
                         comingSoonTimers.map((timer) => {
@@ -208,7 +300,13 @@ function LeftContent(){
                             );
                         })
                     )}
-                    {hasMoreComingSoonTimers && (
+                    {isLoadingMoreComingSoon && (
+                        <div className="boss-loading-box compact">
+                            <span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                            <span>Loading more bosses...</span>
+                        </div>
+                    )}
+                    {hasMoreComingSoonTimers && !isLoadingMoreComingSoon && (
                         <div className="small text-muted text-center py-2">
                             Scroll to load more bosses
                         </div>
