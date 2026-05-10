@@ -46,7 +46,12 @@ def _absolute_url(base_url: str, path_or_url: str) -> str:
 
 def _email_logo_url(values: dict[str, str]) -> str:
     base_url = values.get("api_base_url") or values.get("app_base_url") or "http://127.0.0.1:8000"
-    return _absolute_url(base_url, "/system-settings/email-logo")
+    logo_url = values.get("site_logo_url") or ""
+
+    if logo_url:
+        return _absolute_url(base_url, logo_url)
+
+    return _absolute_url(base_url, "/system-settings/email-logo.png")
 
 
 def _build_email_html(

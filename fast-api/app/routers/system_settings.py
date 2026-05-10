@@ -323,6 +323,7 @@ def read_public_maintenance(db: Annotated[Session, Depends(get_db)]):
 
 
 @public_router.get("/email-logo")
+@public_router.get("/email-logo.png")
 def read_email_logo(db: Annotated[Session, Depends(get_db)]):
     logo_path = _site_logo_file_path(get_settings_map(db))
 
