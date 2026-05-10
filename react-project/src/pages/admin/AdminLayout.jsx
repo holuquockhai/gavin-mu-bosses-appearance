@@ -2,6 +2,8 @@
 import { Outlet } from "react-router-dom";
 import TopNavigation from "../components/TopNavigation";
 import BottomContent from "../components/BottomContent";
+import ChatWidget from "../components/ChatWidget";
+import OnlineUsersCard from "../components/OnlineUsersCard";
 import { getUser } from "../../utils/auth";
 import { useState, useEffect } from "react";
 import { useRealtimeSync } from "../../hooks/useRealtimeSync";
@@ -34,14 +36,19 @@ export default function Layout() {
       <main>
         <div id="main-content" className="container-fluid min-vh-100">
           <section className="row main-row g-3 align-items-start">
-            <div className="col-12">
+            <div className="col-12 col-xl-9 order-1">
               <Outlet />
+            </div>
+
+            <div className="col-12 col-xl-3 order-2">
+              <OnlineUsersCard className="admin-online-users-card" />
             </div>
           </section>
 
           <BottomContent />
         </div>
       </main>
+      <ChatWidget />
     </>
   );
 }

@@ -3,7 +3,53 @@ import { createChatMessageApi, getChatMessagesApi } from "../../api/chatApi";
 import { USER_API_URL } from "../../api/userApi";
 import { getUser } from "../../utils/auth";
 
-const messageLimit = 50;
+const messageLimit = 25;
+const unreadPreviewLimit = 10;
+const iconsPerPage = 28;
+const chatIconCategories = [
+  {
+    id: "smileys",
+    label: "Smileys",
+    icon: "😀",
+    icons: ["😀", "😃", "😄", "😁", "😆", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😎", "🤩", "🥳", "😏", "😒", "😔", "😢", "😭", "😤", "😡", "🤬", "😱", "😴", "🤔", "🤫", "🤐", "🙄", "😬", "🤢", "🤮", "🤯"],
+  },
+  {
+    id: "people",
+    label: "People",
+    icon: "👍",
+    icons: ["👍", "👎", "👌", "✌️", "🤞", "🤟", "🤘", "👊", "✊", "👏", "🙌", "🙏", "💪", "🫡", "👋", "🤝", "🫶", "👀", "🧠", "👑", "🥷", "🧙", "🧛", "🦸", "🦹", "🧝", "🧟", "🏃", "🕺", "💃"],
+  },
+  {
+    id: "nature",
+    label: "Nature",
+    icon: "🌿",
+    icons: ["🌿", "☘️", "🍀", "🌲", "🌳", "🌴", "🌵", "🌙", "⭐", "✨", "⚡", "🔥", "💧", "🌊", "☀️", "🌤️", "⛈️", "🌈", "❄️", "☄️", "🌍", "🌌"],
+  },
+  {
+    id: "food",
+    label: "Food",
+    icon: "🍕",
+    icons: ["🍏", "🍎", "🍌", "🍇", "🍓", "🍒", "🍍", "🥑", "🍔", "🍟", "🍕", "🌭", "🥪", "🌮", "🍜", "🍣", "🍱", "🍗", "🍖", "🍰", "🍪", "🍫", "☕", "🍺", "🍻", "🥂"],
+  },
+  {
+    id: "activity",
+    label: "Activity",
+    icon: "🏆",
+    icons: ["⚔️", "🛡️", "🏆", "🥇", "🎯", "🎮", "🕹️", "🎲", "♟️", "🎰", "🎧", "🎤", "🎬", "🎨", "⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🏓", "🥊", "🏹", "🎣"],
+  },
+  {
+    id: "objects",
+    label: "Objects",
+    icon: "💎",
+    icons: ["💎", "🔔", "📣", "📌", "📍", "🧭", "⏰", "⌛", "🔒", "🔑", "🧰", "🪓", "🔨", "⚙️", "🧨", "💣", "🔮", "🪄", "🧪", "💊", "📜", "📝", "📦", "🎁", "💰", "🪙"],
+  },
+  {
+    id: "symbols",
+    label: "Symbols",
+    icon: "❤️",
+    icons: ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "💔", "💯", "✅", "❌", "⭕", "⚠️", "🚫", "💢", "♻️", "🔰", "🔱", "⚜️", "🔆", "🔅", "⬆️", "⬇️", "➡️", "⬅️", "🔴", "🟠", "🟡", "🟢", "🔵", "🟣"],
+  },
+];
 
 const formatMessageTime = (value) => {
   if (!value) {
@@ -31,17 +77,23 @@ function ChatWidget() {
   const readStorageKey = `warlords_chat_last_read_${currentUser?.id || "guest"}`;
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [draft, setDraft] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  const [activeIconCategory, setActiveIconCategory] = useState(chatIconCategories[0].id);
+  const [activeIconPage, setActiveIconPage] = useState(0);
+  const [onlineMemberCount, setOnlineMemberCount] = useState(0);
   const [isWindowFocused, setIsWindowFocused] = useState(() => document.hasFocus());
   const [lastReadMessageId, setLastReadMessageId] = useState(() => Number(localStorage.getItem(readStorageKey) || 0));
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
   const readTimerRef = useRef(null);
+  const iconPickerRef = useRef(null);
 
   const canMarkRead = isOpen && isWindowFocused;
 
@@ -94,6 +146,15 @@ function ChatWidget() {
     });
   };
 
+  const updateUnreadPreview = async () => {
+    try {
+      const data = await getChatMessagesApi({ limit: unreadPreviewLimit });
+      setUnreadCount(Math.min(getUnreadCount(data), 99));
+    } catch {
+      // Keep chat quiet when only the unread preview fails.
+    }
+  };
+
   const loadMessages = async ({ showLoading = false } = {}) => {
     if (showLoading) {
       setIsLoading(true);
@@ -103,6 +164,7 @@ function ChatWidget() {
     try {
       const data = await getChatMessagesApi({ limit: messageLimit });
       setMessages(data);
+      setHasLoadedMessages(true);
       setHasOlderMessages(data.length === messageLimit);
       if (canMarkRead) {
         scheduleMarkRead(data);
@@ -140,16 +202,20 @@ function ChatWidget() {
   };
 
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
+    updateUnreadPreview();
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && !hasLoadedMessages) {
       loadMessages({ showLoading: true });
     }
 
-    if (canMarkRead && messages.length > 0) {
+    if (canMarkRead && hasLoadedMessages && messages.length > 0) {
       scheduleMarkRead(messages);
-    } else {
+    } else if (hasLoadedMessages) {
       setUnreadCount(Math.min(getUnreadCount(messages), 99));
     }
-  }, [isOpen, isWindowFocused, messages]);
+  }, [isOpen, isWindowFocused, messages, hasLoadedMessages]);
 
   useEffect(() => {
     const handleFocus = () => setIsWindowFocused(true);
@@ -169,16 +235,51 @@ function ChatWidget() {
   }, []);
 
   useEffect(() => {
-    const handleChatMessageCreated = () => {
+    const handleChatMessageCreated = (event) => {
+      const message = event.detail?.message;
       if (!canMarkRead) {
         setUnreadCount((currentCount) => Math.min(currentCount + 1, 99));
       }
-      loadMessages();
+
+      if (isOpen && message) {
+        mergeMessages([message]);
+        scrollToBottom();
+      } else if (isOpen) {
+        loadMessages();
+      }
     };
 
     window.addEventListener("warlords:chat-message-created", handleChatMessageCreated);
     return () => window.removeEventListener("warlords:chat-message-created", handleChatMessageCreated);
-  }, [canMarkRead]);
+  }, [canMarkRead, isOpen]);
+
+  useEffect(() => {
+    if (!isIconPickerOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      if (!iconPickerRef.current?.contains(event.target)) {
+        setIsIconPickerOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isIconPickerOpen]);
+
+  useEffect(() => {
+    const handleOnlineUsersUpdated = (event) => {
+      setOnlineMemberCount(Array.isArray(event.detail) ? event.detail.length : 0);
+    };
+
+    window.addEventListener("warlords:online-users-updated", handleOnlineUsersUpdated);
+    return () => window.removeEventListener("warlords:online-users-updated", handleOnlineUsersUpdated);
+  }, []);
+
+  useEffect(() => {
+    setActiveIconPage(0);
+  }, [activeIconCategory]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -203,6 +304,21 @@ function ChatWidget() {
     }
   };
 
+  const handleIconClick = (icon) => {
+    setDraft((currentDraft) => `${currentDraft}${icon}`);
+    setIsIconPickerOpen(false);
+  };
+
+  const selectedIconCategory = chatIconCategories.find((category) => category.id === activeIconCategory) || chatIconCategories[0];
+  const selectedIconPages = selectedIconCategory.icons.reduce((pages, icon, index) => {
+    const pageIndex = Math.floor(index / iconsPerPage);
+    if (!pages[pageIndex]) {
+      pages[pageIndex] = [];
+    }
+    pages[pageIndex].push(icon);
+    return pages;
+  }, []);
+
   return (
     <div className="chat-widget">
       {isOpen && (
@@ -210,7 +326,9 @@ function ChatWidget() {
           <div className="chat-panel-header">
             <div>
               <h5 className="mb-0">Warlords Chat</h5>
-              <p className="small mb-0 text-muted">Team messages</p>
+              <p className="small mb-0 text-muted">
+                {onlineMemberCount} {onlineMemberCount === 1 ? "member" : "members"} online
+              </p>
             </div>
             <button
               type="button"
@@ -273,14 +391,88 @@ function ChatWidget() {
           {error && <div className="small text-danger px-3 pb-2">{error}</div>}
 
           <form className="chat-compose" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Type a message..."
-              value={draft}
-              maxLength={1000}
-              onChange={(event) => setDraft(event.target.value)}
-            />
+            {isIconPickerOpen && (
+              <div className="chat-icon-picker" ref={iconPickerRef}>
+                <div className="chat-icon-picker-header">
+                  <span className="small fw-semibold">Icons</span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => setIsIconPickerOpen(false)}
+                    aria-label="Close icon picker"
+                  >
+                    <i className="bi bi-x-lg" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div className="chat-icon-tabs" role="tablist" aria-label="Chat icon categories">
+                  {chatIconCategories.map((category) => (
+                    <button
+                      type="button"
+                      className={`chat-icon-tab ${category.id === activeIconCategory ? "active" : ""}`}
+                      key={category.id}
+                      title={category.label}
+                      aria-label={category.label}
+                      aria-selected={category.id === activeIconCategory}
+                      onClick={() => setActiveIconCategory(category.id)}
+                    >
+                      {category.icon}
+                    </button>
+                  ))}
+                </div>
+                <div className="chat-icon-grid">
+                  <div
+                    className="chat-icon-slider"
+                    style={{ transform: `translateX(-${activeIconPage * 100}%)` }}
+                  >
+                    {selectedIconPages.map((pageIcons, pageIndex) => (
+                      <div className="chat-icon-page" key={`${selectedIconCategory.id}-${pageIndex}`}>
+                        {pageIcons.map((icon) => (
+                          <button
+                            type="button"
+                            className="chat-icon-option"
+                            key={`${selectedIconCategory.id}-${pageIndex}-${icon}`}
+                            onClick={() => handleIconClick(icon)}
+                          >
+                            {icon}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {selectedIconPages.length > 1 && (
+                  <div className="chat-icon-dots" aria-label="Icon pages">
+                    {selectedIconPages.map((_, pageIndex) => (
+                      <button
+                        type="button"
+                        className={`chat-icon-dot ${pageIndex === activeIconPage ? "active" : ""}`}
+                        key={`${selectedIconCategory.id}-dot-${pageIndex}`}
+                        aria-label={`Show icon page ${pageIndex + 1}`}
+                        onClick={() => setActiveIconPage(pageIndex)}
+                      ></button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="chat-compose-input">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Type a message..."
+                value={draft}
+                maxLength={1000}
+                onChange={(event) => setDraft(event.target.value)}
+              />
+              <button
+                type="button"
+                className="btn btn-outline-secondary chat-icon-picker-toggle"
+                onClick={() => setIsIconPickerOpen((value) => !value)}
+                aria-label="Choose chat icon"
+              >
+                <i className="bi bi-emoji-smile" aria-hidden="true"></i>
+              </button>
+            </div>
             <button type="submit" className="btn btn-success" disabled={isSending || !draft.trim()}>
               <i className="bi bi-send" aria-hidden="true"></i>
             </button>

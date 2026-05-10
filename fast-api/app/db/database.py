@@ -18,7 +18,10 @@ server_engine = create_engine(
 )
 
 with server_engine.connect() as conn:
-    conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{db_name}`"))
+    conn.execute(text(
+        f"CREATE DATABASE IF NOT EXISTS `{db_name}` "
+        "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+    ))
     conn.commit()
 
 engine = create_engine(

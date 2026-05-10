@@ -58,9 +58,11 @@ async def create_chat_message(
         .filter(ChatMessage.id == chat_message.id)
         .one()
     )
+    message_payload = ChatMessageResponse.model_validate(saved_message).model_dump(mode="json")
     await websocket_manager.broadcast({
         "type": "chat_message_created",
         "message_id": saved_message.id,
+        "message": message_payload,
     })
 
     return saved_message

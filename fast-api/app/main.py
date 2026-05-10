@@ -44,6 +44,9 @@ app.add_middleware(
 
 Base.metadata.create_all(bind=engine)
 
+with engine.begin() as conn:
+    conn.execute(text("ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
+
 uploads_path = Path(__file__).resolve().parents[1] / "uploads"
 uploads_path.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
@@ -67,6 +70,7 @@ with engine.begin() as conn:
     chat_columns = {column["name"] for column in inspect(conn).get_columns("chat_messages")}
     if "created_at" not in chat_columns:
         conn.execute(text("ALTER TABLE chat_messages ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP"))
+    conn.execute(text("ALTER TABLE chat_messages CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
 
 db = SessionLocal()
 try:

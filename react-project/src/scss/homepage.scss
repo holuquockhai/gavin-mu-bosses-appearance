@@ -199,6 +199,13 @@ $color-mode-type: data;
   position: relative;
 }
 
+.history-list.show-all {
+  height: var(--history-list-height, min(68vh, 720px));
+  padding-right: 0.5rem;
+  align-content: start;
+  position: relative;
+}
+
 .countdown-time {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   font-size: 1.25rem;
@@ -273,6 +280,11 @@ $color-mode-type: data;
   border-radius: 50%;
   background: var(--bs-success);
   box-shadow: 0 0 0 0.2rem rgba(var(--bs-success-rgb), 0.16);
+}
+
+.admin-online-users-card {
+  position: sticky;
+  top: 6.75rem;
 }
 
 @media (max-width: 575.98px) {

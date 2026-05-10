@@ -180,7 +180,9 @@ async def mark_appeared(
         "type": "timer_state_updated",
         "action": "appeared",
         "boss_id": history.boss_id,
+        "boss_name": history.boss_name,
         "channel": history.channel,
+        "actor_user_id": current_user.id,
     })
     await websocket_manager.broadcast({"type": "notifications_updated"})
     return history
@@ -196,6 +198,14 @@ async def complete_expired(
         await websocket_manager.broadcast({
             "type": "timer_state_updated",
             "action": "expired",
+            "items": [
+                {
+                    "boss_id": history.boss_id,
+                    "boss_name": history.boss_name,
+                    "channel": history.channel,
+                }
+                for history in history_items
+            ],
         })
         await websocket_manager.broadcast({"type": "notifications_updated"})
         await websocket_manager.broadcast({"type": "logs_updated", "scope": "activities"})

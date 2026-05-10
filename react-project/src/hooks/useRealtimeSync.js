@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { getBossesApi } from "../api/bossApi";
 import { getChannelsApi } from "../api/channelApi";
 import { getNotificationsApi } from "../api/notificationApi";
@@ -9,7 +10,8 @@ import { setBosses } from "../js/bossSlice";
 import { setChannels } from "../js/channelSlice";
 import { setNotifications } from "../js/notificationSlice";
 import { setBossTimerState } from "../js/timerSlice";
-import { getToken, logout } from "../utils/auth";
+import { getToken, getUser, logout } from "../utils/auth";
+import { playAlertTone } from "../utils/sound";
 
 const getRealtimeUrl = () => {
   if (API_URL.startsWith("http://")) {
@@ -26,6 +28,8 @@ const getRealtimeUrl = () => {
 
 export function useRealtimeSync() {
   const dispatch = useDispatch();
+  const soundEnabled = useSelector((state) => state.systemSettings.soundEnabled);
+  const soundStyle = useSelector((state) => state.systemSettings.soundStyle);
 
   useEffect(() => {
     let socket;
@@ -93,6 +97,15 @@ export function useRealtimeSync() {
           const message = JSON.parse(event.data);
 
           if (message.type === "timer_state_updated") {
+            const currentUser = getUser();
+            const isRemoteAppeared =
+              message.action === "appeared" && message.actor_user_id !== currentUser?.id;
+            const isExpiredTimer = message.action === "expired";
+
+            if (soundEnabled && (isRemoteAppeared || isExpiredTimer)) {
+              playAlertTone(soundStyle);
+            }
+
             refreshState({ timers: true, notifications: true });
           }
 
@@ -156,5 +169,5 @@ export function useRealtimeSync() {
       window.clearTimeout(refreshTimerId);
       socket?.close();
     };
-  }, [dispatch]);
+  }, [dispatch, soundEnabled, soundStyle]);
 }
