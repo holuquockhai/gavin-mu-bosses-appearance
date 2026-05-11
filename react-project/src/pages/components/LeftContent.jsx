@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { completeExpiredCountdowns, markBossAppeared, setBossTimerState } from "../../js/timerSlice";
 import { addBossAppearedNotification } from "../../js/notificationSlice";
 import { getUser } from "../../utils/auth";
-import { getBossTimerStateApi, getComingSoonBossTimersApi, markBossAppearedApi } from "../../api/timerApi";
+import { completeExpiredBossTimersApi, getBossTimerStateApi, getComingSoonBossTimersApi, markBossAppearedApi } from "../../api/timerApi";
 import { createNotificationApi } from "../../api/notificationApi";
 import { playAlertTone } from "../../utils/sound";
 import OnlineUsersCard from "./OnlineUsersCard";
@@ -175,9 +175,20 @@ function LeftContent(){
             if (expiredTimers.length > 0 && !isCompletingExpiredRef.current) {
                 isCompletingExpiredRef.current = true;
                 dispatch(completeExpiredCountdowns(completedAt));
-                window.setTimeout(() => {
-                    isCompletingExpiredRef.current = false;
-                }, 1000);
+                completeExpiredBossTimersApi()
+                    .then((historyItems) => {
+                        if (historyItems.length === 0) {
+                            window.dispatchEvent(new Event("warlords:timer-state-refresh"));
+                        }
+                    })
+                    .catch(() => {
+                        window.dispatchEvent(new Event("warlords:timer-state-refresh"));
+                    })
+                    .finally(() => {
+                        window.setTimeout(() => {
+                            isCompletingExpiredRef.current = false;
+                        }, 1000);
+                    });
             }
         }, COUNTDOWN_TICK_INTERVAL_MS);
 

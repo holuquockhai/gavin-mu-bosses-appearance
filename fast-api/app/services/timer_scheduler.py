@@ -5,7 +5,7 @@ from app.db.database import SessionLocal
 from app.services.timer_service import complete_expired_timers
 from app.services.websocket_manager import websocket_manager
 
-EXPIRED_TIMER_CHECK_INTERVAL_SECONDS = 30
+EXPIRED_TIMER_CHECK_INTERVAL_SECONDS = 3
 
 
 async def run_expired_timer_checker() -> None:

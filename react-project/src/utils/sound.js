@@ -14,14 +14,54 @@ const fallbackToneMap = {
   alarm: [740, 554, 740, 554],
 };
 
-function playFallbackTone(soundStyle = "chime") {
+let sharedAudioContext = null;
+
+function getAudioContext() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
 
   if (!AudioContext) {
+    return null;
+  }
+
+  if (!sharedAudioContext) {
+    sharedAudioContext = new AudioContext();
+  }
+
+  return sharedAudioContext;
+}
+
+export function unlockAlertSound() {
+  const context = getAudioContext();
+
+  if (!context) {
     return;
   }
 
-  const context = new AudioContext();
+  if (context.state === "suspended") {
+    context.resume().catch(() => {});
+  }
+
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+
+  gain.gain.setValueAtTime(0.0001, context.currentTime);
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start();
+  oscillator.stop(context.currentTime + 0.01);
+}
+
+function playFallbackTone(soundStyle = "chime") {
+  const context = getAudioContext();
+
+  if (!context) {
+    return;
+  }
+
+  if (context.state === "suspended") {
+    context.resume().catch(() => {});
+  }
+
   const frequencies = fallbackToneMap[soundStyle] || fallbackToneMap.chime;
   const noteLength = 0.14;
 

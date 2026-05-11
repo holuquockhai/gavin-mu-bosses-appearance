@@ -11,7 +11,7 @@ import { setChannels } from "../js/channelSlice";
 import { setNotifications } from "../js/notificationSlice";
 import { setBossTimerState } from "../js/timerSlice";
 import { getToken, getUser, logout } from "../utils/auth";
-import { playAlertTone } from "../utils/sound";
+import { playAlertTone, unlockAlertSound } from "../utils/sound";
 
 const getRealtimeUrl = () => {
   if (API_URL.startsWith("http://")) {
@@ -252,8 +252,18 @@ export function useRealtimeSync() {
       socket?.close();
     };
 
+    const handleSoundUnlock = () => {
+      unlockAlertSound();
+      window.removeEventListener("pointerdown", handleSoundUnlock);
+      window.removeEventListener("touchstart", handleSoundUnlock);
+      window.removeEventListener("keydown", handleSoundUnlock);
+    };
+
     window.addEventListener("online", handleBrowserOnline);
     window.addEventListener("offline", handleBrowserOffline);
+    window.addEventListener("pointerdown", handleSoundUnlock, { passive: true });
+    window.addEventListener("touchstart", handleSoundUnlock, { passive: true });
+    window.addEventListener("keydown", handleSoundUnlock);
 
     return () => {
       isClosed = true;
@@ -262,6 +272,9 @@ export function useRealtimeSync() {
       window.clearTimeout(refreshTimerId);
       window.removeEventListener("online", handleBrowserOnline);
       window.removeEventListener("offline", handleBrowserOffline);
+      window.removeEventListener("pointerdown", handleSoundUnlock);
+      window.removeEventListener("touchstart", handleSoundUnlock);
+      window.removeEventListener("keydown", handleSoundUnlock);
       socket?.close();
     };
   }, [dispatch, soundEnabled, soundStyle]);
