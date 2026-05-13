@@ -21,7 +21,7 @@ function MainContent(){
                 <div className="p-3 card rounded-4 unified" id="showHideCard">
                     <div className="row">
                         <h5 className="card-title col-8">Show / Hide Boss Cards</h5>
-                        <span className="small col-4 text-muted text-end">Use to temporarily hide cards</span>
+                        <span className="small col-4 text-muted text-end">Shown on all channels</span>
                     </div>
 
                     {/** Render bosses filter checkboxes */}

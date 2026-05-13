@@ -11,6 +11,7 @@ function BossTimerCard({boss, selectedChannel}){
     const dispatch = useDispatch();
     const hoursList = useSelector(state => state.timerHours.value);
     const minuteList = useSelector(state => state.timerMinutes.value);
+    const channels = useSelector(state => state.channels.value);
     const [selectedHour, setSelectedHour] = useState("0");
     const [selectedMinute, setSelectedMinute] = useState("30");
 
@@ -96,7 +97,15 @@ function BossTimerCard({boss, selectedChannel}){
                         <span className="small text-muted">{selectedChannel || "No channel selected"}</span>
                     </div>
                     <span className="small text-muted text-end">
-                        <button type="button" className="btn-close" aria-label="Close" onClick={() => dispatch(markBossAsShowed({ bossId: boss.id, channel: selectedChannel }))}></button>
+                        <button
+                            type="button"
+                            className="btn-close"
+                            aria-label="Close"
+                            onClick={() => dispatch(markBossAsShowed({
+                                bossId: boss.id,
+                                channels: channels.map((channel) => channel.name),
+                            }))}
+                        ></button>
                     </span>
                 </div>
 

@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { markBossAsShowed, setBosses, showChannelVisibility } from "../js/bossSlice";
+import { markBossAsShowed, setAllChannelVisibility, setBosses, showChannelVisibility } from "../js/bossSlice";
 import { setChannels } from "../js/channelSlice";
 import BossTimerCard from "./components/BossTimerCard";
 import PresetControlForm from "./components/PresetControlForm";
 import { getBossesApi } from "../api/bossApi";
 import { getChannelsApi } from "../api/channelApi";
+
+function formatTimerBadge(endAt) {
+  const seconds = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainSeconds = seconds % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainSeconds).padStart(2, "0")}`;
+}
 
 const Landing = () => {
   const dispatch = useDispatch();
@@ -13,11 +22,12 @@ const Landing = () => {
   const [bossError, setBossError] = useState("");
   const [channelError, setChannelError] = useState("");
   const [selectedChannel, setSelectedChannel] = useState("");
+  const [, setTimerTick] = useState(0);
 
   // Load bosses redux store values
   const bosses = useSelector((state) => state.bosses.value);
-
   const channels = useSelector((state) => state.channels.value);
+  const timers = useSelector((state) => state.bossCountdowns.value);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,6 +104,24 @@ const Landing = () => {
     }
   }, [bosses.length, dispatch, selectedChannel]);
 
+  useEffect(() => {
+    if (channels.length > 0) {
+      dispatch(setAllChannelVisibility({ channels: channels.map((channel) => channel.name) }));
+    }
+  }, [channels, dispatch]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setTimerTick((value) => value + 1);
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const getBossTimerForSelectedChannel = (bossId) => (
+    timers.find((timer) => timer.bossId === bossId && timer.channel === selectedChannel)
+  );
+
   return (
     <>
       <div className="homepage-stack">
@@ -131,7 +159,7 @@ const Landing = () => {
             <div className="boss-toggle-panel">
               <div className="d-flex justify-content-between align-items-center gap-2 mb-2">
                 <h6 className="mb-0">Show / Hide Boss Cards</h6>
-                <span className="small text-muted">Default hidden per channel</span>
+                <span className="small text-muted">Shown on all channels</span>
               </div>
               <div className="chips d-flex flex-wrap gap-2" id="visChips">
                 {isLoadingBosses && (
@@ -148,20 +176,34 @@ const Landing = () => {
 
                 {!isLoadingBosses && !bossError && bosses.map((boss) => (
                   <div className="form-check form-switch boss-toggle-chip" key={boss.id}>
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      role="switch"
-                      id={`switchCheck-${boss.name}`}
-                      checked={boss.isShowed}
-                      onChange={() => dispatch(markBossAsShowed({ bossId: boss.id, channel: selectedChannel }))}
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor={`switchCheck-${boss.name}`}
-                    >
-                      {boss.name}
-                    </label>
+                    {(() => {
+                      const channelTimer = getBossTimerForSelectedChannel(boss.id);
+
+                      return (
+                        <>
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id={`switchCheck-${boss.name}`}
+                            checked={boss.isShowed}
+                            onChange={() => dispatch(markBossAsShowed({
+                              bossId: boss.id,
+                              channels: channels.map((channel) => channel.name),
+                            }))}
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor={`switchCheck-${boss.name}`}
+                          >
+                            {boss.name}
+                          </label>
+                          <span className={`boss-toggle-countdown ${channelTimer ? "" : "is-empty"}`}>
+                            {channelTimer ? formatTimerBadge(channelTimer.endAt) : "00:00:00"}
+                          </span>
+                        </>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>

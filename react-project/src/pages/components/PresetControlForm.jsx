@@ -49,16 +49,12 @@ function PresetControlForm({ selectedChannel }) {
       ...visibilityByChannel,
     };
 
-    if (selectedChannel) {
-      mergedChannels[selectedChannel] = currentShowedBossIds;
-    }
-
     if (!channels.length) {
       return mergedChannels;
     }
 
     return channels.reduce((settings, channel) => {
-      settings[channel.name] = mergedChannels[channel.name] || [];
+      settings[channel.name] = currentShowedBossIds;
       return settings;
     }, {});
   };
@@ -87,8 +83,9 @@ function PresetControlForm({ selectedChannel }) {
     dispatch(applyPresetVisibility({
       channels: selectedPreset.channels || {},
       selectedChannel,
+      channelNames: channels.map((channel) => channel.name),
     }));
-    setMessage(`Applied ${selectedPreset.name} for ${selectedChannel}.`);
+    setMessage(`Applied ${selectedPreset.name} to all channels.`);
   };
 
   const handlePresetCreated = (preset) => {
