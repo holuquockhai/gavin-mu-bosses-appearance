@@ -5,6 +5,7 @@ from app.db.database import SessionLocal
 from app.services.timer_service import complete_expired_timers
 from app.services.websocket_manager import websocket_manager
 
+# Browser clients try to complete expired timers immediately; this is the server fallback for closed or offline clients.
 EXPIRED_TIMER_CHECK_INTERVAL_SECONDS = 3
 
 

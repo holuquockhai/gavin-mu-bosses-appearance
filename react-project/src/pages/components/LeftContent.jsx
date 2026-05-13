@@ -175,6 +175,7 @@ function LeftContent(){
             if (expiredTimers.length > 0 && !isCompletingExpiredRef.current) {
                 isCompletingExpiredRef.current = true;
                 dispatch(completeExpiredCountdowns(completedAt));
+                // Persist browser-detected expiry immediately instead of waiting for the backend fallback checker.
                 completeExpiredBossTimersApi()
                     .then((historyItems) => {
                         if (historyItems.length === 0) {

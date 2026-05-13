@@ -15,6 +15,7 @@ export const parseApiDate = (value) => {
 
   const valueString = String(value);
   const hasTimezone = timezonePattern.test(valueString);
+  // Backend timestamps are UTC. If MySQL returns a naive DATETIME string, mark it as UTC before browser-local display.
   const date = new Date(hasTimezone ? valueString : `${valueString}Z`);
 
   return Number.isNaN(date.getTime()) ? null : date;

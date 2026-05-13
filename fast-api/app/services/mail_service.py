@@ -52,6 +52,7 @@ def _email_logo_url(values: dict[str, str]) -> str:
     )
     logo_url = values.get("site_logo_url") or ""
 
+    # Prefer the uploaded static logo URL because email clients handle real image file URLs better than API endpoints.
     if logo_url:
         return _absolute_url(base_url, logo_url)
 

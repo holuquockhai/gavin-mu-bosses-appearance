@@ -52,6 +52,7 @@ export function useRealtimeSync() {
     };
 
     const refreshState = ({ timers = false, notifications = false, bosses = false, channels = false } = {}) => {
+      // Batch websocket bursts into one API refresh per data type instead of refetching for every event.
       pendingRefresh.timers = pendingRefresh.timers || timers;
       pendingRefresh.notifications = pendingRefresh.notifications || notifications;
       pendingRefresh.bosses = pendingRefresh.bosses || bosses;
@@ -253,6 +254,7 @@ export function useRealtimeSync() {
     };
 
     const handleSoundUnlock = () => {
+      // Capture the first gesture early so mobile browsers allow boss appearance sounds later.
       unlockAlertSound();
       window.removeEventListener("pointerdown", handleSoundUnlock);
       window.removeEventListener("touchstart", handleSoundUnlock);

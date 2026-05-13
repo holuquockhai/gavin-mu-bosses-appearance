@@ -15,6 +15,7 @@ server_url = url.set(database=None)
 server_engine = create_engine(
     server_url,
     pool_pre_ping=True,
+    # Keep database-generated timestamps in UTC; the frontend converts display to each user's browser timezone.
     connect_args={"init_command": "SET time_zone = '+00:00'"},
 )
 
@@ -29,6 +30,7 @@ engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
     pool_recycle=3600,
+    # MySQL DATETIME values return without timezone info, so all app connections must agree on UTC.
     connect_args={"init_command": "SET time_zone = '+00:00'"},
 )
 

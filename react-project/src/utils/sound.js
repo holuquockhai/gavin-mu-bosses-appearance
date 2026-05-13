@@ -31,6 +31,7 @@ function getAudioContext() {
 }
 
 export function unlockAlertSound() {
+  // Mobile browsers require a user gesture before websocket-driven alert sounds can play later.
   const context = getAudioContext();
 
   if (!context) {
