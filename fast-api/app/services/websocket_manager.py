@@ -1,5 +1,6 @@
 import asyncio
 import json
+from datetime import datetime, timezone
 
 from fastapi import WebSocket
 
@@ -14,6 +15,8 @@ class WebSocketManager:
 
     async def connect(self, websocket: WebSocket, user: dict | None = None) -> None:
         await websocket.accept()
+        if user:
+            user["last_active_at"] = datetime.now(timezone.utc).isoformat()
         self.active_connections[websocket] = user
 
     def disconnect(self, websocket: WebSocket) -> dict | None:
@@ -39,6 +42,17 @@ class WebSocketManager:
             users_by_id.values(),
             key=lambda item: (item.get("full_name") or item.get("email") or "").lower(),
         )
+
+    def touch_user_activity(self, user_id: int) -> bool:
+        touched = False
+        active_at = datetime.now(timezone.utc).isoformat()
+
+        for user in self.active_connections.values():
+            if user and user.get("id") == user_id:
+                user["last_active_at"] = active_at
+                touched = True
+
+        return touched
 
     async def broadcast_online_users(self) -> None:
         await self.broadcast({

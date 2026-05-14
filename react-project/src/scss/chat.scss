@@ -5,6 +5,15 @@
   z-index: 1045;
 }
 
+body.chat-scroll-lock {
+  overflow: hidden;
+  touch-action: none;
+}
+
+.chat-mobile-overlay {
+  display: none;
+}
+
 .chat-toggle-button {
   position: relative;
   display: inline-grid;
@@ -137,6 +146,12 @@
   flex: 0 0 auto;
 }
 
+.chat-message-meta em {
+  font-size: 0.68rem;
+  font-style: normal;
+  color: var(--bs-tertiary-color);
+}
+
 .chat-message-body p {
   margin: 0;
   padding: 0.55rem 0.7rem;
@@ -165,6 +180,67 @@
   color: var(--bs-white);
   border-color: rgba(var(--bs-success-rgb), 0.65);
   background: var(--bs-success);
+}
+
+.chat-message.unsent .chat-message-body p,
+.chat-message.mine.unsent .chat-message-body p {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--bs-secondary-color);
+  border-color: rgba(var(--bs-secondary-rgb), 0.22);
+  background: rgba(var(--bs-secondary-rgb), 0.08);
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.chat-message-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+  opacity: 0;
+  transform: translateY(-0.25rem);
+  visibility: hidden;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0.18s ease;
+}
+
+.chat-message:hover .chat-message-actions,
+.chat-message:focus-within .chat-message-actions {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.chat-message-actions .btn {
+  min-width: auto;
+  padding: 0;
+  font-size: 0.7rem;
+  text-decoration: none;
+}
+
+.chat-message-actions .btn:hover,
+.chat-message-actions .btn:focus {
+  text-decoration: underline;
+}
+
+.chat-edit-form {
+  display: grid;
+  gap: 0.4rem;
+  min-width: min(260px, 68vw);
+  padding: 0.5rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.75rem;
+  background: rgba(var(--bs-body-color-rgb), 0.045);
+}
+
+.chat-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
 }
 
 .chat-system-message {
@@ -361,5 +437,28 @@
   .chat-icon-picker,
   .chat-icon-picker-toggle {
     display: none;
+  }
+}
+
+@media (max-width: 575.98px) and (orientation: portrait) {
+  .chat-mobile-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+    border: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+  }
+
+  .chat-panel {
+    position: fixed;
+    right: 0.75rem;
+    bottom: 4.75rem;
+    width: calc(100vw - 1.5rem);
+    height: min(72vh, calc(100dvh - 7rem));
   }
 }

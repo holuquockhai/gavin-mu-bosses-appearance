@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { USER_API_URL } from "../../api/userApi";
+
+const INACTIVE_AFTER_MS = 3 * 60 * 1000;
 
 function getAvatarUrl(avatarUrl) {
   if (!avatarUrl) {
@@ -9,8 +12,16 @@ function getAvatarUrl(avatarUrl) {
   return avatarUrl.startsWith("http") ? avatarUrl : `${USER_API_URL}${avatarUrl}`;
 }
 
+function getLastActiveAt(user) {
+  const value = user.last_active_at || user.lastActiveAt || user.last_activity_at;
+  const timestamp = value ? Date.parse(value) : NaN;
+
+  return Number.isNaN(timestamp) ? Date.now() : timestamp;
+}
+
 function OnlineUsersCard({ className = "" }) {
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     const handleOnlineUsersUpdated = (event) => {
@@ -19,6 +30,12 @@ function OnlineUsersCard({ className = "" }) {
 
     window.addEventListener("warlords:online-users-updated", handleOnlineUsersUpdated);
     return () => window.removeEventListener("warlords:online-users-updated", handleOnlineUsersUpdated);
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNow(Date.now()), 30000);
+
+    return () => window.clearInterval(intervalId);
   }, []);
 
   return (
@@ -35,21 +52,31 @@ function OnlineUsersCard({ className = "" }) {
           onlineUsers.map((user) => {
             const displayName = user.full_name || user.email;
             const avatarUrl = getAvatarUrl(user.avatar_url);
+            const isActive = now - getLastActiveAt(user) < INACTIVE_AFTER_MS;
+            const statusText = isActive ? "Online" : "Inactive";
 
             return (
               <div className="online-user-item" key={user.id}>
-                <div className="online-user-avatar">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt={displayName} />
-                  ) : (
-                    <span>{String(displayName || "?").charAt(0).toUpperCase()}</span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="online-user-name">{displayName}</div>
-                  {user.full_name && <div className="online-user-email">{user.email}</div>}
-                </div>
-                <span className="online-user-dot" aria-label="Online"></span>
+                <Link to={`/profile/${user.id}`} className="online-user-profile-link">
+                  <div className="online-user-avatar">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={displayName} />
+                    ) : (
+                      <span>{String(displayName || "?").charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="online-user-name">{displayName}</div>
+                    <div className={`online-user-status ${isActive ? "is-active" : "is-inactive"}`}>
+                      {statusText}
+                    </div>
+                  </div>
+                </Link>
+                <span
+                  className={`online-user-dot ${isActive ? "is-active" : "is-inactive"}`}
+                  aria-label={statusText}
+                  title={statusText}
+                ></span>
               </div>
             );
           })

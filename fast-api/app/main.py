@@ -72,6 +72,12 @@ with engine.begin() as conn:
     chat_columns = {column["name"] for column in inspect(conn).get_columns("chat_messages")}
     if "created_at" not in chat_columns:
         conn.execute(text("ALTER TABLE chat_messages ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP"))
+    if "edited_at" not in chat_columns:
+        conn.execute(text("ALTER TABLE chat_messages ADD COLUMN edited_at DATETIME NULL"))
+    if "unsent_at" not in chat_columns:
+        conn.execute(text("ALTER TABLE chat_messages ADD COLUMN unsent_at DATETIME NULL"))
+    if "is_unsent" not in chat_columns:
+        conn.execute(text("ALTER TABLE chat_messages ADD COLUMN is_unsent BOOLEAN NOT NULL DEFAULT FALSE"))
     conn.execute(text("ALTER TABLE chat_messages CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
     boss_history_columns = {column["name"] for column in inspect(conn).get_columns("boss_history")}
     if "appeared_by_name" not in boss_history_columns:

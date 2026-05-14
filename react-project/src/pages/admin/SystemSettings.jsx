@@ -55,7 +55,7 @@ const settingsTabs = [
   { id: "logs", label: "Logs Setting", icon: "bi-journal-text" },
   { id: "mysql", label: "MySQL", icon: "bi-database" },
   { id: "database-backup", label: "Database Backup", icon: "bi-cloud-download" },
-  { id: "settings-backup", label: "Settings Backup", icon: "bi-file-earmark-arrow-down" },
+  { id: "settings-backup", label: "Configuration Backup", icon: "bi-file-earmark-arrow-down" },
   { id: "factory-reset", label: "Factory Reset", icon: "bi-exclamation-triangle" },
 ];
 
@@ -966,7 +966,7 @@ function SystemSettings() {
                       disabled={isDownloadingBackup}
                     >
                       <LoadingLabel isLoading={isDownloadingBackup} loadingText="Downloading...">
-                        Download Settings JSON
+                        Download Configurations - JSON
                       </LoadingLabel>
                     </button>
                     <ProgressStatus label="Downloading settings" value={settingsBackupProgress} />

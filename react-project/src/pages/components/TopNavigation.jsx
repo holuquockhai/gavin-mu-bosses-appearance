@@ -10,6 +10,7 @@ import logo from "../../assets/logo.png";
 import siteName from "../../assets/site_name.png";
 import { USER_API_URL } from "../../api/userApi";
 import { getPublicBrandingApi } from "../../api/systemSettingsApi";
+import { setBaseBrowserTitle } from "../../utils/browserTitle";
 
 function resolveAvatarUrl(avatarUrl) {
   if (!avatarUrl) {
@@ -45,7 +46,7 @@ function TopNavigation({ isDark, setIsDark, user }) {
   }, []);
 
   useEffect(() => {
-    document.title = branding.site_head_title || "WARLORDS";
+    setBaseBrowserTitle(branding.site_head_title || "WARLORDS");
   }, [branding.site_head_title]);
 
   const handleLogout = () => {

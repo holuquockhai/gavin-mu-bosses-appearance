@@ -27,3 +27,19 @@ export const createChatMessageApi = async (message) => {
 
   return response.data;
 };
+
+export const updateChatMessageApi = async (messageId, message) => {
+  const response = await axios.put(`${API_URL}/chat/messages/${messageId}`, { message }, {
+    headers: authHeaders(),
+  });
+
+  return response.data;
+};
+
+export const unsendChatMessageApi = async (messageId) => {
+  const response = await axios.delete(`${API_URL}/chat/messages/${messageId}`, {
+    headers: authHeaders(),
+  });
+
+  return response.data;
+};

@@ -71,6 +71,9 @@ async def realtime_socket(websocket: WebSocket):
 
             if payload.get("type") == "ping":
                 await websocket.send_text(json.dumps({"type": "pong"}))
+            elif payload.get("type") == "activity":
+                if websocket_manager.touch_user_activity(user["id"]):
+                    await websocket_manager.broadcast_online_users()
     except WebSocketDisconnect:
         disconnected_user = websocket_manager.disconnect(websocket)
         await websocket_manager.broadcast_online_users()

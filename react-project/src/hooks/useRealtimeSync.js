@@ -43,6 +43,7 @@ export function useRealtimeSync() {
     let refreshTimerId;
     let heartbeatTimerId;
     let heartbeatTimeoutId;
+    let lastActivitySentAt = 0;
     let isClosed = false;
     const pendingRefresh = {
       timers: false,
@@ -127,6 +128,29 @@ export function useRealtimeSync() {
       }, 5000);
     };
 
+    const sendActivity = ({ force = false } = {}) => {
+      const now = Date.now();
+
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      if (!force && now - lastActivitySentAt < 30000) {
+        return;
+      }
+
+      try {
+        socket.send(JSON.stringify({ type: "activity" }));
+        lastActivitySentAt = now;
+      } catch {
+        // Reconnect handling below will recover closed sockets.
+      }
+    };
+
+    const handleUserActivity = () => sendActivity();
+
+    const handleUserPointerActivity = () => sendActivity();
+
     const connect = () => {
       const token = getToken();
 
@@ -149,6 +173,7 @@ export function useRealtimeSync() {
 
         emitConnectionStatus("connected");
         startHeartbeat();
+        sendActivity({ force: true });
       };
 
       socket.onmessage = (event) => {
@@ -202,6 +227,10 @@ export function useRealtimeSync() {
 
           if (message.type === "chat_message_created") {
             window.dispatchEvent(new CustomEvent("warlords:chat-message-created", { detail: message }));
+          }
+
+          if (message.type === "chat_message_updated") {
+            window.dispatchEvent(new CustomEvent("warlords:chat-message-updated", { detail: message }));
           }
 
           if (message.type === "chat_user_left") {
@@ -263,8 +292,12 @@ export function useRealtimeSync() {
 
     window.addEventListener("online", handleBrowserOnline);
     window.addEventListener("offline", handleBrowserOffline);
+    window.addEventListener("click", handleUserActivity);
+    window.addEventListener("keydown", handleUserActivity);
+    window.addEventListener("pointermove", handleUserPointerActivity);
     window.addEventListener("pointerdown", handleSoundUnlock, { passive: true });
     window.addEventListener("touchstart", handleSoundUnlock, { passive: true });
+    window.addEventListener("touchstart", handleUserActivity, { passive: true });
     window.addEventListener("keydown", handleSoundUnlock);
 
     return () => {
@@ -274,8 +307,12 @@ export function useRealtimeSync() {
       window.clearTimeout(refreshTimerId);
       window.removeEventListener("online", handleBrowserOnline);
       window.removeEventListener("offline", handleBrowserOffline);
+      window.removeEventListener("click", handleUserActivity);
+      window.removeEventListener("keydown", handleUserActivity);
+      window.removeEventListener("pointermove", handleUserPointerActivity);
       window.removeEventListener("pointerdown", handleSoundUnlock);
       window.removeEventListener("touchstart", handleSoundUnlock);
+      window.removeEventListener("touchstart", handleUserActivity);
       window.removeEventListener("keydown", handleSoundUnlock);
       socket?.close();
     };

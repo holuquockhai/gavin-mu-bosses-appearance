@@ -90,7 +90,7 @@ def seed_admin(db: Session):
         if account["email"] == "admin@example.com":
             admin_user = user
 
-    default_channels = ["Channel 1", "Channel 2", "Channel 3"]
+    default_channels = [f"Channel {channel_number}" for channel_number in range(1, 15)]
     channel_owner_id = admin_user.id if admin_user else None
 
     for channel_name in default_channels:
