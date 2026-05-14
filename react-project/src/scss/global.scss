@@ -2,6 +2,19 @@
     --bs-body-font-size: 1rem;
 }
 
+.global-flash-message {
+  position: sticky;
+  top: var(--top-navigation-height, 76px);
+  z-index: 1025;
+  width: 100%;
+  padding: 0 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.global-flash-message .alert {
+  border-radius: 0.75rem;
+}
+
 .connection-overlay {
   position: fixed;
   inset: 0;

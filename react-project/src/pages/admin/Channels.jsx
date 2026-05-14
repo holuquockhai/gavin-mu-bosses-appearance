@@ -15,6 +15,7 @@ import {
 } from "../../js/channelSlice";
 import AdminPagination from "./components/AdminPagination";
 import { formatUserDateTime, parseApiDate } from "../../utils/dateTime";
+import { showGlobalMessage } from "../../utils/flashMessage";
 
 const pageSize = 25;
 
@@ -52,7 +53,6 @@ export default function Channels() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
-  const [notification, setNotification] = useState(null);
   const [channelName, setChannelName] = useState("");
   const [channelToEdit, setChannelToEdit] = useState(null);
   const [channelToDelete, setChannelToDelete] = useState(null);
@@ -164,15 +164,6 @@ export default function Channels() {
   }, []);
 
   useEffect(() => {
-    if (!notification) {
-      return;
-    }
-
-    const timeoutId = setTimeout(() => setNotification(null), 4000);
-    return () => clearTimeout(timeoutId);
-  }, [notification]);
-
-  useEffect(() => {
     setPage(1);
   }, [filters]);
 
@@ -211,10 +202,7 @@ export default function Channels() {
       const createdChannel = await createChannelApi({ name: channelName.trim() });
       setLocalChannels((currentChannels) => [...currentChannels, createdChannel]);
       dispatch(createChannel(createdChannel));
-      setNotification({
-        id: Date.now(),
-        message: `Channel created successfully: ${createdChannel.name}`,
-      });
+      showGlobalMessage({ message: `Channel ${createdChannel.name} created.` });
       hideModal("createChannelModal");
       setChannelName("");
     } catch (err) {
@@ -243,10 +231,7 @@ export default function Channels() {
         ),
       );
       dispatch(updateChannel(updatedChannel));
-      setNotification({
-        id: Date.now(),
-        message: `Channel updated successfully: ${updatedChannel.name}`,
-      });
+      showGlobalMessage({ message: `Channel ${updatedChannel.name} updated.` });
       hideModal("editChannelModal");
       setChannelToEdit(null);
       setChannelName("");
@@ -271,10 +256,7 @@ export default function Channels() {
         currentChannels.filter((channel) => channel.id !== channelToDelete.id),
       );
       dispatch(deleteChannel(channelToDelete.id));
-      setNotification({
-        id: Date.now(),
-        message: `Channel deleted successfully: ${channelToDelete.name}`,
-      });
+      showGlobalMessage({ message: `Channel ${channelToDelete.name} deleted.` });
       hideModal("deleteChannelModal");
       setChannelToDelete(null);
     } catch (err) {
@@ -310,22 +292,6 @@ export default function Channels() {
           + Create Channel
         </button>
       </div>
-
-      {notification && (
-        <div
-          key={notification.id}
-          className="alert alert-success alert-dismissible fade show"
-          role="alert"
-        >
-          {notification.message}
-          <button
-            type="button"
-            className="btn-close"
-            aria-label="Close"
-            onClick={() => setNotification(null)}
-          ></button>
-        </div>
-      )}
 
       {error && <div className="alert alert-danger">{error}</div>}
 

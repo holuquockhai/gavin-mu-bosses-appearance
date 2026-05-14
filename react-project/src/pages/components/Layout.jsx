@@ -6,6 +6,7 @@ import RightContent from "./RightContent";
 import BottomContent from "./BottomContent";
 import ChatWidget from "./ChatWidget";
 import ConnectionOverlay from "../../components/ConnectionOverlay";
+import GlobalFlashMessage from "../../components/GlobalFlashMessage";
 import { getUser } from "../../utils/auth";
 import { useState, useEffect } from "react";
 import { useConnectionStatus } from "../../hooks/useConnectionStatus";
@@ -46,6 +47,7 @@ export default function Layout() {
   return (
     <>
       <TopNavigation isDark={isDark} setIsDark={setIsDark} user={user} />
+      <GlobalFlashMessage />
 
       <main>
         <div id="main-content" className="container-fluid min-vh-100">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { markBossAsShowed, setAllChannelVisibility, setBosses, showChannelVisibility } from "../js/bossSlice";
+import { applyBossVisibility, setAllChannelVisibility, setBosses, showChannelVisibility } from "../js/bossSlice";
 import { setChannels } from "../js/channelSlice";
 import BossTimerCard from "./components/BossTimerCard";
 import PresetControlForm from "./components/PresetControlForm";
@@ -16,12 +16,30 @@ function formatTimerBadge(endAt) {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainSeconds).padStart(2, "0")}`;
 }
 
+const BOSS_VISIBILITY_STORAGE_KEY = "warlordsVisibleBossIds";
+
+const getSavedVisibleBossIds = () => {
+  try {
+    const savedValue = localStorage.getItem(BOSS_VISIBILITY_STORAGE_KEY);
+    const parsedValue = savedValue ? JSON.parse(savedValue) : [];
+
+    return Array.isArray(parsedValue) ? parsedValue.map(Number).filter(Number.isFinite) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveVisibleBossIds = (bossIds) => {
+  localStorage.setItem(BOSS_VISIBILITY_STORAGE_KEY, JSON.stringify(bossIds));
+};
+
 const Landing = () => {
   const dispatch = useDispatch();
   const [isLoadingBosses, setIsLoadingBosses] = useState(true);
   const [bossError, setBossError] = useState("");
   const [channelError, setChannelError] = useState("");
   const [selectedChannel, setSelectedChannel] = useState("");
+  const [visibleBossIds, setVisibleBossIds] = useState(getSavedVisibleBossIds);
   const [, setTimerTick] = useState(0);
 
   // Load bosses redux store values
@@ -111,6 +129,15 @@ const Landing = () => {
   }, [channels, dispatch]);
 
   useEffect(() => {
+    if (channels.length > 0) {
+      dispatch(applyBossVisibility({
+        bossIds: visibleBossIds,
+        channels: channels.map((channel) => channel.name),
+      }));
+    }
+  }, [channels, dispatch, visibleBossIds]);
+
+  useEffect(() => {
     const intervalId = window.setInterval(() => {
       setTimerTick((value) => value + 1);
     }, 1000);
@@ -121,6 +148,19 @@ const Landing = () => {
   const getBossTimerForSelectedChannel = (bossId) => (
     timers.find((timer) => timer.bossId === bossId && timer.channel === selectedChannel)
   );
+
+  const handleToggleBossVisibility = (bossId) => {
+    setVisibleBossIds((currentBossIds) => {
+      const normalizedBossId = Number(bossId);
+      const isVisible = currentBossIds.includes(normalizedBossId);
+      const nextBossIds = isVisible
+        ? currentBossIds.filter((currentBossId) => currentBossId !== normalizedBossId)
+        : [...currentBossIds, normalizedBossId];
+
+      saveVisibleBossIds(nextBossIds);
+      return nextBossIds;
+    });
+  };
 
   return (
     <>
@@ -178,6 +218,7 @@ const Landing = () => {
                   <div className="form-check form-switch boss-toggle-chip" key={boss.id}>
                     {(() => {
                       const channelTimer = getBossTimerForSelectedChannel(boss.id);
+                      const isBossVisible = visibleBossIds.includes(Number(boss.id));
 
                       return (
                         <>
@@ -186,11 +227,8 @@ const Landing = () => {
                             type="checkbox"
                             role="switch"
                             id={`switchCheck-${boss.name}`}
-                            checked={boss.isShowed}
-                            onChange={() => dispatch(markBossAsShowed({
-                              bossId: boss.id,
-                              channels: channels.map((channel) => channel.name),
-                            }))}
+                            checked={isBossVisible}
+                            onChange={() => handleToggleBossVisibility(boss.id)}
                           />
                           <label
                             className="form-check-label"
@@ -216,8 +254,14 @@ const Landing = () => {
         </section>
 
         <div className="boss-card-grid">
-          {bosses.filter((boss) => boss.isShowed).map((boss) => (
-            <BossTimerCard key={boss.id} boss={boss} selectedChannel={selectedChannel} />
+          {bosses.map((boss) => (
+            <BossTimerCard
+              key={boss.id}
+              boss={boss}
+              selectedChannel={selectedChannel}
+              isVisible={visibleBossIds.includes(Number(boss.id))}
+              onHide={() => handleToggleBossVisibility(boss.id)}
+            />
           ))}
         </div>
       </div>

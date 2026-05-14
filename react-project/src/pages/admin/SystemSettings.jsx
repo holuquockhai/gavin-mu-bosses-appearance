@@ -14,6 +14,7 @@ import {
 } from "../../api/systemSettingsApi";
 import { USER_API_URL } from "../../api/userApi";
 import { logout } from "../../utils/auth";
+import { showGlobalMessage } from "../../utils/flashMessage";
 
 const initialForm = {
   app_secret_key: "",
@@ -131,7 +132,6 @@ function SystemSettings() {
     site_sublogo: null,
   });
   const [testRecipient, setTestRecipient] = useState("");
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -187,7 +187,6 @@ function SystemSettings() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsSaving(true);
-    setMessage("");
     setError("");
 
     try {
@@ -241,7 +240,7 @@ function SystemSettings() {
       }
 
       applySavedSettings(savedSettings);
-      setMessage("System settings have been saved successfully.");
+      showGlobalMessage({ message: "System settings have been saved successfully." });
     } catch (err) {
       setError(getErrorMessage(err, "Failed to save system settings"));
     } finally {
@@ -256,12 +255,11 @@ function SystemSettings() {
     }
 
     setIsTesting(true);
-    setMessage("");
     setError("");
 
     try {
       const data = await sendSystemSettingsTestEmailApi(testRecipient.trim());
-      setMessage(data.message || "Test email sent successfully.");
+      showGlobalMessage({ message: data.message || "Test email sent successfully." });
     } catch (err) {
       setError(getErrorMessage(err, "Could not send test email"));
     } finally {
@@ -272,7 +270,6 @@ function SystemSettings() {
   const handleDownloadBackup = async () => {
     setIsDownloadingBackup(true);
     setSettingsBackupProgress(0);
-    setMessage("");
     setError("");
 
     try {
@@ -291,7 +288,7 @@ function SystemSettings() {
       link.remove();
       URL.revokeObjectURL(downloadUrl);
       setSettingsBackupProgress(100);
-      setMessage("System settings backup has been downloaded.");
+      showGlobalMessage({ message: "System settings backup has been downloaded." });
     } catch (err) {
       setError(getErrorMessage(err, "Failed to download system settings backup"));
     } finally {
@@ -308,7 +305,6 @@ function SystemSettings() {
 
     setIsRestoringBackup(true);
     setSettingsRestoreProgress(0);
-    setMessage("");
     setError("");
 
     try {
@@ -319,7 +315,7 @@ function SystemSettings() {
       setRestoreFile(null);
       setRestoreInputKey((currentKey) => currentKey + 1);
       setSettingsRestoreProgress(100);
-      setMessage("System settings backup has been restored successfully.");
+      showGlobalMessage({ message: "System settings backup has been restored successfully." });
     } catch (err) {
       setError(getErrorMessage(err, "Failed to restore system settings backup"));
     } finally {
@@ -331,7 +327,6 @@ function SystemSettings() {
   const handleDownloadDatabaseBackup = async () => {
     setIsDownloadingDatabaseBackup(true);
     setDatabaseBackupProgress(0);
-    setMessage("");
     setError("");
 
     try {
@@ -350,7 +345,7 @@ function SystemSettings() {
       link.remove();
       URL.revokeObjectURL(downloadUrl);
       setDatabaseBackupProgress(100);
-      setMessage("MySQL database backup has been downloaded.");
+      showGlobalMessage({ message: "MySQL database backup has been downloaded." });
     } catch (err) {
       setError(getErrorMessage(err, "Failed to download MySQL database backup"));
     } finally {
@@ -367,7 +362,6 @@ function SystemSettings() {
 
     setIsRestoringDatabaseBackup(true);
     setDatabaseRestoreProgress(0);
-    setMessage("");
     setError("");
 
     try {
@@ -377,7 +371,7 @@ function SystemSettings() {
       setDatabaseRestoreFile(null);
       setDatabaseRestoreInputKey((currentKey) => currentKey + 1);
       setDatabaseRestoreProgress(100);
-      setMessage(data.message || "MySQL database backup has been restored successfully.");
+      showGlobalMessage({ message: data.message || "MySQL database backup has been restored successfully." });
     } catch (err) {
       setError(getErrorMessage(err, "Failed to restore MySQL database backup"));
     } finally {
@@ -405,7 +399,6 @@ function SystemSettings() {
     }
 
     setIsResetting(true);
-    setMessage("");
     setError("");
 
     try {
@@ -429,7 +422,6 @@ function SystemSettings() {
         </div>
       </div>
 
-      {message && <div className="alert alert-success">{message}</div>}
       {error && <div className="alert alert-danger">{error}</div>}
 
       <ul className="nav nav-tabs mb-3">

@@ -9,6 +9,7 @@ import {
 } from "../../api/logApi";
 import AdminPagination from "./components/AdminPagination";
 import { formatUserDateTime } from "../../utils/dateTime";
+import { showGlobalMessage } from "../../utils/flashMessage";
 
 const pageSize = 25;
 
@@ -115,7 +116,6 @@ function Logs() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [sendingId, setSendingId] = useState(null);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const activityTotalPages = useMemo(() => Math.max(1, Math.ceil(activities.total / pageSize)), [activities.total]);
@@ -255,12 +255,11 @@ function Logs() {
 
   const handleSendNow = async (emailId) => {
     setSendingId(emailId);
-    setMessage("");
     setError("");
 
     try {
       await sendEmailLogNowApi(emailId);
-      setMessage("Email send job has been processed.");
+      showGlobalMessage({ message: "Email send job has been processed." });
       await loadEmails();
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to send email");
@@ -278,7 +277,6 @@ function Logs() {
         </div>
       </div>
 
-      {message && <div className="alert alert-success">{message}</div>}
       {error && <div className="alert alert-danger">{error}</div>}
 
       <ul className="nav nav-pills gap-2 mb-3">

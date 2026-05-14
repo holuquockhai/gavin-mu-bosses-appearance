@@ -10,6 +10,7 @@ import {
 } from "../../js/presetSlice";
 import PresetModal from "./PresetModal";
 import { deletePresetApi, getPresetsApi, renamePresetApi, updatePresetApi } from "../../api/presetApi";
+import { showGlobalMessage } from "../../utils/flashMessage";
 
 function PresetControlForm({ selectedChannel }) {
   const dispatch = useDispatch();
@@ -19,7 +20,6 @@ function PresetControlForm({ selectedChannel }) {
   const channels = useSelector((state) => state.channels.value);
   const [selectedPresetId, setSelectedPresetId] = useState("");
   const [presetModalState, setPresetModalState] = useState(1);
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     getPresetsApi()
@@ -63,7 +63,10 @@ function PresetControlForm({ selectedChannel }) {
 
   const handleSavePreset = async () => {
     if (!selectedPreset) {
-      setMessage("Select a preset before saving.");
+      showGlobalMessage({
+        message: "Select a preset before saving.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -71,12 +74,15 @@ function PresetControlForm({ selectedChannel }) {
       channels: buildAllChannelSettings({ includeSelectedPresetBase: true }),
     });
     dispatch(updatePreset(updatedPreset));
-    setMessage(`Saved ${selectedPreset.name} for all channels.`);
+    showGlobalMessage({ message: `Preset ${selectedPreset.name} saved for all channels.` });
   };
 
   const handleApplyPreset = () => {
     if (!selectedPreset || !selectedChannel) {
-      setMessage("Select a preset and channel before applying.");
+      showGlobalMessage({
+        message: "Select a preset and channel before applying.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -85,27 +91,27 @@ function PresetControlForm({ selectedChannel }) {
       selectedChannel,
       channelNames: channels.map((channel) => channel.name),
     }));
-    setMessage(`Applied ${selectedPreset.name} to all channels.`);
+    showGlobalMessage({ message: `Preset ${selectedPreset.name} applied to all channels.` });
   };
 
   const handlePresetCreated = (preset) => {
     dispatch(updatePreset(preset));
     setSelectedPresetId(String(preset.id));
-    setMessage(`Created preset ${preset.name}.`);
+    showGlobalMessage({ message: `Preset ${preset.name} created.` });
   };
 
   const handlePresetRenamed = async (preset) => {
     const updatedPreset = await renamePresetApi(preset.presetId, preset.name);
     dispatch(renamePreset(preset));
     dispatch(updatePreset(updatedPreset));
-    setMessage(`Renamed preset to ${updatedPreset.name}.`);
+    showGlobalMessage({ message: `Preset renamed to ${updatedPreset.name}.` });
   };
 
   const handlePresetDeleted = async (presetId) => {
     await deletePresetApi(presetId);
     dispatch(deletePreset(presetId));
     setSelectedPresetId("");
-    setMessage("Deleted preset.");
+    showGlobalMessage({ message: "Preset deleted." });
   };
 
   return (
@@ -163,7 +169,6 @@ function PresetControlForm({ selectedChannel }) {
             </button>
           </div>
         </div>
-        {message && <div className="small text-muted mt-2">{message}</div>}
       </div>
 
       <PresetModal

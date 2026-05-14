@@ -3,17 +3,29 @@ import { markBossAsShowed } from '../../js/bossSlice';
 import { clearBossCountdown, setBossCountdown } from "../../js/timerSlice";
 import { addBossTimerSetNotification } from "../../js/notificationSlice";
 import { getUser } from "../../utils/auth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createBossTimerApi, clearBossTimerApi } from "../../api/timerApi";
 import { createNotificationApi } from "../../api/notificationApi";
+import { showGlobalMessage } from "../../utils/flashMessage";
 
-function BossTimerCard({boss, selectedChannel}){
+function BossTimerCard({boss, selectedChannel, isVisible = boss.isShowed, onHide}){
     const dispatch = useDispatch();
     const hoursList = useSelector(state => state.timerHours.value);
     const minuteList = useSelector(state => state.timerMinutes.value);
     const channels = useSelector(state => state.channels.value);
     const [selectedHour, setSelectedHour] = useState("0");
     const [selectedMinute, setSelectedMinute] = useState("30");
+    const [shouldRender, setShouldRender] = useState(isVisible);
+
+    useEffect(() => {
+        if (isVisible) {
+            setShouldRender(true);
+            return undefined;
+        }
+
+        const timeoutId = window.setTimeout(() => setShouldRender(false), 500);
+        return () => window.clearTimeout(timeoutId);
+    }, [isVisible]);
 
     const buildPeriodLabel = () => {
         const hours = Number(selectedHour);
@@ -71,6 +83,13 @@ function BossTimerCard({boss, selectedChannel}){
             period,
         };
         dispatch(addBossTimerSetNotification(notificationPayload));
+        showGlobalMessage({
+            message: (
+                <>
+                    Timer set for <strong>{boss.name}</strong> on <strong>{selectedChannel}</strong> for {period} successfully.
+                </>
+            ),
+        });
         createNotificationApi({
             type: "boss-timer-set",
             payload: notificationPayload,
@@ -86,9 +105,13 @@ function BossTimerCard({boss, selectedChannel}){
         window.dispatchEvent(new Event("warlords:timer-state-refresh"));
     };
 
+    if (!shouldRender) {
+        return null;
+    }
+
     return(
         <>
-        <div className={`boss-detail ${boss.isShowed ? 'show' : ''}`}>
+        <div className={`boss-detail ${isVisible ? 'show' : ''}`}>
             <div className="card border-0 shadow-sm unified boss-timer-card">
                 <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start gap-3">
@@ -101,10 +124,17 @@ function BossTimerCard({boss, selectedChannel}){
                             type="button"
                             className="btn-close"
                             aria-label="Close"
-                            onClick={() => dispatch(markBossAsShowed({
-                                bossId: boss.id,
-                                channels: channels.map((channel) => channel.name),
-                            }))}
+                            onClick={() => {
+                                if (onHide) {
+                                    onHide();
+                                    return;
+                                }
+
+                                dispatch(markBossAsShowed({
+                                    bossId: boss.id,
+                                    channels: channels.map((channel) => channel.name),
+                                }));
+                            }}
                         ></button>
                     </span>
                 </div>

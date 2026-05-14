@@ -3,6 +3,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { getCurrentUserApi, getUserProfileApi, updateProfileApi, USER_API_URL } from "../api/userApi";
 import { getUser, updateStoredUser } from "../utils/auth";
 import { formatUserDate, formatUserDateTime } from "../utils/dateTime";
+import { showGlobalMessage } from "../utils/flashMessage";
 
 const COUNTRY_OPTIONS = [
   "Australia",
@@ -67,7 +68,6 @@ function Profile() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const mustUpdatePassword = Boolean(storedUser?.must_update_password);
 
@@ -110,7 +110,6 @@ function Profile() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setMessage("");
     setError("");
 
     if (password && password !== confirmPassword) {
@@ -141,7 +140,7 @@ function Profile() {
       setAvatarFile(null);
       setPassword("");
       setConfirmPassword("");
-      setMessage("Profile updated successfully.");
+      showGlobalMessage({ message: "Profile updated successfully." });
     } catch (err) {
       setError(err.response?.data?.detail || "Could not update profile.");
     } finally {
@@ -258,7 +257,6 @@ function Profile() {
             Please update your temporary password before continuing.
           </div>
         )}
-        {message && <div className="alert alert-success">{message}</div>}
         {error && <div className="alert alert-danger">{error}</div>}
 
         <form onSubmit={handleSubmit}>

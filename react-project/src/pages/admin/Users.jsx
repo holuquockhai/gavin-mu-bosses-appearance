@@ -11,6 +11,7 @@ import { createNotificationApi } from "../../api/notificationApi";
 import { addUserCreatedNotification } from "../../js/notificationSlice";
 import { getUser } from "../../utils/auth";
 import AdminPagination from "./components/AdminPagination";
+import { showGlobalMessage } from "../../utils/flashMessage";
 
 const pageSize = 25;
 
@@ -52,7 +53,6 @@ export default function Users() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
-  const [notification, setNotification] = useState(null);
   const [createForm, setCreateForm] = useState(emptyForm);
   const [editForm, setEditForm] = useState(emptyForm);
   const [userToEdit, setUserToEdit] = useState(null);
@@ -127,15 +127,6 @@ export default function Users() {
     window.addEventListener("warlords:users-updated", loadUsers);
     return () => window.removeEventListener("warlords:users-updated", loadUsers);
   }, []);
-
-  useEffect(() => {
-    if (!notification) {
-      return;
-    }
-
-    const timeoutId = setTimeout(() => setNotification(null), 4000);
-    return () => clearTimeout(timeoutId);
-  }, [notification]);
 
   useEffect(() => {
     setPage(1);
@@ -235,10 +226,7 @@ export default function Users() {
         role: createForm.role,
       });
       setUsers((currentUsers) => [createdUser, ...currentUsers]);
-      setNotification({
-        id: Date.now(),
-        message: `User created successfully: ${createdUser.email}`,
-      });
+      showGlobalMessage({ message: `User ${createdUser.email} created.` });
       hideModal("createUserModal");
       setCreateForm(emptyForm);
 
@@ -288,10 +276,7 @@ export default function Users() {
           user.id === updatedUser.id ? updatedUser : user,
         ),
       );
-      setNotification({
-        id: Date.now(),
-        message: `User updated successfully: ${updatedUser.email}`,
-      });
+      showGlobalMessage({ message: `User ${updatedUser.email} updated.` });
       hideModal("editUserModal");
       setUserToEdit(null);
     } catch (err) {
@@ -314,10 +299,7 @@ export default function Users() {
       setUsers((currentUsers) =>
         currentUsers.filter((user) => user.id !== userToDelete.id),
       );
-      setNotification({
-        id: Date.now(),
-        message: `User deleted successfully: ${userToDelete.email}`,
-      });
+      showGlobalMessage({ message: `User ${userToDelete.email} deleted.` });
       hideModal("deleteUserModal");
       setUserToDelete(null);
     } catch (err) {
@@ -339,22 +321,6 @@ export default function Users() {
           + Create User
         </button>
       </div>
-
-      {notification && (
-        <div
-          key={notification.id}
-          className="alert alert-success alert-dismissible fade show"
-          role="alert"
-        >
-          {notification.message}
-          <button
-            type="button"
-            className="btn-close"
-            aria-label="Close"
-            onClick={() => setNotification(null)}
-          ></button>
-        </div>
-      )}
 
       {error && <div className="alert alert-danger">{error}</div>}
 

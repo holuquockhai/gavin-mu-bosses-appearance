@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { completeExpiredCountdowns, markBossAppeared, setBossTimerState } from "../../js/timerSlice";
+import { Modal } from "bootstrap";
+import { clearBossCountdown, completeExpiredCountdowns, markBossAppeared, setBossTimerState } from "../../js/timerSlice";
 import { addBossAppearedNotification } from "../../js/notificationSlice";
 import { getUser } from "../../utils/auth";
-import { completeExpiredBossTimersApi, getBossTimerStateApi, getComingSoonBossTimersApi, markBossAppearedApi } from "../../api/timerApi";
+import { clearBossTimerApi, completeExpiredBossTimersApi, getBossTimerStateApi, getComingSoonBossTimersApi, markBossAppearedApi } from "../../api/timerApi";
 import { createNotificationApi } from "../../api/notificationApi";
 import { playAlertTone } from "../../utils/sound";
 import OnlineUsersCard from "./OnlineUsersCard";
@@ -56,6 +57,8 @@ function LeftContent(){
     const [isLoadingComingSoon, setIsLoadingComingSoon] = useState(true);
     const [isLoadingMoreComingSoon, setIsLoadingMoreComingSoon] = useState(false);
     const [defaultComingSoonListHeight, setDefaultComingSoonListHeight] = useState(0);
+    const [timerToDelete, setTimerToDelete] = useState(null);
+    const [isDeletingTimer, setIsDeletingTimer] = useState(false);
     const comingSoonListRef = useRef(null);
     const comingSoonTimersRef = useRef([]);
     const showAllComingSoonRef = useRef(false);
@@ -98,6 +101,46 @@ function LeftContent(){
             completedAt,
         }));
         loadComingSoon({ offset: 0, limit: showAllComingSoon ? COMING_SOON_SHOW_ALL_LIMIT : COMING_SOON_TOP_LIMIT });
+    };
+
+    const openDeleteTimerConfirm = (timer) => {
+        setTimerToDelete(timer);
+        const modalElement = document.getElementById("deleteComingSoonTimerModal");
+        Modal.getOrCreateInstance(modalElement).show();
+    };
+
+    const closeDeleteTimerConfirm = () => {
+        const modalElement = document.getElementById("deleteComingSoonTimerModal");
+        Modal.getOrCreateInstance(modalElement).hide();
+    };
+
+    const handleDeleteComingSoonTimer = async () => {
+        if (!timerToDelete) {
+            return;
+        }
+
+        setIsDeletingTimer(true);
+        try {
+            await clearBossTimerApi({
+                bossId: timerToDelete.bossId,
+                channel: timerToDelete.channel,
+            });
+            dispatch(clearBossCountdown({
+                bossId: timerToDelete.bossId,
+                channel: timerToDelete.channel,
+            }));
+            setComingSoonTimers((currentTimers) => {
+                const nextTimers = currentTimers.filter((timer) => timer.id !== timerToDelete.id);
+                comingSoonTimersRef.current = nextTimers;
+                return nextTimers;
+            });
+            setComingSoonTotal((currentTotal) => Math.max(0, currentTotal - 1));
+            closeDeleteTimerConfirm();
+            setTimerToDelete(null);
+            window.dispatchEvent(new Event("warlords:timer-state-refresh"));
+        } finally {
+            setIsDeletingTimer(false);
+        }
     };
 
     const loadComingSoon = ({ offset = 0, limit = COMING_SOON_TOP_LIMIT, append = false, showLoading = true } = {}) => {
@@ -280,6 +323,12 @@ function LeftContent(){
 
                             return (
                                 <div className={`boss-countdown-box ${isReady ? "ready" : ""}`} key={timer.id}>
+                                    <button
+                                        type="button"
+                                        className="btn-close boss-countdown-close"
+                                        aria-label={`Delete ${timer.bossName} countdown`}
+                                        onClick={() => openDeleteTimerConfirm(timer)}
+                                    ></button>
                                     <div className="boss-countdown-header">
                                         <div className="min-w-0">
                                             <strong className="boss-countdown-name">{timer.bossName}</strong>
@@ -313,6 +362,34 @@ function LeftContent(){
                             Scroll to load more bosses
                         </div>
                     )}
+                </div>
+            </div>
+
+            <div className="modal fade" id="deleteComingSoonTimerModal" tabIndex="-1" aria-labelledby="deleteComingSoonTimerModalLabel" aria-hidden="true">
+                <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title" id="deleteComingSoonTimerModalLabel">Delete boss countdown</h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div className="modal-body">
+                            Are you sure you want to delete the countdown for <strong>{timerToDelete?.bossName}</strong> on{" "}
+                            <strong>{formatChannelLabel(timerToDelete?.channel)}</strong>?
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={handleDeleteComingSoonTimer}
+                                disabled={isDeletingTimer}
+                            >
+                                {isDeletingTimer ? "Deleting..." : "Delete"}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Modal } from "bootstrap";
 import CreateBossModal from "./components/CreateBossModal";
@@ -6,33 +6,18 @@ import ListBossTable from "./components/ListBossTable";
 import { addBossCreatedNotification } from "../../js/notificationSlice";
 import { getUser } from "../../utils/auth";
 import { createNotificationApi } from "../../api/notificationApi";
+import { showGlobalMessage } from "../../utils/flashMessage";
 
 export default function CreateBossPage() {
   const dispatch = useDispatch();
   const [bossListVersion, setBossListVersion] = useState(0);
-  const [notification, setNotification] = useState(null);
-
-  useEffect(() => {
-    if (!notification) {
-      return;
-    }
-
-    const timeoutId = setTimeout(() => {
-      setNotification(null);
-    }, 4000);
-
-    return () => clearTimeout(timeoutId);
-  }, [notification]);
 
   const handleBossCreated = (boss) => {
     const currentUser = getUser();
     const actorName = currentUser?.full_name || currentUser?.email || "Someone";
 
     setBossListVersion((currentVersion) => currentVersion + 1);
-    setNotification({
-      id: Date.now(),
-      message: `Boss created successfully: ${boss.name}`,
-    });
+    showGlobalMessage({ message: `Boss ${boss.name} created.` });
     const notificationPayload = { actorName, bossName: boss.name };
     dispatch(addBossCreatedNotification(notificationPayload));
     createNotificationApi({
@@ -43,11 +28,10 @@ export default function CreateBossPage() {
 
   const handleBossDeleted = (boss) => {
     setBossListVersion((currentVersion) => currentVersion + 1);
-    setNotification({
-      id: Date.now(),
+    showGlobalMessage({
       message: (
         <>
-          <strong>{boss.name}</strong> has been successfully deleted!
+          Boss <strong>{boss.name}</strong> deleted.
         </>
       ),
     });
@@ -55,10 +39,7 @@ export default function CreateBossPage() {
 
   const handleBossUpdated = (boss) => {
     setBossListVersion((currentVersion) => currentVersion + 1);
-    setNotification({
-      id: Date.now(),
-      message: `Boss updated successfully: ${boss.name}`,
-    });
+    showGlobalMessage({ message: `Boss ${boss.name} updated.` });
   };
 
   const openCreateModal = () => {
@@ -74,22 +55,6 @@ export default function CreateBossPage() {
           + Create Boss
         </button>
       </div>
-
-      {notification && (
-        <div
-          key={notification.id}
-          className="alert alert-success alert-dismissible fade show"
-          role="alert"
-        >
-          {notification.message}
-          <button
-            type="button"
-            className="btn-close"
-            aria-label="Close"
-            onClick={() => setNotification(null)}
-          ></button>
-        </div>
-      )}
 
       <CreateBossModal onCreated={handleBossCreated} />
 

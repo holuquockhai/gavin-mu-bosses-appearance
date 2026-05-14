@@ -1,11 +1,40 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+const BOSS_VISIBILITY_STORAGE_KEY = "warlordsVisibleBossIds";
+
+const getSavedVisibleBossIds = () => {
+  try {
+    const savedValue = localStorage.getItem(BOSS_VISIBILITY_STORAGE_KEY);
+    const parsedValue = savedValue ? JSON.parse(savedValue) : null;
+
+    return Array.isArray(parsedValue) ? parsedValue.map(Number) : null;
+  } catch {
+    return null;
+  }
+};
+
+const normalizeBossIds = (bossIds = []) => (
+  Array.isArray(bossIds) ? bossIds.map(Number).filter(Number.isFinite) : []
+);
+
+const saveVisibleBossIds = (bossIds) => {
+  localStorage.setItem(BOSS_VISIBILITY_STORAGE_KEY, JSON.stringify(bossIds));
+};
+
+const persistVisibleBossIds = (state, bossIds) => {
+  const normalizedBossIds = normalizeBossIds(bossIds);
+
+  state.savedVisibleBossIds = normalizedBossIds;
+  saveVisibleBossIds(normalizedBossIds);
+};
+
 export const bossesSlice = createSlice({
   name: 'bosses',
 
   initialState: {
     value: [],
     visibilityByChannel: {},
+    savedVisibleBossIds: getSavedVisibleBossIds() || [],
   },
 
   reducers: {
@@ -24,12 +53,14 @@ export const bossesSlice = createSlice({
     },
 
     setBosses: (state, action) => {
+      const savedVisibleBossIds = state.savedVisibleBossIds || [];
+
       state.value = action.payload.map((boss) => {
         const currentBoss = state.value.find((item) => item.id === boss.id);
 
         return {
           ...boss,
-          isShowed: currentBoss?.isShowed ?? false,
+          isShowed: currentBoss ? currentBoss.isShowed : savedVisibleBossIds.includes(Number(boss.id)),
         };
       });
     },
@@ -52,6 +83,7 @@ export const bossesSlice = createSlice({
       const showedBossIds = state.value
         .filter((item) => item.isShowed)
         .map((item) => item.id);
+      persistVisibleBossIds(state, showedBossIds);
 
       if (channels.length > 0) {
         state.visibilityByChannel = channels.reduce((settings, channel) => {
@@ -62,13 +94,40 @@ export const bossesSlice = createSlice({
     },
 
     applyBossVisibility: (state, action) => {
-      const showedBossIds = action.payload?.bossIds ?? action.payload;
+      const showedBossIds = normalizeBossIds(action.payload?.bossIds ?? action.payload);
       const channels = action.payload?.channels || [];
 
       state.value = state.value.map((boss) => ({
         ...boss,
-        isShowed: showedBossIds.includes(boss.id),
+        isShowed: showedBossIds.includes(Number(boss.id)),
       }));
+      persistVisibleBossIds(state, showedBossIds);
+
+      if (channels.length > 0) {
+        state.visibilityByChannel = channels.reduce((settings, channel) => {
+          settings[channel] = showedBossIds;
+          return settings;
+        }, {});
+      }
+    },
+
+    ensureBossesVisible: (state, action) => {
+      const bossIds = normalizeBossIds(action.payload?.bossIds || []);
+      const channels = action.payload?.channels || [];
+
+      if (bossIds.length === 0) {
+        return;
+      }
+
+      state.value = state.value.map((boss) => ({
+        ...boss,
+        isShowed: boss.isShowed || bossIds.includes(Number(boss.id)),
+      }));
+
+      const showedBossIds = state.value
+        .filter((item) => item.isShowed)
+        .map((item) => item.id);
+      persistVisibleBossIds(state, showedBossIds);
 
       if (channels.length > 0) {
         state.visibilityByChannel = channels.reduce((settings, channel) => {
@@ -86,9 +145,9 @@ export const bossesSlice = createSlice({
         settings[channel] = Array.isArray(bossIds) ? [...bossIds] : [];
         return settings;
       }, {});
-      const presetBossIds = channelSettings[selectedChannel]
+      const presetBossIds = normalizeBossIds(channelSettings[selectedChannel]
         || Object.values(channelSettings).find((bossIds) => bossIds.length > 0)
-        || [];
+        || []);
 
       state.visibilityByChannel = channelNames.length > 0
         ? channelNames.reduce((settings, channel) => {
@@ -98,8 +157,9 @@ export const bossesSlice = createSlice({
         : channelSettings;
       state.value = state.value.map((boss) => ({
         ...boss,
-        isShowed: presetBossIds.includes(boss.id),
+        isShowed: presetBossIds.includes(Number(boss.id)),
       }));
+      persistVisibleBossIds(state, presetBossIds);
     },
 
     showChannelVisibility: () => {
@@ -120,6 +180,7 @@ export const {
   setBosses,
   setAllChannelVisibility,
   applyBossVisibility,
+  ensureBossesVisible,
   applyPresetVisibility,
   showChannelVisibility,
 } = bossesSlice.actions;
