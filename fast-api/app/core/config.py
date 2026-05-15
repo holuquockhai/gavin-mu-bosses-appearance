@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     MYSQL_CHARSET: str = "utf8mb4"
     SECRET_KEY: str = "change-me"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE_PATH,
