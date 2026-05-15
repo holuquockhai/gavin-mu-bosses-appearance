@@ -428,7 +428,7 @@ export default function Users() {
               paginatedUsers.map((user, index) => (
                 <tr key={user.id}>
                   <th scope="row">{(page - 1) * pageSize + index + 1}</th>
-                  <td>{user.full_name || "-"}</td>
+                  <td className="admin-table-name">{user.full_name || "-"}</td>
                   <td>{user.email}</td>
                   <td>
                     {formatRoles(user.roles).length === 0 ? (
@@ -451,10 +451,10 @@ export default function Users() {
                       {user.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td>
+                  <td className="admin-table-actions">
                     <button
                       type="button"
-                      className="btn btn-sm btn-outline-primary me-2"
+                      className="btn btn-sm btn-outline-primary"
                       onClick={() => openEditModal(user)}
                     >
                       Edit

@@ -383,14 +383,14 @@ const ListBossTable = ({ refreshKey, onDeleted, onUpdated }) => {
                 return (
                   <tr key={boss.id}>
                     <th scope="row">{(page - 1) * pageSize + index + 1}</th>
-                    <td>{boss.name}</td>
+                    <td className="admin-table-name">{boss.name}</td>
                     <td>{getUserName(boss.created_by)}</td>
                     <td>{getUserName(boss.updated_by)}</td>
-                    <td>{formatDateTime(boss.updated_at)}</td>
-                    <td>
+                    <td className="admin-table-date">{formatDateTime(boss.updated_at)}</td>
+                    <td className="admin-table-actions">
                       <button
                         type="button"
-                        className="btn btn-sm btn-outline-primary me-2"
+                        className="btn btn-sm btn-outline-primary"
                         onClick={() => openEditModal(boss)}
                       >
                         Edit

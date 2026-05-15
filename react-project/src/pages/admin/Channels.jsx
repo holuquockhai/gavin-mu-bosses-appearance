@@ -431,14 +431,14 @@ export default function Channels() {
                 return (
                   <tr key={channel.id}>
                     <th scope="row">{(page - 1) * pageSize + index + 1}</th>
-                    <td>{channel.name}</td>
+                    <td className="admin-table-name">{channel.name}</td>
                     <td>{getUserName(channel.created_by)}</td>
                     <td>{getUserName(channel.updated_by)}</td>
-                    <td>{formatDateTime(channel.updated_at)}</td>
-                    <td>
+                    <td className="admin-table-date">{formatDateTime(channel.updated_at)}</td>
+                    <td className="admin-table-actions">
                       <button
                         type="button"
-                        className="btn btn-sm btn-outline-primary me-2"
+                        className="btn btn-sm btn-outline-primary"
                         onClick={() => openEditModal(channel)}
                       >
                         Edit

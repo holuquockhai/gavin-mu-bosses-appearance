@@ -117,7 +117,7 @@ function PresetControlForm({ selectedChannel }) {
   return (
     <>
       <div className="preset-control">
-        <div className="d-flex flex-column flex-lg-row gap-2 align-items-lg-center">
+        <div className="preset-control-row">
           <div className="preset-select-wrap">
             <label className="small text-muted text-nowrap mb-1" htmlFor="presetSelect">Presets (max 3)</label>
             <select
@@ -135,7 +135,7 @@ function PresetControlForm({ selectedChannel }) {
             </select>
           </div>
 
-          <div className="preset-actions d-flex flex-wrap gap-2">
+          <div className="preset-actions">
             <button className="btn btn-outline-secondary" id="applyPresetBtn" onClick={handleApplyPreset}>
               Apply
             </button>

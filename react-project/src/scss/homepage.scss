@@ -149,12 +149,27 @@ $color-mode-type: data;
 }
 
 .preset-select-wrap {
-  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.preset-control-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.preset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .preset-actions .btn,
 .boss-timer-card .btn {
   min-width: 72px;
+  white-space: nowrap;
 }
 
 .boss-countdown-box {
@@ -444,7 +459,21 @@ $color-mode-type: data;
     grid-template-columns: 1fr;
   }
 
+  .preset-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
   .preset-actions .btn {
-    flex: 1 1 45%;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .preset-control-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 }
