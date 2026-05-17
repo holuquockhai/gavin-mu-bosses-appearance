@@ -20,6 +20,19 @@ export const getChatMessagesApi = async ({ limit = 50, beforeId } = {}) => {
   return response.data;
 };
 
+export const searchChatMessagesApi = async ({ query, limit = 50 }) => {
+  const response = await axios.get(`${API_URL}/chat/messages/search`, {
+    params: {
+      q: query,
+      limit,
+      _: Date.now(),
+    },
+    headers: authHeaders(),
+  });
+
+  return response.data;
+};
+
 export const createChatMessageApi = async (message) => {
   const response = await axios.post(`${API_URL}/chat/messages`, { message }, {
     headers: authHeaders(),

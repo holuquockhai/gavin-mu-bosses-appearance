@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   createChatMessageApi,
   getChatMessagesApi,
+  searchChatMessagesApi,
   unsendChatMessageApi,
   updateChatMessageApi,
 } from "../../api/chatApi";
@@ -11,10 +12,11 @@ import { formatUserDateTime } from "../../utils/dateTime";
 import { startMovingBrowserTitle, stopMovingBrowserTitle } from "../../utils/browserTitle";
 
 const messageLimit = 25;
-const unreadPreviewLimit = 10;
+const unreadPreviewLimit = 100;
 const iconsPerPage = 28;
 const chatLeftNoticeDelayMs = 5000;
 const duplicateJoinNoticeWindowMs = 30000;
+const readDelayMs = 5000;
 const chatIconCategories = [
   {
     id: "smileys",
@@ -62,6 +64,20 @@ const chatIconCategories = [
 
 const formatMessageTime = (value) => formatUserDateTime(value);
 
+const getMessageOrder = (message) => {
+  const numericId = Number(message.id);
+
+  if (Number.isFinite(numericId)) {
+    return numericId;
+  }
+
+  return new Date(message.created_at || 0).getTime();
+};
+
+const sortChatMessages = (messageList) => (
+  [...messageList].sort((first, second) => getMessageOrder(first) - getMessageOrder(second))
+);
+
 const getAvatarUrl = (avatarUrl) => {
   if (!avatarUrl) {
     return null;
@@ -82,26 +98,48 @@ function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isSearchingMessages, setIsSearchingMessages] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editDraft, setEditDraft] = useState("");
   const [isUpdatingMessage, setIsUpdatingMessage] = useState(false);
   const [unsendingMessageId, setUnsendingMessageId] = useState(null);
   const [hasOlderMessages, setHasOlderMessages] = useState(false);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchedMessageIds, setSearchedMessageIds] = useState([]);
+  const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
   const [activeIconCategory, setActiveIconCategory] = useState(chatIconCategories[0].id);
   const [activeIconPage, setActiveIconPage] = useState(0);
   const [onlineMemberCount, setOnlineMemberCount] = useState(0);
   const [isWindowFocused, setIsWindowFocused] = useState(() => document.hasFocus());
   const [lastReadMessageId, setLastReadMessageId] = useState(() => Number(localStorage.getItem(readStorageKey) || 0));
+  const [highlightReadMessageId, setHighlightReadMessageId] = useState(() => Number(localStorage.getItem(readStorageKey) || 0));
   const [unreadCount, setUnreadCount] = useState(() => Number(localStorage.getItem(unreadStorageKey) || 0));
   const [error, setError] = useState("");
+  const messagesListRef = useRef(null);
   const messagesEndRef = useRef(null);
   const readTimerRef = useRef(null);
   const iconPickerRef = useRef(null);
+  const previousMessagesAnchorRef = useRef(null);
+  const isOpeningMessagesRef = useRef(false);
+  const searchRequestIdRef = useRef(0);
   const pendingChatLeftTimersRef = useRef(new Map());
   const recentChatJoinNoticesRef = useRef(new Map());
 
   const canMarkRead = isOpen && isWindowFocused;
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const searchMatchIds = useMemo(() => {
+    if (!normalizedSearchTerm) {
+      return [];
+    }
+
+    const matchedIds = messages
+      .filter((message) => (message.message || "").toLowerCase().includes(normalizedSearchTerm))
+      .map((message) => String(message.id));
+
+    return [...new Set([...matchedIds, ...searchedMessageIds])];
+  }, [messages, normalizedSearchTerm, searchedMessageIds]);
+  const activeSearchMatchId = activeSearchIndex >= 0 ? searchMatchIds[activeSearchIndex] : "";
 
   const setStoredUnreadCount = (count) => {
     const nextCount = Math.min(Number(count) || 0, 99);
@@ -126,6 +164,37 @@ function ChatWidget() {
     ))
   );
 
+  const getLatestChatMessageId = (messageList) => Math.max(
+    0,
+    ...messageList
+      .filter((message) => message.type !== "system")
+      .map((message) => message.id),
+  );
+
+  const initializeReadMarkerIfMissing = (messageList) => {
+    if (localStorage.getItem(readStorageKey) !== null) {
+      return false;
+    }
+
+    const storedUnreadCount = Number(localStorage.getItem(unreadStorageKey) || 0);
+    const storedUnreadTitle = localStorage.getItem(unreadTitleStorageKey);
+    if (storedUnreadCount > 0 || storedUnreadTitle) {
+      return false;
+    }
+
+    const latestMessageId = getLatestChatMessageId(messageList);
+    if (latestMessageId <= 0) {
+      return false;
+    }
+
+    localStorage.setItem(readStorageKey, String(latestMessageId));
+    setLastReadMessageId(latestMessageId);
+    setHighlightReadMessageId(latestMessageId);
+    setStoredUnreadCount(0);
+    setStoredUnreadTitle("");
+    return true;
+  };
+
   const showLatestUnreadInTitle = (messageList, readMessageId = lastReadMessageId) => {
     const unreadMessages = getUnreadMessages(messageList, readMessageId);
     const latestUnreadMessage = unreadMessages[unreadMessages.length - 1];
@@ -137,6 +206,26 @@ function ChatWidget() {
 
     const senderName = latestUnreadMessage.user?.full_name || latestUnreadMessage.user?.email || "Someone";
     setStoredUnreadTitle(`${senderName} sent a new message`);
+  };
+
+  const updateUnreadStateFromMessages = (messageList, { preserveExisting = false } = {}) => {
+    const unreadMessages = getUnreadMessages(messageList);
+    const currentStoredUnreadCount = Number(localStorage.getItem(unreadStorageKey) || unreadCount || 0);
+    const shouldKeepExistingBadge = preserveExisting
+      && currentStoredUnreadCount > 0
+      && unreadMessages.length < currentStoredUnreadCount;
+
+    if (shouldKeepExistingBadge) {
+      setUnreadCount(Math.min(currentStoredUnreadCount, 99));
+      const storedUnreadTitle = localStorage.getItem(unreadTitleStorageKey);
+      if (storedUnreadTitle) {
+        startMovingBrowserTitle(storedUnreadTitle);
+      }
+      return;
+    }
+
+    setStoredUnreadCount(unreadMessages.length);
+    showLatestUnreadInTitle(messageList);
   };
 
   const markMessagesRead = (messageList = messages) => {
@@ -153,6 +242,7 @@ function ChatWidget() {
 
     localStorage.setItem(readStorageKey, String(latestMessageId));
     setLastReadMessageId(latestMessageId);
+    setHighlightReadMessageId(latestMessageId);
     setStoredUnreadCount(0);
     setStoredUnreadTitle("");
   };
@@ -166,13 +256,31 @@ function ChatWidget() {
 
     readTimerRef.current = window.setTimeout(() => {
       markMessagesRead(messageList);
-    }, 300);
+    }, readDelayMs);
   };
 
-  const scrollToBottom = () => {
-    window.setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }, 50);
+  const scrollToBottom = ({ behavior = "smooth", protectInitialLoad = false } = {}) => {
+    if (protectInitialLoad) {
+      isOpeningMessagesRef.current = true;
+    }
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const messagesList = messagesListRef.current;
+
+        if (messagesList) {
+          messagesList.scrollTop = messagesList.scrollHeight;
+        } else {
+          messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+        }
+
+        if (protectInitialLoad) {
+          window.setTimeout(() => {
+            isOpeningMessagesRef.current = false;
+          }, 250);
+        }
+      });
+    });
   };
 
   const mergeMessages = (incomingMessages, { prepend = false } = {}) => {
@@ -184,16 +292,18 @@ function ChatWidget() {
 
       nextMessages.forEach((message) => messagesById.set(message.id, message));
 
-      return [...messagesById.values()].sort((first, second) => first.id - second.id);
+      return sortChatMessages([...messagesById.values()]);
     });
   };
 
   const updateUnreadPreview = async () => {
     try {
       const data = await getChatMessagesApi({ limit: unreadPreviewLimit });
-      const unreadMessages = getUnreadMessages(data);
-      setStoredUnreadCount(unreadMessages.length);
-      showLatestUnreadInTitle(data);
+      if (initializeReadMarkerIfMissing(data)) {
+        return;
+      }
+
+      updateUnreadStateFromMessages(data, { preserveExisting: true });
     } catch {
       // Keep chat quiet when only the unread preview fails.
     }
@@ -207,17 +317,20 @@ function ChatWidget() {
 
     try {
       const data = await getChatMessagesApi({ limit: messageLimit });
-      setMessages(data);
+      setMessages(sortChatMessages(data));
       setHasLoadedMessages(true);
       setHasOlderMessages(data.length === messageLimit);
+      if (initializeReadMarkerIfMissing(data)) {
+        scrollToBottom({ behavior: "auto", protectInitialLoad: true });
+        return;
+      }
+
       if (canMarkRead) {
         scheduleMarkRead(data);
       } else {
-        const unreadMessages = getUnreadMessages(data);
-        setStoredUnreadCount(unreadMessages.length);
-        showLatestUnreadInTitle(data);
+        updateUnreadStateFromMessages(data, { preserveExisting: true });
       }
-      scrollToBottom();
+      scrollToBottom({ behavior: "auto", protectInitialLoad: true });
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load chat messages");
     } finally {
@@ -230,13 +343,28 @@ function ChatWidget() {
       return;
     }
 
+    const oldestLoadedMessage = messages.find((message) => message.type !== "system" && Number.isFinite(Number(message.id)));
+    if (!oldestLoadedMessage) {
+      return;
+    }
+
+    const messagesList = messagesListRef.current;
+    const anchorElement = messagesList?.querySelector(`[data-chat-message-id="${oldestLoadedMessage.id}"]`);
+    const anchorTop = anchorElement && messagesList
+      ? anchorElement.getBoundingClientRect().top - messagesList.getBoundingClientRect().top
+      : 0;
+
+    previousMessagesAnchorRef.current = {
+      id: oldestLoadedMessage.id,
+      top: anchorTop,
+    };
     setIsLoadingOlder(true);
     setError("");
 
     try {
       const data = await getChatMessagesApi({
         limit: messageLimit,
-        beforeId: messages[0].id,
+        beforeId: oldestLoadedMessage.id,
       });
       mergeMessages(data, { prepend: true });
       setHasOlderMessages(data.length === messageLimit);
@@ -246,6 +374,93 @@ function ChatWidget() {
       setIsLoadingOlder(false);
     }
   };
+
+  const handleMessagesScroll = (event) => {
+    if (
+      event.currentTarget.scrollTop <= 48
+      && hasLoadedMessages
+      && hasOlderMessages
+      && !isOpeningMessagesRef.current
+      && !isLoadingOlder
+      && !isLoading
+    ) {
+      loadOlderMessages();
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (!previousMessagesAnchorRef.current) {
+      return;
+    }
+
+    const anchor = previousMessagesAnchorRef.current;
+    const messagesList = messagesListRef.current;
+    const anchorElement = messagesList?.querySelector(`[data-chat-message-id="${anchor.id}"]`);
+    previousMessagesAnchorRef.current = null;
+
+    if (!messagesList || !anchorElement) {
+      return;
+    }
+
+    const currentTop = anchorElement.getBoundingClientRect().top - messagesList.getBoundingClientRect().top;
+    messagesList.scrollTop += currentTop - anchor.top;
+  }, [messages]);
+
+  useLayoutEffect(() => {
+    if (!activeSearchMatchId) {
+      return;
+    }
+
+    const activeElement = messagesListRef.current?.querySelector(`[data-chat-message-id="${activeSearchMatchId}"]`);
+    activeElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [activeSearchMatchId, messages.length]);
+
+  useEffect(() => {
+    if (!normalizedSearchTerm || searchMatchIds.length === 0) {
+      setActiveSearchIndex(-1);
+      return;
+    }
+
+    setActiveSearchIndex((currentIndex) => (
+      currentIndex >= 0 && currentIndex < searchMatchIds.length ? currentIndex : 0
+    ));
+  }, [normalizedSearchTerm, searchMatchIds.length]);
+
+  useEffect(() => {
+    if (!normalizedSearchTerm) {
+      searchRequestIdRef.current += 1;
+      setSearchedMessageIds([]);
+      setIsSearchingMessages(false);
+      return undefined;
+    }
+
+    const requestId = searchRequestIdRef.current + 1;
+    searchRequestIdRef.current = requestId;
+
+    const searchTimer = window.setTimeout(async () => {
+      setIsSearchingMessages(true);
+
+      try {
+        const results = await searchChatMessagesApi({ query: normalizedSearchTerm, limit: 100 });
+        if (searchRequestIdRef.current !== requestId) {
+          return;
+        }
+        setSearchedMessageIds(results.map((message) => String(message.id)));
+        mergeMessages(results);
+      } catch (err) {
+        if (searchRequestIdRef.current !== requestId) {
+          return;
+        }
+        setError(err.response?.data?.detail || "Failed to search chat messages");
+      } finally {
+        if (searchRequestIdRef.current === requestId) {
+          setIsSearchingMessages(false);
+        }
+      }
+    }, 350);
+
+    return () => window.clearTimeout(searchTimer);
+  }, [normalizedSearchTerm]);
 
   const startEditingMessage = (message) => {
     setEditingMessageId(message.id);
@@ -317,11 +532,15 @@ function ChatWidget() {
     if (canMarkRead && hasLoadedMessages && messages.length > 0) {
       scheduleMarkRead(messages);
     } else if (hasLoadedMessages) {
-      const unreadMessages = getUnreadMessages(messages);
-      setStoredUnreadCount(unreadMessages.length);
-      showLatestUnreadInTitle(messages);
+      updateUnreadStateFromMessages(messages, { preserveExisting: true });
     }
   }, [isOpen, isWindowFocused, messages, hasLoadedMessages]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setHighlightReadMessageId(lastReadMessageId);
+    }
+  }, [isOpen, lastReadMessageId]);
 
   useEffect(() => {
     const handleFocus = () => setIsWindowFocused(true);
@@ -527,6 +746,49 @@ function ChatWidget() {
     setIsIconPickerOpen(false);
   };
 
+  const handleSearchNavigation = (direction) => {
+    if (searchMatchIds.length === 0) {
+      return;
+    }
+
+    setActiveSearchIndex((currentIndex) => {
+      const safeIndex = currentIndex < 0 ? 0 : currentIndex;
+      return (safeIndex + direction + searchMatchIds.length) % searchMatchIds.length;
+    });
+  };
+
+  const highlightSearchText = (text) => {
+    if (!normalizedSearchTerm || !text) {
+      return text;
+    }
+
+    const lowerText = text.toLowerCase();
+    const parts = [];
+    let cursor = 0;
+    let matchIndex = lowerText.indexOf(normalizedSearchTerm, cursor);
+
+    while (matchIndex !== -1) {
+      if (matchIndex > cursor) {
+        parts.push(text.slice(cursor, matchIndex));
+      }
+
+      const matchEnd = matchIndex + normalizedSearchTerm.length;
+      parts.push(
+        <mark className="chat-search-mark" key={`${matchIndex}-${matchEnd}`}>
+          {text.slice(matchIndex, matchEnd)}
+        </mark>,
+      );
+      cursor = matchEnd;
+      matchIndex = lowerText.indexOf(normalizedSearchTerm, cursor);
+    }
+
+    if (cursor < text.length) {
+      parts.push(text.slice(cursor));
+    }
+
+    return parts;
+  };
+
   const selectedIconCategory = chatIconCategories.find((category) => category.id === activeIconCategory) || chatIconCategories[0];
   const selectedIconPages = selectedIconCategory.icons.reduce((pages, icon, index) => {
     const pageIndex = Math.floor(index / iconsPerPage);
@@ -550,8 +812,8 @@ function ChatWidget() {
           <section
             className="chat-panel shadow-lg"
             aria-label="Team chat"
-            onClick={() => markMessagesRead(messages)}
-            onFocusCapture={() => markMessagesRead(messages)}
+            onClick={() => scheduleMarkRead(messages)}
+            onFocusCapture={() => scheduleMarkRead(messages)}
           >
             <div className="chat-panel-header">
               <div>
@@ -559,6 +821,47 @@ function ChatWidget() {
                 <p className="small mb-0 text-muted">
                   {onlineMemberCount} {onlineMemberCount === 1 ? "member" : "members"} online
                 </p>
+              </div>
+              <div className="chat-search" role="search">
+                <div className="input-group input-group-sm">
+                  <span className="input-group-text">
+                    <i className="bi bi-search" aria-hidden="true"></i>
+                  </span>
+                  <input
+                    type="search"
+                    className="form-control"
+                    placeholder="Search messages"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => handleSearchNavigation(-1)}
+                    disabled={searchMatchIds.length === 0}
+                    aria-label="Previous matched message"
+                  >
+                    <i className="bi bi-chevron-up" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => handleSearchNavigation(1)}
+                    disabled={searchMatchIds.length === 0}
+                    aria-label="Next matched message"
+                  >
+                    <i className="bi bi-chevron-down" aria-hidden="true"></i>
+                  </button>
+                </div>
+                {normalizedSearchTerm && (
+                  <span className="chat-search-count">
+                    {isSearchingMessages
+                      ? "Searching..."
+                      : searchMatchIds.length > 0
+                        ? `${activeSearchIndex + 1} of ${searchMatchIds.length}`
+                        : "No results"}
+                  </span>
+                )}
               </div>
               <button
                 type="button"
@@ -570,17 +873,11 @@ function ChatWidget() {
               </button>
             </div>
 
-          <div className="chat-messages">
-            {hasOlderMessages && (
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary align-self-center"
-                onClick={loadOlderMessages}
-                disabled={isLoadingOlder}
-              >
-                {isLoadingOlder ? "Loading..." : "Load older"}
-              </button>
-            )}
+          <div className="chat-messages" ref={messagesListRef} onScroll={handleMessagesScroll}>
+            <div className={`chat-previous-loader ${isLoadingOlder ? "show" : ""}`} role="status" aria-live="polite">
+              <span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
+              <span>Loading previous messages...</span>
+            </div>
 
             {isLoading ? (
               <p className="small text-muted text-center mb-0 py-4">Loading messages...</p>
@@ -589,16 +886,27 @@ function ChatWidget() {
             ) : (
               messages.map((message) => {
                 if (message.type === "system") {
+                  const messageId = String(message.id);
+                  const isSearchMatch = searchMatchIds.includes(messageId);
+                  const isActiveSearchMatch = activeSearchMatchId === messageId;
+
                   return (
-                    <div className="chat-system-message" key={message.id}>
-                      <span>{message.message}</span>
+                    <div
+                      className={`chat-system-message ${isSearchMatch ? "search-match" : ""} ${isActiveSearchMatch ? "active-search-match" : ""}`}
+                      key={message.id}
+                      data-chat-message-id={message.id}
+                    >
+                      <span>{highlightSearchText(message.message)}</span>
                       <time>{formatMessageTime(message.created_at)}</time>
                     </div>
                   );
                 }
 
+                const messageId = String(message.id);
                 const isMine = message.user?.id === currentUser?.id;
-                const isUnread = !isMine && message.id > lastReadMessageId;
+                const isUnread = !isMine && message.id > highlightReadMessageId;
+                const isSearchMatch = searchMatchIds.includes(messageId);
+                const isActiveSearchMatch = activeSearchMatchId === messageId;
                 const displayName = message.user?.full_name || message.user?.email || "Unknown user";
                 const avatarUrl = getAvatarUrl(message.user?.avatar_url);
                 const isEditing = editingMessageId === message.id;
@@ -606,7 +914,11 @@ function ChatWidget() {
                 const unsentText = isMine ? "You unsent a message" : `${displayName} unsent a message`;
 
                 return (
-                  <article className={`chat-message ${isMine ? "mine" : ""} ${isUnread ? "unread" : ""} ${isUnsent ? "unsent" : ""}`} key={message.id}>
+                  <article
+                    className={`chat-message ${isMine ? "mine" : ""} ${isUnread ? "unread" : ""} ${isUnsent ? "unsent" : ""} ${isSearchMatch ? "search-match" : ""} ${isActiveSearchMatch ? "active-search-match" : ""}`}
+                    key={message.id}
+                    data-chat-message-id={message.id}
+                  >
                     {!isMine && (
                       <div className="chat-avatar">
                         {avatarUrl ? (
@@ -657,7 +969,7 @@ function ChatWidget() {
                         </form>
                       ) : (
                         <>
-                          <p>{message.message}</p>
+                          <p>{highlightSearchText(message.message)}</p>
                           {isMine && (
                             <div className="chat-message-actions">
                               <button

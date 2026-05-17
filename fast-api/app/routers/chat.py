@@ -63,6 +63,30 @@ def list_chat_messages(
     return list(reversed(messages))
 
 
+@router.get("/messages/search", response_model=list[ChatMessageResponse])
+def search_chat_messages(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    q: Annotated[str, Query(min_length=1, max_length=100)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+):
+    search_text = q.strip()
+    if not search_text:
+        return []
+
+    messages = (
+        db.query(ChatMessage)
+        .options(joinedload(ChatMessage.user))
+        .filter(ChatMessage.is_unsent.is_(False))
+        .filter(ChatMessage.message.ilike(f"%{search_text}%"))
+        .order_by(ChatMessage.id.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return list(reversed(messages))
+
+
 @router.post("/messages", response_model=ChatMessageResponse)
 async def create_chat_message(
     data: ChatMessageCreate,
