@@ -525,10 +525,12 @@ function ChatWidget() {
   }, []);
 
   useEffect(() => {
-    if (isOpen && !hasLoadedMessages) {
-      loadMessages({ showLoading: true });
+    if (isOpen) {
+      loadMessages({ showLoading: !hasLoadedMessages });
     }
+  }, [isOpen]);
 
+  useEffect(() => {
     if (canMarkRead && hasLoadedMessages && messages.length > 0) {
       scheduleMarkRead(messages);
     } else if (hasLoadedMessages) {
@@ -746,6 +748,14 @@ function ChatWidget() {
     setIsIconPickerOpen(false);
   };
 
+  const closeChat = () => {
+    setIsOpen(false);
+    setSearchTerm("");
+    setSearchedMessageIds([]);
+    setActiveSearchIndex(-1);
+    setIsIconPickerOpen(false);
+  };
+
   const handleSearchNavigation = (direction) => {
     if (searchMatchIds.length === 0) {
       return;
@@ -807,7 +817,7 @@ function ChatWidget() {
             type="button"
             className="chat-mobile-overlay"
             aria-label="Close chat"
-            onClick={() => setIsOpen(false)}
+            onClick={closeChat}
           ></button>
           <section
             className="chat-panel shadow-lg"
@@ -866,7 +876,7 @@ function ChatWidget() {
               <button
                 type="button"
                 className="btn btn-sm btn-outline-secondary"
-                onClick={() => setIsOpen(false)}
+                onClick={closeChat}
                 aria-label="Close chat"
               >
                 <i className="bi bi-x-lg" aria-hidden="true"></i>
@@ -1095,7 +1105,7 @@ function ChatWidget() {
       <button
         type="button"
         className="chat-toggle-button shadow"
-        onClick={() => setIsOpen((value) => !value)}
+        onClick={() => (isOpen ? closeChat() : setIsOpen(true))}
         aria-label="Open chat"
       >
         <i className={`bi ${isOpen ? "bi-chat-dots-fill" : "bi-chat-dots"}`} aria-hidden="true"></i>
