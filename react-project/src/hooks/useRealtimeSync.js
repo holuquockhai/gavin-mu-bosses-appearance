@@ -199,6 +199,14 @@ export function useRealtimeSync() {
             refreshState({ timers: true, notifications: true });
           }
 
+          if (message.type === "timer_reminder_due") {
+            if (soundEnabled) {
+              playAlertTone(soundStyle);
+            }
+
+            refreshState({ notifications: true });
+          }
+
           if (message.type === "notifications_updated") {
             refreshState({ notifications: true });
           }

@@ -115,6 +115,7 @@ async def upsert_timer(
     timer.hours = data.hours
     timer.minutes = data.minutes
     timer.end_at = to_utc_naive(data.end_at)
+    timer.reminder_sent = False
     timer.user_id = current_user.id
 
     db.commit()

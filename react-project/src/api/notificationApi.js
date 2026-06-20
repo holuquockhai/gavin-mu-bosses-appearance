@@ -8,7 +8,31 @@ const authHeaders = () => ({
 });
 
 export const getNotificationsApi = async () => {
-  const response = await axios.get(`${API_URL}/notifications/`, {
+  const [notificationsResponse, countResponse] = await Promise.all([
+    axios.get(`${API_URL}/notifications/`, {
+      params: { _: Date.now() },
+      headers: {
+        ...authHeaders(),
+        "Cache-Control": "no-cache",
+      },
+    }),
+    axios.get(`${API_URL}/notifications/count`, {
+      params: { _: Date.now() },
+      headers: {
+        ...authHeaders(),
+        "Cache-Control": "no-cache",
+      },
+    }),
+  ]);
+
+  return {
+    items: notificationsResponse.data,
+    total: countResponse.data.total,
+  };
+};
+
+export const getNotificationCountApi = async () => {
+  const response = await axios.get(`${API_URL}/notifications/count`, {
     params: { _: Date.now() },
     headers: {
       ...authHeaders(),
@@ -16,7 +40,7 @@ export const getNotificationsApi = async () => {
     },
   });
 
-  return response.data;
+  return response.data.total;
 };
 
 export const createNotificationApi = async ({ type, payload, createdAt }) => {

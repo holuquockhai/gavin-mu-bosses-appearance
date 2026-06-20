@@ -77,6 +77,14 @@ function NotificationMessage({ notification }) {
         );
     }
 
+    if (notification.type === "boss-reminder") {
+        return (
+            <>
+                <strong>{notification.bossName}</strong> on <strong>{notification.channel}</strong> will appear in {notification.minutesRemaining || 5} minutes.
+            </>
+        );
+    }
+
     if (notification.type === "user-created") {
         return (
             <>

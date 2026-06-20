@@ -8,14 +8,25 @@ import { createBossTimerApi, clearBossTimerApi } from "../../api/timerApi";
 import { createNotificationApi } from "../../api/notificationApi";
 import { showGlobalMessage } from "../../utils/flashMessage";
 
+function formatTimerBadge(endAt) {
+    const seconds = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainSeconds = seconds % 60;
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainSeconds).padStart(2, "0")}`;
+}
+
 function BossTimerCard({boss, selectedChannel, isVisible = boss.isShowed, onHide}){
     const dispatch = useDispatch();
     const hoursList = useSelector(state => state.timerHours.value);
     const minuteList = useSelector(state => state.timerMinutes.value);
     const channels = useSelector(state => state.channels.value);
+    const timers = useSelector((state) => state.bossCountdowns.value);
     const [selectedHour, setSelectedHour] = useState("0");
     const [selectedMinute, setSelectedMinute] = useState("30");
     const [shouldRender, setShouldRender] = useState(isVisible);
+    const selectedChannelTimer = timers.find((timer) => timer.bossId === boss.id && timer.channel === selectedChannel);
 
     useEffect(() => {
         if (isVisible) {
@@ -116,7 +127,12 @@ function BossTimerCard({boss, selectedChannel, isVisible = boss.isShowed, onHide
                 <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start gap-3">
                     <div>
-                        <h5 className="card-title mb-1">{boss.name}</h5>
+                        <div className="boss-card-title-row">
+                            <h5 className="card-title mb-0">{boss.name}</h5>
+                            <span className={`boss-card-countdown ${selectedChannelTimer ? "" : "is-empty"}`}>
+                                {selectedChannelTimer ? formatTimerBadge(selectedChannelTimer.endAt) : "00:00:00"}
+                            </span>
+                        </div>
                         <span className="small text-muted">{selectedChannel || "No channel selected"}</span>
                     </div>
                     <span className="small text-muted text-end">

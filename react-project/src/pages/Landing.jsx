@@ -7,15 +7,6 @@ import PresetControlForm from "./components/PresetControlForm";
 import { getBossesApi } from "../api/bossApi";
 import { getChannelsApi } from "../api/channelApi";
 
-function formatTimerBadge(endAt) {
-  const seconds = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainSeconds = seconds % 60;
-
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainSeconds).padStart(2, "0")}`;
-}
-
 const BOSS_VISIBILITY_STORAGE_KEY = "warlordsVisibleBossIds";
 
 const getSavedVisibleBossIds = () => {
@@ -45,7 +36,6 @@ const Landing = () => {
   // Load bosses redux store values
   const bosses = useSelector((state) => state.bosses.value);
   const channels = useSelector((state) => state.channels.value);
-  const timers = useSelector((state) => state.bossCountdowns.value);
 
   useEffect(() => {
     let isMounted = true;
@@ -145,10 +135,6 @@ const Landing = () => {
     return () => window.clearInterval(intervalId);
   }, []);
 
-  const getBossTimerForSelectedChannel = (bossId) => (
-    timers.find((timer) => timer.bossId === bossId && timer.channel === selectedChannel)
-  );
-
   const handleToggleBossVisibility = (bossId) => {
     setVisibleBossIds((currentBossIds) => {
       const normalizedBossId = Number(bossId);
@@ -217,7 +203,6 @@ const Landing = () => {
                 {!isLoadingBosses && !bossError && bosses.map((boss) => (
                   <div className="form-check form-switch boss-toggle-chip" key={boss.id}>
                     {(() => {
-                      const channelTimer = getBossTimerForSelectedChannel(boss.id);
                       const isBossVisible = visibleBossIds.includes(Number(boss.id));
 
                       return (
@@ -236,9 +221,6 @@ const Landing = () => {
                           >
                             {boss.name}
                           </label>
-                          <span className={`boss-toggle-countdown ${channelTimer ? "" : "is-empty"}`}>
-                            {channelTimer ? formatTimerBadge(channelTimer.endAt) : "00:00:00"}
-                          </span>
                         </>
                       );
                     })()}

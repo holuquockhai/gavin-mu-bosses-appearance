@@ -84,6 +84,9 @@ with engine.begin() as conn:
         conn.execute(text("ALTER TABLE boss_history ADD COLUMN appeared_by_name VARCHAR(255) NULL"))
     if "appeared_by_type" not in boss_history_columns:
         conn.execute(text("ALTER TABLE boss_history ADD COLUMN appeared_by_type VARCHAR(40) NULL"))
+    boss_timer_columns = {column["name"] for column in inspect(conn).get_columns("boss_timers")}
+    if "reminder_sent" not in boss_timer_columns:
+        conn.execute(text("ALTER TABLE boss_timers ADD COLUMN reminder_sent BOOLEAN NOT NULL DEFAULT FALSE"))
 
 db = SessionLocal()
 try:

@@ -21,7 +21,7 @@ function resolveAvatarUrl(avatarUrl) {
 }
 
 function TopNavigation({ isDark, setIsDark, user }) {
-  const notificationCount = useSelector((state) => state.notifications.value.length);
+  const notificationCount = useSelector((state) => state.notifications.totalCount);
   const displayName = user?.full_name || user?.email || "User";
   const isAdmin = user?.roles?.includes("admin");
   const avatarUrl = resolveAvatarUrl(user?.avatar_url);

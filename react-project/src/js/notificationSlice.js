@@ -12,11 +12,14 @@ export const notificationSlice = createSlice({
   name: "notifications",
   initialState: {
     value: [],
+    totalCount: 0,
     pageSize: Number(localStorage.getItem("notificationPageSize")) || 5,
   },
   reducers: {
     setNotifications: (state, action) => {
-      state.value = action.payload.map((notification) => ({
+      const notifications = Array.isArray(action.payload) ? action.payload : action.payload.items;
+      state.totalCount = Number(action.payload.total ?? notifications.length);
+      state.value = notifications.map((notification) => ({
         id: notification.id,
         type: notification.type,
         ...notification.payload,
@@ -43,6 +46,7 @@ export const notificationSlice = createSlice({
         userName,
         message: `${actorName} created user ${userName}.`,
       }));
+      state.totalCount += 1;
     },
     addBossCreatedNotification: (state, action) => {
       const { actorName, bossName } = action.payload;
@@ -51,6 +55,7 @@ export const notificationSlice = createSlice({
         bossName,
         message: `${actorName} created boss ${bossName}.`,
       }));
+      state.totalCount += 1;
     },
     addBossTimerSetNotification: (state, action) => {
       const { actorName, bossName, channel, period } = action.payload;
@@ -60,6 +65,7 @@ export const notificationSlice = createSlice({
         channel,
         period,
       }));
+      state.totalCount += 1;
     },
     addBossAppearedNotification: (state, action) => {
       const { actorName, bossName, channel } = action.payload;
@@ -68,12 +74,15 @@ export const notificationSlice = createSlice({
         bossName,
         channel,
       }));
+      state.totalCount += 1;
     },
     removeNotification: (state, action) => {
       state.value = state.value.filter((notification) => notification.id !== action.payload);
+      state.totalCount = Math.max(0, state.totalCount - 1);
     },
     clearNotifications: (state) => {
       state.value = [];
+      state.totalCount = 0;
     },
   },
 });

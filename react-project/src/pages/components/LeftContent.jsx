@@ -319,7 +319,9 @@ function LeftContent(){
                         <p className="small text-muted mb-0">Set a boss timer to show countdown here.</p>
                     ) : (
                         comingSoonTimers.map((timer) => {
-                            const isReady = timer.endAt <= Date.now();
+                            const remainingMs = timer.endAt - Date.now();
+                            const isReady = remainingMs <= 0;
+                            const isNearTimeout = !isReady && remainingMs <= 5 * 60 * 1000;
 
                             return (
                                 <div className={`boss-countdown-box ${isReady ? "ready" : ""}`} key={timer.id}>
@@ -344,7 +346,7 @@ function LeftContent(){
                                             Mark As Appeared
                                         </button>
                                     </div>
-                                    <div className={`countdown-time ${isReady ? "text-success" : ""}`}>
+                                    <div className={`countdown-time ${isReady ? "text-success" : ""} ${isNearTimeout ? "text-danger" : ""}`}>
                                         {isReady ? "Appeared" : formatRemaining(timer.endAt)}
                                     </div>
                                 </div>

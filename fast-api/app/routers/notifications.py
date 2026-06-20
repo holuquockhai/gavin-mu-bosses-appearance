@@ -34,6 +34,25 @@ def list_notifications(
     )
 
 
+@router.get("/count")
+def count_notifications(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    dismissed_notification_ids = (
+        db.query(NotificationDismissal.notification_id)
+        .filter(NotificationDismissal.user_id == current_user.id)
+    )
+
+    return {
+        "total": (
+            db.query(Notification)
+            .filter(~Notification.id.in_(dismissed_notification_ids))
+            .count()
+        )
+    }
+
+
 @router.post("/", response_model=NotificationResponse)
 async def create_notification(
     data: NotificationCreate,
