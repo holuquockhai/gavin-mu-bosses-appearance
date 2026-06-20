@@ -6,17 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="628b7070-c873-4be2-9a65-e3029df11496" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routers/system_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/system_settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/system_setting.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/system_setting.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/system_settings_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/system_settings_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/install_email_queue_cron.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/install_email_queue_cron.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/App.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/api/bossApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/api/bossApi.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/js/bossSlice.js" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/js/bossSlice.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/main.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/main.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/admin/SystemSettings.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/admin/SystemSettings.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/pages/components/LeftHiddenNavigation.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/pages/components/LeftHiddenNavigation.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../react-project/src/utils/auth.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../react-project/src/utils/auth.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,6 +120,7 @@
       <workItem from="1775921853198" duration="8462000" />
       <workItem from="1777153580717" duration="5286000" />
       <workItem from="1778133263456" duration="16411000" />
+      <workItem from="1779372824371" duration="599000" />
     </task>
     <servers />
   </component>

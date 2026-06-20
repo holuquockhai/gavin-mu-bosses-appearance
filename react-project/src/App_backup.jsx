@@ -6,20 +6,6 @@ import RightContent from './pages/components/RightContent'
 import BottomContent from './pages/components/BottomContent'
 // import './App.css'
 
-const listChannels = [
-  {value: 1, title: "Channel 1"},
-  {value: 2, title: "Channel 2"},
-  {value: 3, title: "Channel 3"},
-  {value: 4, title: "Channel 4"},
-  {value: 5, title: "Channel 5"},
-  {value: 6, title: "Channel 6"},
-  {value: 7, title: "Channel 7"},
-  {value: 8, title: "Channel 8"},
-  {value: 9, title: "Channel 9"},
-  {value: 10, title: "Channel 10"},
-  {value: 11, title: "Channel 11"},
-]
-
 
 function App() {
   const [isDark, setIsDark] = useState(() => {
